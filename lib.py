@@ -1,9 +1,16 @@
 #!/usr/bin/python3
 
-import subprocess
+from subprocess import run, PIPE
+
+def echo (bstr):
+    print (bstr.decode(), end='')
 
 def script (*args):
-    p = subprocess.run (('./script.sh',) + args, stdout=subprocess.PIPE)
-    p = p.stdout.split (b'\n')
-    del p[-1]
+    p = run (('./script.sh',) + args, stdout=PIPE)
+    p = p.stdout
+    return p
+
+def script_lines (*args):
+    p = script (args)
+    p = p.split (b'\n')
     return p
