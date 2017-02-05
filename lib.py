@@ -1,12 +1,15 @@
 #!/usr/bin/python3
 
-from subprocess import run, PIPE
+import subprocess
+import bsddb3
+import re
 
 def echo (bstr):
     print (bstr.decode(), end='')
 
 def script (*args):
-    p = run (('./script.sh',) + args, stdout=PIPE)
+    args = ('./script.sh',) + args
+    p = subprocess.run (args, stdout=subprocess.PIPE)
     p = p.stdout
     return p
 
@@ -28,3 +31,24 @@ def unescape (bstr):
         b = b.encode()
         bstr = bstr.replace (a, b)
     return bstr
+
+def isIdent (bstr):
+    if re.search (b'_', bstr):
+        return True
+    elif re.search (b'^[A-Z0-9]*$', bstr):
+        return True
+    else:
+        return False
+
+class Table:
+    def __init__ (self, filename):
+        self.db = bsddb3.db.DB()
+        # FIXME: hardcoded path
+        self.db.open ('databases/' + filename, flags=bsddb3.db.DB_RDONLY)
+
+    def exists (self, key):
+        return self.db.exists (key)
+
+class DB:
+    def __init__ (self):
+        self.defs = Table ('definitions.db')

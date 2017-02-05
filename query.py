@@ -1,7 +1,10 @@
 #!/usr/bin/python3
 
 from sys import argv
-from lib import echo, script, scriptLines, unescape
+from lib import echo, script, scriptLines
+import lib
+
+db = lib.DB()
 
 cmd = argv[1]
 
@@ -26,10 +29,10 @@ elif cmd == 'file':
         toBe = True
         for tok in tokens:
             toBe = not toBe
-            if toBe:
+            if toBe and db.defs.exists (tok) and lib.isIdent (tok):
                 tok = b'\033[31m' + tok + b'\033[0m'
             else:
-                tok = unescape (tok)
+                tok = lib.unescape (tok)
             echo (tok)
     else:
         p = script ('get-file', version, path)
