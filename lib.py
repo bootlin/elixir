@@ -10,7 +10,21 @@ def script (*args):
     p = p.stdout
     return p
 
-def script_lines (*args):
-    p = script (args)
+def scriptLines (*args):
+    p = script (*args)
     p = p.split (b'\n')
+    del p[-1]
     return p
+
+def unescape (bstr):
+    subs = (
+        ('<','/*'),
+        ('>','*/'),
+        ('\1','\n'),
+        ('\2','<'),
+        ('\3','>'))
+    for a,b in subs:
+        a = a.encode()
+        b = b.encode()
+        bstr = bstr.replace (a, b)
+    return bstr

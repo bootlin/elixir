@@ -3,7 +3,7 @@
 # FIXME: hardcoded path
 cd /srv/git/linux
 
-test $# -gt 0 || set invalid
+test $# -gt 0 || set help
 
 cmd=$1
 shift
@@ -18,6 +18,10 @@ case $cmd in
 
     get-blob)
         git cat-file blob $1
+        ;;
+
+    get-file)
+        git cat-file blob v$1:$2
         ;;
 
     get-dir)
@@ -42,8 +46,8 @@ case $cmd in
         sed -r "s/^\S* blob (\S*)\t(([^/]*\/)*(.*))$/$format/"
         ;;
 
-    tokenize-blob)
-        git cat-file blob $1 |
+    tokenize-file)
+        git cat-file blob v$1:$2 |
         tr '\n<>' '\1\2\3' |
         sed 's/\/\*/</g' |
         sed 's/\*\//>/g' |
@@ -65,7 +69,12 @@ case $cmd in
         rmdir $tmp
         ;;
 
+    help)
+        echo "Usage: $0 subcommand [args]..."
+        exit 1
+        ;;
+
     *)
-        echo "Usage: $0 [list-tags | get-blob | get-dir | list-blobs | tokenize-blob | parse-defs]"
+        echo "$0: Unknown subcommand: $cmd"
         exit 1
 esac
