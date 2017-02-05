@@ -36,19 +36,6 @@ def append_reflist (a, idx, string):
 
 ##################################################################################
 
-defTypeD = {
-    'define': 'd',
-    'enum': 'e',
-    'enumerator': 'E',
-    'function': 'f',
-    'label': 'l',
-    'macro': 'M',
-    'member': 'm',
-    'struct': 's',
-    'typedef': 't',
-    'union': 'u',
-    'variable': 'v' }
-
 defTypeR = {
     'd': 'define',
     'e': 'enum',
@@ -61,6 +48,8 @@ defTypeR = {
     't': 'typedef',
     'u': 'union',
     'v': 'variable' }
+
+defTypeD = {v: k for k, v in defTypeR.items()}
 
 ##################################################################################
 
