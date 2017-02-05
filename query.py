@@ -41,7 +41,50 @@ elif cmd == 'ident':
     version = argv[2]
     ident = argv[3]
 
-    pass
+    if not db.defs.exists (ident):
+        print (argv[0] + ': Unknown identifier: ' + ident)
+        exit()
+
+    vers = db.vers.get (version).iter()
+    defs = db.defs.get (ident).iter()
+    refs = db.refs.get (ident).iter()
+
+    id2, type, dline = next (defs)
+    id3, rlines = next (refs)
+
+    dBuf = []
+    rBuf = []
+
+    maxId = 999999999
+
+    for id1, path in vers:
+        while id1 > id2:
+            try:
+                id2, type, dline = next (defs)
+            except StopIteration:
+                id2 = maxId
+
+        while id1 > id3:
+            try:
+                id3, rlines = next (refs)
+            except StopIteration:
+                id3 = maxId
+
+        if id1 == id2:
+            dBuf.append ((path, type, dline))
+
+        if id1 == id3:
+            rBuf.append ((path, rlines))
+
+    print ('Defined in', len (dBuf), 'files:')
+    for path, type, dline in sorted (dBuf):
+        print (path + ': ' + str (dline) + ' (' + type + ')')
+
+    print()
+
+    print ('Referenced in', len (rBuf), 'files:')
+    for path, rlines in sorted (rBuf):
+        print (path + ': ' + rlines)
 
 else:
     print (argv[0] + ': Unknown subcommand: ' + cmd)
