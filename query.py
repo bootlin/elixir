@@ -3,8 +3,9 @@
 from sys import argv
 from lib import echo, script, scriptLines
 import lib
+import data
 
-db = lib.DB()
+db = data.DB()
 
 cmd = argv[1]
 
@@ -46,8 +47,8 @@ elif cmd == 'ident':
         exit()
 
     vers = db.vers.get (version).iter()
-    defs = db.defs.get (ident).iter()
-    refs = db.refs.get (ident).iter()
+    defs = db.defs.get (ident).iter (dummy=True)
+    refs = db.refs.get (ident).iter (dummy=True)
 
     id2, type, dline = next (defs)
     id3, rlines = next (refs)
@@ -55,24 +56,13 @@ elif cmd == 'ident':
     dBuf = []
     rBuf = []
 
-    maxId = 999999999
-
     for id1, path in vers:
         while id1 > id2:
-            try:
-                id2, type, dline = next (defs)
-            except StopIteration:
-                id2 = maxId
-
+            id2, type, dline = next (defs)
         while id1 > id3:
-            try:
-                id3, rlines = next (refs)
-            except StopIteration:
-                id3 = maxId
-
+            id3, rlines = next (refs)
         if id1 == id2:
             dBuf.append ((path, type, dline))
-
         if id1 == id3:
             rBuf.append ((path, rlines))
 
@@ -80,9 +70,7 @@ elif cmd == 'ident':
     for path, type, dline in sorted (dBuf):
         print (path + ': ' + str (dline) + ' (' + type + ')')
 
-    print()
-
-    print ('Referenced in', len (rBuf), 'files:')
+    print ('\nReferenced in', len (rBuf), 'files:')
     for path, rlines in sorted (rBuf):
         print (path + ': ' + rlines)
 
