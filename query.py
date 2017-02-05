@@ -25,7 +25,6 @@ elif cmd == 'file':
 
     if ext == '.c' or ext == '.h':
         tokens = scriptLines ('tokenize-file', version, path)
-        del tokens[-1]
         toBe = True
         for tok in tokens:
             toBe = not toBe

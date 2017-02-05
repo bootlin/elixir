@@ -51,7 +51,8 @@ case $cmd in
         tr '\n<>' '\1\2\3' |
         sed 's/\/\*/</g' |
         sed 's/\*\//>/g' |
-        sed -r 's/(\W*)(<[^>]*>)?(\w*)/\1\2\n\3\n/g'
+        sed -r 's/(\W*)(<[^>]*>)?(\w*)/\1\2\n\3\n/g' |
+        head -n -1
         ;;
 
     untokenize)
