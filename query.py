@@ -4,8 +4,15 @@ from sys import argv
 from lib import echo, script, scriptLines
 import lib
 import data
+import os
 
-db = data.DB()
+try:
+    dbDir = os.environ['LXR_DATA_DIR']
+except KeyError:
+    print (argv[0] + ': LXR_DATA_DIR needs to be set')
+    exit (1)
+
+db = data.DB (dbDir)
 
 cmd = argv[1]
 

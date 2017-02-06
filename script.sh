@@ -1,7 +1,11 @@
 #!/bin/sh
 
-# FIXME: hardcoded path
-cd /srv/git/linux
+if [ ! -d "$LXR_REPO_DIR" ]; then
+    echo "$0: Can't find repository"
+    exit 1
+fi
+
+cd "$LXR_REPO_DIR"
 
 test $# -gt 0 || set help
 

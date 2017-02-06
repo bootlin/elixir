@@ -6,6 +6,7 @@ from binascii import hexlify, unhexlify
 from io import BytesIO
 import re
 from lib import autoBytes
+import os.path
 
 def pack_hash (a):
 	a = a.encode ('ascii')
@@ -118,8 +119,7 @@ import os.path
 
 class DirDB:
     def __init__ (self, dirname, contentType):
-        # FIXME: hardcoded path
-        self.path = 'databases/' + dirname + '/'
+        self.path = dirname + '/'
         self.ctype = contentType
 
     def exists (self, key):
@@ -134,9 +134,9 @@ class DirDB:
 
 class BsdDB:
     def __init__ (self, filename, contentType):
+        self.filename = filename
         self.db = bsddb3.db.DB()
-        # FIXME: hardcoded path
-        self.db.open ('databases/' + filename, flags=bsddb3.db.DB_RDONLY)
+        self.db.open (filename, flags=bsddb3.db.DB_RDONLY)
         self.ctype = contentType
 
     def exists (self, key):
@@ -150,7 +150,12 @@ class BsdDB:
         return p
 
 class DB:
-    def __init__ (self):
-        self.vers = DirDB ('versions', PathList)
-        self.defs = BsdDB ('definitions.db', DefList)
-        self.refs = BsdDB ('identrefs.db', RefList)
+    def __init__ (self, dir):
+        if os.path.isdir (dir):
+            self.dir = dir
+        else:
+            raise FileNotFoundError
+
+        self.vers = DirDB (dir + '/versions', PathList)
+        self.defs = BsdDB (dir + '/definitions.db', DefList)
+        self.refs = BsdDB (dir + '/identrefs.db', RefList)
