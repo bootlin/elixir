@@ -32,7 +32,9 @@ def unescape (bstr):
     return bstr
 
 def isIdent (bstr):
-    if re.search (b'_', bstr):
+    if len (bstr) < 3:
+        return False
+    elif re.search (b'_', bstr):
         return True
     elif re.search (b'^[A-Z0-9]*$', bstr):
         return True
@@ -42,4 +44,6 @@ def isIdent (bstr):
 def autoBytes (arg):
     if type (arg) is str:
         arg = arg.encode()
+    elif type (arg) is int:
+        arg = str(arg).encode()
     return arg

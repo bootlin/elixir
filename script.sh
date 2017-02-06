@@ -15,6 +15,8 @@ shift
 case $cmd in
     list-tags)
         git tag |
+        head -n 10 |
+        sed 's/^v//' |
         sed 's/$/.0/' |
         sort -V |
         sed 's/\.0$//'
@@ -51,7 +53,13 @@ case $cmd in
         ;;
 
     tokenize-file)
-        git cat-file blob v$1:$2 |
+        if [ "$1" = -b ]; then
+            ref=$2
+        else
+            ref=v$1:$2
+        fi
+
+        git cat-file blob $ref |
         tr '\n<>' '\1\2\3' |
         sed 's/\/\*/</g' |
         sed 's/\*\//>/g' |

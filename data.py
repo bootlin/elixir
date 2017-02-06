@@ -1,39 +1,10 @@
 #!/usr/bin/python3
 
 import bsddb3
-from struct import pack, unpack
-from binascii import hexlify, unhexlify
 from io import BytesIO
 import re
 from lib import autoBytes
 import os.path
-
-def pack_hash (a):
-	a = a.encode ('ascii')
-	a = unhexlify (a)
-	a = pack ('20s', a)
-	return a
-
-def unpack_hash (a):
-	a = unpack ('20s', a)
-	a = a[0]
-	a = hexlify (a)
-	a = a.decode ('ascii')
-	return a
-
-def pack_int (a):
-	a = pack ('>L', a)
-	return a
-
-def unpack_int (a):
-	a = unpack ('>L', a)
-	a = a[0]
-	return a
-
-def append_reflist (a, idx, string):
-	idx = pack_int (idx)
-	a = a + idx + string + b'E'
-	return a
 
 ##################################################################################
 
@@ -57,7 +28,7 @@ defTypeD = {v: k for k, v in defTypeR.items()}
 maxId = 999999999
 
 class DefList:
-    def __init__ (self, data):
+    def __init__ (self, data=b''):
         self.data = data
 
     def iter (self, dummy=False):
@@ -71,72 +42,72 @@ class DefList:
         if dummy:
             yield (maxId, None, None)
 
+    def append (self, id, type, line):
+        if type not in defTypeD:
+            return
+        p = str(id) + defTypeD[type] + str(line)
+        if self.data != b'':
+            p = ',' + p
+        self.data += p.encode()
+
+    def pack (self):
+        return self.data
+
 class PathList:
-    def __init__ (self, data):
+    def __init__ (self, data=b''):
         self.data = data
 
     def iter (self, dummy=False):
         for p in self.data.split (b'\n'):
-            p = re.search (b'(\d*)\t(.*)$', p)
-            id, path = p.groups()
+            if (p == b''): continue
+            id, path = p.split (b' ')
             id = int (id)
             path = path.decode()
             yield (id, path)
         if dummy:
             yield (maxId, None)
 
+    def append (self, id, path):
+        p = str(id).encode() + b' ' + path
+        self.data = self.data + p + b'\n'
+
+    def pack (self):
+        return self.data
+
 from io import BytesIO
 
 class RefList:
-    def __init__ (self, data):
-        if type (data) is bytes:
-            self.data = data
-        else:
-            self.data = b''
+    def __init__ (self, data=b''):
+        self.data = data
 
     def iter (self, dummy=False):
         size = len (self.data)
         s = BytesIO (self.data)
         while s.tell() < size:
-            b = s.read (4)
-            b = unpack_int (b)
-
-            # Reading byte by byte isn't optimal
-            t = BytesIO()
-            d = s.read (1)
-            while d != b'E':
-                t.write (d)
-                d = s.read (1)
-            c = t.getvalue()
+            line = s.readline()
+            line = line [:-1]
+            b,c = line.split (b':')
+            b = int (b.decode())
             c = c.decode()
-            t.close()
             yield (b, c)
         s.close()
         if dummy:
             yield (maxId, None)
 
-import os.path
+    def append (self, id, lines):
+        p = str(id) + ':' + lines + '\n'
+        self.data += p.encode()
 
-class DirDB:
-    def __init__ (self, dirname, contentType):
-        self.path = dirname + '/'
-        self.ctype = contentType
-
-    def exists (self, key):
-        return os.path.isfile (self.path + 'v' + key)
-
-    def get (self, key):
-        f = open (self.path + 'v' + key)
-        data = f.read()
-        data = data.encode()
-        f.close()
-        return self.ctype (data)
+    def pack (self):
+        return self.data
 
 class BsdDB:
     def __init__ (self, filename, contentType):
         self.filename = filename
         self.db = bsddb3.db.DB()
-        self.db.open (filename, flags=bsddb3.db.DB_RDONLY)
+        self.db.open (filename,
+            flags=bsddb3.db.DB_CREATE, # FIXME: handle locks
+            dbtype=bsddb3.db.DB_BTREE)
         self.ctype = contentType
 
     def exists (self, key):
@@ -149,6 +120,13 @@ class BsdDB:
         p = self.ctype (p)
         return p
 
+    def put (self, key, val):
+        key = autoBytes (key)
+        val = autoBytes (val)
+        if type (val) is not bytes:
+            val = val.pack()
+        self.db.put (key, val)
+
 class DB:
     def __init__ (self, dir):
         if os.path.isdir (dir):
@@ -156,6 +134,10 @@ class DB:
         else:
             raise FileNotFoundError
 
-        self.vers = DirDB (dir + '/versions', PathList)
+        self.vars = BsdDB (dir + '/variables.db', lambda x: int (x.decode()) )
+        self.blob = BsdDB (dir + '/blobs.db', lambda x: int (x.decode()) )
+        self.hash = BsdDB (dir + '/hashes.db', lambda x: x )
+        self.file = BsdDB (dir + '/filenames.db', lambda x: x.decode() )
+        self.vers = BsdDB (dir + '/versions.db', PathList)
         self.defs = BsdDB (dir + '/definitions.db', DefList)
-        self.refs = BsdDB (dir + '/identrefs.db', RefList)
+        self.refs = BsdDB (dir + '/references.db', RefList)

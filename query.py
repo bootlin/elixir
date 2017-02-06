@@ -33,10 +33,10 @@ elif cmd == 'file':
 
     if ext == '.c' or ext == '.h':
         tokens = scriptLines ('tokenize-file', version, path)
-        toBe = True
+        even = True
         for tok in tokens:
-            toBe = not toBe
-            if toBe and db.defs.exists (tok) and lib.isIdent (tok):
+            even = not even
+            if even and db.defs.exists (tok) and lib.isIdent (tok):
                 tok = b'\033[31m' + tok + b'\033[0m'
             else:
                 tok = lib.unescape (tok)
