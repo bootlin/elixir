@@ -1,0 +1,31 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+<title>$title</title>
+<link rel="stylesheet" href="/style.css" type="text/css" media="screen" />
+<link rel="stylesheet" href="/menu.css" type="text/css" media="screen" />
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<base href="$baseurl"/>
+</head>
+
+<body>
+
+<div id="wrapper">
+<div id="wrapper2">
+<div id="header">
+
+	<div id="logo">
+		<h1>Linux Cross Reference</h1>
+		<h2><a href="http://free-electrons.com">Free Electrons</a></h2>
+		<h2>Embedded Linux Experts</h2>
+		<p>
+		&nbsp;&bull;&nbsp;<a href="source/">source navigation</a> &nbsp;&bull;&nbsp;<a href="ident">identifier search</a> &nbsp;&bull;&nbsp;<a href="search">freetext search</a> &nbsp;&bull;&nbsp;
+		</p>
+	</div>
+</div>
+
+<div id="topbar">
+<p>Version: $versions
+</div>
+
+<h1>$banner</h1>
