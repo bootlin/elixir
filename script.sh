@@ -76,7 +76,7 @@ case $cmd in
     parse-defs)
         tmp=`mktemp -d`
         git cat-file blob "$1" > $tmp/$2
-        ctags -x $tmp/$2 | awk '{print $1" "$2" "$3}'
+        ctags -x --c-kinds=+p $tmp/$2 | awk '{print $1" "$2" "$3}'
         rm $tmp/$2
         rmdir $tmp
         ;;

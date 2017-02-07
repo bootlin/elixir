@@ -16,6 +16,7 @@ defTypeR = {
     'l': 'label',
     'M': 'macro',
     'm': 'member',
+    'p': 'prototype',
     's': 'struct',
     't': 'typedef',
     'u': 'union',
