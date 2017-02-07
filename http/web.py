@@ -32,7 +32,7 @@ print ('Content-Type: text/html;charset=utf-8\n')
 form = cgi.FieldStorage()
 version = form.getvalue ('v')
 if not (version and search ('^[A-Za-z0-9.-]+$', version)):
-    version = '2.6.11'
+    version = '4.9'
 
 url = os.environ['SCRIPT_URL']
 m = search ('^/source/(.*)$', url)
@@ -51,7 +51,7 @@ elif url == '/ident':
     url2 = 'ident?i='+ident+'&'
 
 head = open ('template-head').read()
-head = sub ('\$baseurl', 'http://lxr2', head)
+head = sub ('\$baseurl', 'http://lxrng', head)
 
 lines = shell_exec ('cd ..; ./query.py versions')
 va = OrderedDict()
@@ -168,7 +168,8 @@ if mode == 'source':
 
 
 elif mode == 'ident':
-    head = sub ('\$banner', ident, head)
+    field = '</h1>\n<form method="get" action="ident">\n<input type=hidden name="v" value="'+version+'">\nIdentifier: <input type="text" name="i" value="'+ident+'"size="60"/>\n<input type="submit" value="Go get it"/>\n</form>\n<h1>' + ident
+    head = sub ('\$banner', field, head)
     head = sub ('\$title', 'Linux identifier search "'+ident+'" - Linux Cross Reference - Free Electrons', head)
     print (head, end='')
 
