@@ -56,6 +56,7 @@ elif url == '/search':
 
 head = open ('template-head').read()
 head = sub ('\$baseurl', 'http://lxrng', head)
+head = sub ('\$vvar', version, head)
 
 lines = shell_exec ('cd ..; ./query.py versions')
 va = OrderedDict()
