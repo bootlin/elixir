@@ -50,6 +50,10 @@ elif url == '/ident':
         ident = 'INVALID'
     url2 = 'ident?i='+ident+'&'
 
+elif url == '/search':
+    mode = 'search'
+    url2 = 'search?'
+
 head = open ('template-head').read()
 head = sub ('\$baseurl', 'http://lxrng', head)
 
@@ -214,6 +218,13 @@ elif mode == 'ident':
                     print ('<li><a href="source/'+f+'?v='+version+'#L'+str(n)+'">line '+str(n)+'</a>')
                 print ('</ul>')
     print ('</ul>')
+
+elif mode == 'search':
+    head = sub ('\$banner', '', head)
+    head = sub ('\$title', 'Linux freetext search - Linux Cross Reference - Free Electrons', head)
+    print (head, end='')
+
+    print ('<form method="get" action="http://www.google.com/search"><input type="text"   name="q" size="31" maxlength="255" value="" /><input type="submit" value="Google Search" /><input type="radio"  name="sitesearch" value="" /> The Web<input type="radio"  name="sitesearch" value="lxr.free-electrons.com/source" checked="checked"/>lxr.free-electrons.com/source</form>')
 
 else:
     print (head)
