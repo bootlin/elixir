@@ -182,43 +182,46 @@ elif mode == 'ident':
     lines = iter (lines)
 
     m = search ('Defined in (\d*) file', next (lines))
-    num = int (m.group(1))
-    
-    print ('Defined in', num, 'files:')
-    print ('<ul>')
-    for i in range (0, num):
-        l = next (lines)
-        m = search ('^(.*): (\d*) \((.*)\)$', l)
-        f, n, t = m.groups()
-        print ('<li><a href="source/'+f+'?v='+version+'#L'+n+'">'+f+', line '+n+' (as a '+t+')</a>', end='')
-    print ('</ul>')
+    if m:
+        num = int (m.group(1))
 
-    next (lines)
+        print ('Defined in', num, 'files:')
+        print ('<ul>')
+        for i in range (0, num):
+            l = next (lines)
+            m = search ('^(.*): (\d*) \((.*)\)$', l)
+            f, n, t = m.groups()
+            print ('<li><a href="source/'+f+'?v='+version+'#L'+n+'">'+f+', line '+n+' (as a '+t+')</a>', end='')
+        print ('</ul>')
 
-    m = search ('Referenced in (\d*) file', next (lines))
-    num = int (m.group(1))
-    
-    print ('Referenced in', num, 'files:')
-    print ('<ul>')
-    for i in range (0, num):
-        l = next (lines)
-        m = search ('^(.*): (.*)$', l)
-        f = m.group (1)
-        ln = m.group (2).split (',')
-        if len (ln) == 1:
-            n = ln[0]
-            print ('<li><a href="source/'+f+'?v='+version+'#L'+str(n)+'">'+f+', line '+str(n)+'</a>', end='')
-        else:
-            if num > 100:    # Concise display
-                n = len (ln)
-                print ('<li><a href="source/'+f+'?v='+version+'">'+f+'</a>, '+str(n)+' times')
-            else:    # Verbose display
-                print ('<li>'+f)
-                print ('<ul>')
-                for n in ln:
-                    print ('<li><a href="source/'+f+'?v='+version+'#L'+str(n)+'">line '+str(n)+'</a>')
-                print ('</ul>')
-    print ('</ul>')
+        next (lines)
+
+        m = search ('Referenced in (\d*) file', next (lines))
+        num = int (m.group(1))
+
+        print ('Referenced in', num, 'files:')
+        print ('<ul>')
+        for i in range (0, num):
+            l = next (lines)
+            m = search ('^(.*): (.*)$', l)
+            f = m.group (1)
+            ln = m.group (2).split (',')
+            if len (ln) == 1:
+                n = ln[0]
+                print ('<li><a href="source/'+f+'?v='+version+'#L'+str(n)+'">'+f+', line '+str(n)+'</a>', end='')
+            else:
+                if num > 100:    # Concise display
+                    n = len (ln)
+                    print ('<li><a href="source/'+f+'?v='+version+'">'+f+'</a>, '+str(n)+' times')
+                else:    # Verbose display
+                    print ('<li>'+f)
+                    print ('<ul>')
+                    for n in ln:
+                        print ('<li><a href="source/'+f+'?v='+version+'#L'+str(n)+'">line '+str(n)+'</a>')
+                    print ('</ul>')
+        print ('</ul>')
+    else:
+        print ('Not used')
 
 elif mode == 'search':
     head = sub ('\$banner', '', head)
