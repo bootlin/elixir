@@ -15,10 +15,9 @@ shift
 case $cmd in
     list-tags)
         git tag |
-        head -n 10 |
         sed 's/^v//' |
         sed 's/$/.0/' |
-        sort -V |
+        sort -rV |
         sed 's/\.0$//'
         ;;
 
