@@ -97,10 +97,14 @@ head = sub ('\$versions', v, head)
 if mode == 'source':
     banner = '<a href="source/?v='+version+'">Linux</a>/'
     p2 = ''
-    for p in path.split ('/'):
-        if p == '': continue
+    p3 = path.split ('/')
+    last = p3[-1]
+    p3 = p3[:-1]
+    for p in p3:
         banner += '<a href="source/'+p2+p+'/?v='+version+'">'+p+'</a>/'
         p2 += p+'/'
+    if last != '':
+        banner += '<a href="source/'+p2+last+'?v='+version+'">'+last+'</a>'
 
     head = sub ('\$banner', banner, head)
     head = sub ('\$title', 'Linux/'+path+' - Linux Cross Reference - Free Electrons', head)
