@@ -2,9 +2,10 @@
 
 import subprocess
 import re
+import sys
 
 def echo (bstr):
-    print (bstr.decode(), end='')
+    sys.stdout.buffer.write (bstr)
 
 def script (*args):
     args = ('./script.sh',) + args
