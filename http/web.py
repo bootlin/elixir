@@ -55,7 +55,7 @@ elif url == '/search':
     url2 = 'search?'
 
 head = open ('template-head').read()
-head = sub ('\$baseurl', 'http://lxrng', head)
+head = sub ('\$baseurl', 'http://' + os.environ['HTTP_HOST'], head)
 head = sub ('\$vvar', version, head)
 
 lines = shell_exec ('cd ..; ./query.py versions')
