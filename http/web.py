@@ -47,7 +47,7 @@ elif url == '/ident':
     mode = 'ident'
     ident = form.getvalue ('i')
     if not (ident and search ('^[A-Za-z0-9_]*$', ident)):
-        ident = 'INVALID'
+        ident = ''
     url2 = 'ident?i='+ident+'&'
 
 elif url == '/search':
@@ -221,7 +221,8 @@ elif mode == 'ident':
                     print ('</ul>')
         print ('</ul>')
     else:
-        print ('Not used')
+        if ident != '':
+            print ('Not used')
 
 elif mode == 'search':
     head = sub ('\$banner', '', head)
