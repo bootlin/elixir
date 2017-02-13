@@ -46,7 +46,7 @@ if m:
 elif url == '/ident':
     mode = 'ident'
     ident = form.getvalue ('i')
-    if not (ident and search ('^[A-Za-z0-9_]*$', ident)):
+    if not (ident and search ('^[A-Za-z0-9_-]*$', ident)):
         ident = ''
     url2 = 'ident?i='+ident+'&'
 
@@ -182,7 +182,7 @@ elif mode == 'ident':
     head = sub ('\$title', 'Linux identifier search "'+ident+'" - Linux Cross Reference - Free Electrons', head)
     print (head, end='')
 
-    lines = shell_exec ('cd .. ; ./query.py ident '+version+' '+ident)
+    lines = shell_exec ('cd .. ; ./query.py ident '+version+" '"+ident+"'")
     lines = iter (lines)
 
     m = search ('Defined in (\d*) file', next (lines))
