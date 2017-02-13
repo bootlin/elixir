@@ -59,7 +59,11 @@ elif cmd == 'ident':
 
     vers = db.vers.get (version).iter()
     defs = db.defs.get (ident).iter (dummy=True)
-    refs = db.refs.get (ident).iter (dummy=True)
+    # FIXME: see why we can have a discrepancy between defs and refs
+    if db.refs.exists (ident):
+        refs = db.refs.get (ident).iter (dummy=True)
+    else:
+        refs = data.RefList().iter (dummy=True)
 
     id2, type, dline = next (defs)
     id3, rlines = next (refs)
