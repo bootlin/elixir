@@ -53,6 +53,10 @@ elif cmd == 'ident':
         print (argv[0] + ': Unknown identifier: ' + ident)
         exit()
 
+    if not db.vers.exists (version):
+        print (argv[0] + ': Unknown version: ' + version)
+        exit()
+
     vers = db.vers.get (version).iter()
     defs = db.defs.get (ident).iter (dummy=True)
     refs = db.refs.get (ident).iter (dummy=True)
