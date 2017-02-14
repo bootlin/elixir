@@ -17,7 +17,7 @@ case $cmd in
         git tag |
         sed 's/^v//' |
         sed 's/$/.0/' |
-        sort -rV |
+        sort $1 -V |
         sed 's/\.0$//'
         ;;
 

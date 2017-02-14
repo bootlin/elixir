@@ -17,8 +17,9 @@ db = data.DB (dbDir, readonly=True)
 cmd = argv[1]
 
 if cmd == 'versions':
-    p = script ('list-tags')
-    echo (p)
+    for p in scriptLines ('list-tags', '-r'):
+        if db.vers.exists (p):
+            echo (p + b'\n')
 
 elif cmd == 'dir':
     version = argv[2]
