@@ -26,11 +26,11 @@ case $cmd in
         ;;
 
     get-file)
-        git cat-file blob v$1:$2
+        git cat-file blob v$1:$2 2>/dev/null
         ;;
 
     get-dir)
-        git ls-tree -l "v$1:$2" |
+        git ls-tree -l "v$1:$2" 2>/dev/null |
         awk '{print $2" "$5" "$4}' |
         grep -v ' \.' |
         sort -t ' ' -k 1,1r -k 2,2
@@ -58,7 +58,7 @@ case $cmd in
             ref=v$1:$2
         fi
 
-        git cat-file blob $ref |
+        git cat-file blob $ref 2>/dev/null |
         tr '\n<>' '\1\2\3' |
         sed 's/\/\*/</g' |
         sed 's/\*\//>/g' |

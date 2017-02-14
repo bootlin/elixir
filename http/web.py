@@ -18,6 +18,13 @@ def shell_exec (cmd):
     del a[-1]
     return a
 
+realprint = print
+outputBuffer = ''
+
+def print (arg, end='\n'):
+    global outputBuffer
+    outputBuffer += arg + end;
+
 # enable debugging
 import cgitb
 cgitb.enable()
@@ -27,7 +34,7 @@ import os
 from re import search, sub
 from collections import OrderedDict
 
-print ('Content-Type: text/html;charset=utf-8\n')
+status = 200
 
 form = cgi.FieldStorage()
 version = form.getvalue ('v')
@@ -119,6 +126,9 @@ if mode == 'source':
         type = 'blob'
         lines += shell_exec ('cd ..; ./query.py file '+version+' \''+path+'\'')
 
+    if len (lines) == 1:
+        status = 404
+
     if type == 'tree':
         if path != '':
             lines[0] = 'back - -'
@@ -189,7 +199,7 @@ elif mode == 'ident':
     if m:
         num = int (m.group(1))
 
-        print ('Defined in', num, 'files:')
+        print ('Defined in'+str(num)+'files:')
         print ('<ul>')
         for i in range (0, num):
             l = next (lines)
@@ -203,7 +213,7 @@ elif mode == 'ident':
         m = search ('Referenced in (\d*) file', next (lines))
         num = int (m.group(1))
 
-        print ('Referenced in', num, 'files:')
+        print ('Referenced in'+str(num)+'files:')
         print ('<ul>')
         for i in range (0, num):
             l = next (lines)
@@ -227,6 +237,7 @@ elif mode == 'ident':
     else:
         if ident != '':
             print ('Not used')
+            status = 404
 
 elif mode == 'search':
     head = sub ('\$banner', '', head)
@@ -241,3 +252,8 @@ else:
 
 print (open ('template-tail').read(), end='')
 
+if status == 404:
+    realprint ('Status: 404 Not Found')
+
+realprint ('Content-Type: text/html;charset=utf-8\n')
+realprint (outputBuffer, end='')
