@@ -199,7 +199,7 @@ elif mode == 'ident':
     if m:
         num = int (m.group(1))
 
-        print ('Defined in'+str(num)+'files:')
+        print ('Defined in '+str(num)+' files:')
         print ('<ul>')
         for i in range (0, num):
             l = next (lines)
@@ -213,7 +213,7 @@ elif mode == 'ident':
         m = search ('Referenced in (\d*) file', next (lines))
         num = int (m.group(1))
 
-        print ('Referenced in'+str(num)+'files:')
+        print ('Referenced in '+str(num)+' files:')
         print ('<ul>')
         for i in range (0, num):
             l = next (lines)
