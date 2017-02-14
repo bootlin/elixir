@@ -103,12 +103,15 @@ class RefList:
         return self.data
 
 class BsdDB:
-    def __init__ (self, filename, contentType):
+    def __init__ (self, filename, readonly, contentType):
         self.filename = filename
         self.db = bsddb3.db.DB()
-        self.db.open (filename,
-            flags=bsddb3.db.DB_CREATE, # FIXME: handle locks
-            dbtype=bsddb3.db.DB_BTREE)
+        if readonly:
+            self.db.open (filename, flags=bsddb3.db.DB_RDONLY)
+        else:
+            self.db.open (filename,
+                flags=bsddb3.db.DB_CREATE,
+                dbtype=bsddb3.db.DB_BTREE)
         self.ctype = contentType
 
     def exists (self, key):
@@ -129,16 +132,18 @@ class BsdDB:
         self.db.put (key, val)
 
 class DB:
-    def __init__ (self, dir):
+    def __init__ (self, dir, readonly=True):
         if os.path.isdir (dir):
             self.dir = dir
         else:
             raise FileNotFoundError
 
-        self.vars = BsdDB (dir + '/variables.db', lambda x: int (x.decode()) )
-        self.blob = BsdDB (dir + '/blobs.db', lambda x: int (x.decode()) )
-        self.hash = BsdDB (dir + '/hashes.db', lambda x: x )
-        self.file = BsdDB (dir + '/filenames.db', lambda x: x.decode() )
-        self.vers = BsdDB (dir + '/versions.db', PathList)
-        self.defs = BsdDB (dir + '/definitions.db', DefList)
-        self.refs = BsdDB (dir + '/references.db', RefList)
+        ro = readonly
+
+        self.vars = BsdDB (dir + '/variables.db', ro, lambda x: int (x.decode()) )
+        self.blob = BsdDB (dir + '/blobs.db', ro, lambda x: int (x.decode()) )
+        self.hash = BsdDB (dir + '/hashes.db', ro, lambda x: x )
+        self.file = BsdDB (dir + '/filenames.db', ro, lambda x: x.decode() )
+        self.vers = BsdDB (dir + '/versions.db', ro, PathList)
+        self.defs = BsdDB (dir + '/definitions.db', ro, DefList)
+        self.refs = BsdDB (dir + '/references.db', ro, RefList)

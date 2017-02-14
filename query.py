@@ -12,7 +12,7 @@ except KeyError:
     print (argv[0] + ': LXR_DATA_DIR needs to be set')
     exit (1)
 
-db = data.DB (dbDir)
+db = data.DB (dbDir, readonly=True)
 
 cmd = argv[1]
 
