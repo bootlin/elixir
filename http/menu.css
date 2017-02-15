@@ -37,15 +37,7 @@
 	display:none;
 	}
 
-.menuitem:hover {
-	height:10em;
-	overflow:visible;
-	}
-.submenu li:hover > .subsubmenu {
-	display:block;
-	}
-
-#menu a {
+#menu a,span {
 	display:block;
 	margin:0; padding: 0.2em 0.5em;
 	text-align:center;
@@ -53,15 +45,16 @@
 	color:white;
 	border-top:1px solid #565F68;
 	border-left:1px solid #565F68;
+	cursor:pointer;
 	}
 #menu a:hover { background:black }
-.menuitem a { background:#565F68 }
-.menuitem ul a { background:#88AA88 }
+.menuitem span { background:#565F68 }
+.menuitem ul span { background:#88AA88 }
 .menuitem ul ul a { background:#AA8888 }
 .menuitem ul ul ul a { background:violet }
 .menuitem ul ul ul ul a { background:orange }
 
-#menu a {
+#menu a,span {
 	border-bottom:none;
 	font-weight:bold;
 	}

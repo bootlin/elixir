@@ -4,6 +4,7 @@
 <title>$title</title>
 <link rel="stylesheet" href="/style.css" type="text/css" media="screen" />
 <link rel="stylesheet" href="/menu.css" type="text/css" media="screen" />
+<script type="text/javascript" src="/menu.js"></script>
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
 <base href="$baseurl"/>
 </head>

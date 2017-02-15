@@ -86,12 +86,12 @@ v = '<ul id="menu">\n'
 b = 1
 for v1k in va:
     v1v = va[v1k]
-    v += ' <li class="menuitem" id="mi0'+str(b)+'"><a href="'+url2+'v='+v1k+'">v'+v1k+'</a>\n'
+    v += ' <li class="menuitem" id="mi0'+str(b)+'" onclick="mf1(this);"><span class="mel" onclick="closeSubMenus();">v'+v1k+'</span>\n'
     b += 1
     v += ' <ul class="submenu">\n'
     for v2k in v1v:
         v2v = v1v[v2k]
-        v += '  <li><a href="'+url2+'v='+v2k+'">v'+v2k+'</a>\n'
+        v += '  <li onclick="mf2(this);"><span class="mel2">v'+v2k+'</span>\n'
         v += '  <ul class="subsubmenu">\n'
         for v3 in v2v:
             v += '   <li><a href="'+url2+'v='+v3+'">v'+v3+'</a></li>\n'
