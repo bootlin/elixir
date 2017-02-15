@@ -18,9 +18,9 @@
 	width:10em; height:1.4em;
 	overflow:hidden;
 	}
-#mi01 { left:6em }
-#mi02 { left:16em }
-#mi03 { left:26em }
+#mi01 { left:16em }
+#mi02 { left:26em }
+#mi03 { left:36em }
 
 .menuitem ul {
 	display:block;

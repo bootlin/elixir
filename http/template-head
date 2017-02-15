@@ -27,7 +27,7 @@
 </div>
 
 <div id="topbar">
-<p>Version: $versions
+<p>Version: $vvar $versions
 </div>
 
 <h1>$banner</h1>
