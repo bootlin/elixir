@@ -77,8 +77,9 @@ elif cmd == 'ident':
             id2, type, dline = next (defs)
         while id1 > id3:
             id3, rlines = next (refs)
-        if id1 == id2:
+        while id1 == id2:
             dBuf.append ((path, type, dline))
+            id2, type, dline = next (defs)
         if id1 == id3:
             rBuf.append ((path, rlines))
 
