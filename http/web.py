@@ -127,6 +127,7 @@ if mode == 'source':
         lines += shell_exec ('cd ..; ./query.py file '+version+' \''+path+'\'')
 
     if len (lines) == 1:
+        print ('<br><b>This file does not exist.</b>')
         status = 404
 
     if type == 'tree':
@@ -236,7 +237,7 @@ elif mode == 'ident':
         print ('</ul>')
     else:
         if ident != '':
-            print ('Not used')
+            print ('<br><b>Not used</b>')
             status = 404
 
 elif mode == 'search':
