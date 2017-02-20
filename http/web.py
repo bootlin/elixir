@@ -168,23 +168,29 @@ if mode == 'source':
     elif type == 'blob':
         del (lines[0])
 
-        print ('<div id="lxrcode"><pre>')
+        print ('<div id="lxrcode">')
+        print ('<table><tr><td><pre>')
 
         width = len (str (len (lines))) 
         num = 1
         n2 = ('%'+str(width)+'d') % num
         for l in lines:
-            print ('<a name="L'+str(num)+'" href="source/'+path+'?v='+version+'#L'+str(num)+'">'+n2+'</a> ', end='')
+            print ('  <a name="L'+str(num)+'" href="source/'+path+'?v='+version+'#L'+str(num)+'">'+n2+'</a> ')
+            num += 1
+            n2 = ('%'+str(width)+'d') % num
+
+        print ('</pre></td><td><pre>')
+
+        for l in lines:
             l = cgi.escape (l)
             l = sub ('"', '&quot;', l)
             l = sub ('\033\[31m(.*?)\033\[0m', '<a href="ident?v='+version+'&i=\\1">\\1</a>', l)
             l = sub ('\033\[32m', '<i>', l)
             l = sub ('\033\[0m', '</i>', l)
             print (l)
-            num += 1
-            n2 = ('%'+str(width)+'d') % num
 
-        print ('</pre></div>', end='')
+        print ('</pre></td></tr></table>')
+        print ('</div>', end='')
 
 
 elif mode == 'ident':

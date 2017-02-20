@@ -70,7 +70,7 @@ table.listing td{text-align:left;padding:0.25em 0.25em;border-width:thin;border-
 .listing-odd{background-color:transparent;}
 .listing .listing-even a{color:white;background-color:#6d7dd1;}
 #lxrcode{background-color:white;font-weight:bold;}
-#lxrcode pre{font-family:Monaco, "Courier New", Courier, monospace;font-size:0.95em;padding:1em;color:#787878;overflow:auto;background-color:white;}
+#lxrcode pre{font-family:Monaco, "Courier New", Courier, monospace;font-size:0.95em;padding:0;color:#787878;overflow:auto;background-color:white;}
 #lxrcode a{color:black;background-color:white;}
 #comments{margin-top:3em;}
 .commentlist li, #commentform input, #commentform textarea{font:0.9em 'Lucida Grande', Verdana, Arial, Sans-Serif;}
