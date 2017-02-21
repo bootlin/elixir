@@ -39,7 +39,7 @@ status = 200
 form = cgi.FieldStorage()
 version = form.getvalue ('v')
 if not (version and search ('^[A-Za-z0-9.-]+$', version)):
-    version = '4.9'
+    version = '4.10'
 
 url = os.environ['SCRIPT_URL']
 m = search ('^/source/(.*)$', url)
