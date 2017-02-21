@@ -7,7 +7,7 @@ ul, ol, dt, dl{margin-top:0.5em;}
 li, dd{margin-top:0.35em;}
 a{text-decoration:none;border-bottom:1px dotted #999999;color:#0A0A0A;}
 code{font-family:Monaco, "Courier New", Courier, monospace;font-size:1em;color:black;background-color:inherit;padding:0 0.1em;}
-pre{font-family:Monaco, "Courier New", Courier, monospace;font-size:1em;padding:1em;color:White;background-color:#a9afd1;overflow:auto;}
+pre{font-family:Monaco, "Courier New", Courier, monospace;font-size:1em;padding:1em;color:White;background-color:#a9afd1;}
 a:hover{background:none;}
 #wrapper{width:940px;margin:0 auto;padding:20px;background:white;}
 #header{width:940px;height:158px;margin:0 auto;background:white url(images/img01.jpg) no-repeat left top;}
@@ -69,8 +69,8 @@ table.listing td{text-align:left;padding:0.25em 0.25em;border-width:thin;border-
 .listing-even{color:white;background-color:#6d7dd1;}
 .listing-odd{background-color:transparent;}
 .listing .listing-even a{color:white;background-color:#6d7dd1;}
-#lxrcode{background-color:white;font-weight:bold;}
-#lxrcode pre{font-family:Monaco, "Courier New", Courier, monospace;font-size:0.95em;padding:0;color:#787878;overflow:auto;background-color:white;}
+#lxrcode{background-color:white;font-weight:bold;overflow:auto;}
+#lxrcode pre{font-family:Monaco, "Courier New", Courier, monospace;font-size:0.95em;padding:0;color:#787878;background-color:white;}
 #lxrcode a{color:black;background-color:white;}
 #comments{margin-top:3em;}
 .commentlist li, #commentform input, #commentform textarea{font:0.9em 'Lucida Grande', Verdana, Arial, Sans-Serif;}
