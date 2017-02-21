@@ -171,13 +171,15 @@ if mode == 'source':
         print ('<div id="lxrcode">')
         print ('<table><tr><td><pre>')
 
-        width = len (str (len (lines))) 
+        width1 = len (str (len (lines)))
         num = 1
-        n2 = ('%'+str(width)+'d') % num
+        width2 = len (str (num))
+        space = ' ' * (width1 - width2)
         for l in lines:
-            print ('  <a name="L'+str(num)+'" href="source/'+path+'?v='+version+'#L'+str(num)+'">'+n2+'</a> ')
+            print ('  '+space+'<a name="L'+str(num)+'" href="source/'+path+'?v='+version+'#L'+str(num)+'">'+str(num)+'</a> ')
             num += 1
-            n2 = ('%'+str(width)+'d') % num
+            width2 = len (str (num))
+            space = ' ' * (width1 - width2)
 
         print ('</pre></td><td><pre>')
 
