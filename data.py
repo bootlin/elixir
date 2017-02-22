@@ -124,12 +124,14 @@ class BsdDB:
         p = self.ctype (p)
         return p
 
-    def put (self, key, val):
+    def put (self, key, val, sync=False):
         key = autoBytes (key)
         val = autoBytes (val)
         if type (val) is not bytes:
             val = val.pack()
         self.db.put (key, val)
+        if sync:
+            self.db.sync()
 
 class DB:
     def __init__ (self, dir, readonly=True):

@@ -48,7 +48,7 @@ def updateVersions (tag):
     obj = PathList()
     for idx, path in buf:
         obj.append (idx, path)
-    db.vers.put (tag, obj)
+    db.vers.put (tag, obj, sync=True)
 
 def updateDefinitions (blobs):
     for blob in blobs:
