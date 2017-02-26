@@ -39,6 +39,8 @@ def isIdent (bstr):
         return True
     elif re.search (b'^[A-Z0-9]*$', bstr):
         return True
+    elif len (bstr) >= 6:
+        return True
     else:
         return False
 
