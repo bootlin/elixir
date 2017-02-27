@@ -32,12 +32,38 @@ def unescape (bstr):
         bstr = bstr.replace (a, b)
     return bstr
 
+blacklist = (
+    b'struct',
+    b'static',
+    b'define',
+    b'NULL',
+    b'sizeof',
+    b'status',
+    b'device',
+    b'adapter',
+    b'inline',
+    b'offset',
+    b'failed',
+    b'dentry',
+    b'retval',
+    b'buffer',
+    b'length',
+    b'result',
+    b'unlikely',
+    b'extern',
+    b'driver',
+    )
+
 def isIdent (bstr):
     if len (bstr) < 3:
+        return False
+    elif bstr in blacklist:
         return False
     elif re.search (b'_', bstr):
         return True
     elif re.search (b'^[A-Z0-9]*$', bstr):
+        return True
+    elif len (bstr) >= 6:
         return True
     else:
         return False
