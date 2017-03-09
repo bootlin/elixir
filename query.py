@@ -39,6 +39,12 @@ if cmd == 'versions':
         if db.vers.exists (p):
             echo (p + b'\n')
 
+elif cmd == 'type':
+    version = argv[2]
+    path = argv[3]
+    p = script ('get-type', version, path)
+    echo (p)
+
 elif cmd == 'dir':
     version = argv[2]
     path = argv[3]

@@ -137,14 +137,18 @@ if mode == 'source':
 
     lines = ['null - -']
     
-    if path[-1:] == '/' or path == '':
-        type = 'tree'
-        lines += shell_exec ('cd ..; ./query.py dir '+version+' \''+path+'\'')
+    type = shell_exec ('cd ..; ./query.py type '+version+' \''+path+'\'')
+    if len (type) == 1:
+        type = type[0]
+        if type == 'tree':
+            if path[-1:] == '/' or path == '':
+                lines += shell_exec ('cd ..; ./query.py dir '+version+' \''+path+'\'')
+            else:
+                status = 302
+                location = '/source/'+path+'/?v='+version
+        elif type == 'blob':
+            lines += shell_exec ('cd ..; ./query.py file '+version+' \''+path+'\'')
     else:
-        type = 'blob'
-        lines += shell_exec ('cd ..; ./query.py file '+version+' \''+path+'\'')
-
-    if len (lines) == 1:
         print ('<br><b>This file does not exist.</b>')
         status = 404
 
@@ -281,6 +285,10 @@ print (open ('template-tail').read(), end='')
 
 if status == 404:
     realprint ('Status: 404 Not Found')
+elif status == 302:
+    realprint ('Status: 302 Found')
+    realprint ('Location: '+location+'\n')
+    exit()
 
 realprint ('Content-Type: text/html;charset=utf-8\n')
 realprint (outputBuffer, end='')

@@ -39,6 +39,10 @@ case $cmd in
         sed 's/\.0$//'
         ;;
 
+    get-type)
+        git cat-file -t v$1:$2 2>/dev/null
+        ;;
+
     get-blob)
         git cat-file blob $1
         ;;
