@@ -229,6 +229,8 @@ elif mode == 'ident':
     m = search ('Defined in (\d*) file', next (lines))
     if m:
         num = int (m.group(1))
+        if num == 0:
+            status = 404;
 
         print ('Defined in '+str(num)+' files:')
         print ('<ul>')
