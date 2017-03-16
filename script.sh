@@ -81,10 +81,13 @@ case $cmd in
         fi
 
         git cat-file blob $ref 2>/dev/null |
-        tr '\n<>' '\1\2\3' |
+        tr '\n<>%' '\1\2\3\4' |
         sed 's/\/\*/</g' |
         sed 's/\*\//>/g' |
-        sed -r 's/(\W*)(<[^>]*>)?(\w*)/\1\2\n\3\n/g' |
+        sed 's/\\"/%/g' |
+        sed -r 's/([^A-Za-z0-9_"]*)(<[^>]*>)?("[^"]*")?(\w*)/\1\2\3\n\4\n/g' |
+        sed 's/%/\\"/g' |
+        tr '\4' '%' |
         head -n -1
         ;;
 
