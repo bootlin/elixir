@@ -41,7 +41,7 @@ outputBuffer = ''
 
 def print (arg, end='\n'):
     global outputBuffer
-    outputBuffer += arg + end;
+    outputBuffer += arg + end
 
 # enable debugging
 import cgitb
@@ -230,7 +230,7 @@ elif mode == 'ident':
     if m:
         num = int (m.group(1))
         if num == 0:
-            status = 404;
+            status = 404
 
         print ('Defined in '+str(num)+' files:')
         print ('<ul>')
