@@ -210,6 +210,7 @@ if mode == 'source':
             l = sub ('"', '&quot;', l)
             l = sub ('\033\[31m(.*?)\033\[0m', '<a href="ident?v='+version+'&i=\\1">\\1</a>', l)
             l = sub ('\033\[32m', '<i>', l)
+            l = sub ('\033\[33m', '<i>', l)
             l = sub ('\033\[0m', '</i>', l)
             print (l)
 
