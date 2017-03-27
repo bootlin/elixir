@@ -55,6 +55,95 @@ def unescape (bstr):
     return bstr
 
 blacklist = (
+    b'if',
+    b'dev',
+    b'i',
+    b'ret',
+    b'err',
+    b'flags',
+    b'h',
+    b'u32',
+    b'data',
+    b'const',
+    b'skb',
+    b'len',
+    b'name',
+    b'priv',
+    b'p',
+    b'inode',
+    b'val',
+    b'u8',
+    b'info',
+    b'buf',
+    b'rc',
+    b'type',
+    b'out',
+    b'cmd',
+    b'port',
+    b'size',
+    b'page',
+    b'tp',
+    b'pdev',
+    b'state',
+    b'addr',
+    b'rdev',
+    b'sk',
+    b'count',
+    b'hw',
+    b'lock',
+    b'error',
+    b'reg',
+    b'file',
+    b's',
+    b'u64',
+    b'id',
+    b'tmp',
+    b'u16',
+    b'codec',
+    b'bool',
+    b'req',
+    b'bp',
+    b'c',
+    b'chip',
+    b'r',
+    b'n',
+    b'value',
+    b'false',
+    b'start',
+    b'index',
+    b'res',
+    b'regs',
+    b'j',
+    b'true',
+    b'base',
+    b'irq',
+    b'x',
+    b'net',
+    b'mode',
+    b'vcpu',
+    b'host',
+    b'spec',
+    b'card',
+    b'sb',
+    b'mask',
+    b'list',
+    b'ops',
+    b'next',
+    b'ctx',
+    b'event',
+    b'mddev',
+    b'q',
+    b'attr',
+    b'cpu',
+    b'desc',
+    b'msg',
+    b't',
+    b'entry',
+    b'arg',
+    b'idx',
+    b'end',
+    b'root',
+    b'memset',
     b'struct',
     b'static',
     b'define',
@@ -77,18 +166,12 @@ blacklist = (
     )
 
 def isIdent (bstr):
-    if len (bstr) < 3:
+    if len (bstr) < 2:
         return False
     elif bstr in blacklist:
         return False
-    elif re.search (b'_', bstr):
-        return True
-    elif re.search (b'^[A-Z0-9]*$', bstr):
-        return True
-    elif len (bstr) >= 6:
-        return True
     else:
-        return False
+        return True
 
 def autoBytes (arg):
     if type (arg) is str:
