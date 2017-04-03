@@ -57,7 +57,7 @@ status = 200
 form = cgi.FieldStorage()
 version = form.getvalue ('v')
 if not (version and search ('^[A-Za-z0-9.-]+$', version)):
-    version = '4.10'
+    version = 'v4.10'
 
 url = os.environ['SCRIPT_URL']
 m = search ('^/source/(.*)$', url)
@@ -86,10 +86,10 @@ head = sub ('\$vvar', version, head)
 lines = shell_exec ('cd ..; ./query.py versions')
 va = OrderedDict()
 for l in lines:
-    if search ('^2\.6', l):
-        m = search ('^(2\.6)(\.[0-9]*)((\.|-).*)?$', l)
+    if search ('^v2\.6', l):
+        m = search ('^(v2\.6)(\.[0-9]*)((\.|-).*)?$', l)
     else:
-        m = search ('^([0-9]*)(\.[0-9]*)((\.|-).*)?$', l)
+        m = search ('^(v[0-9]*)(\.[0-9]*)((\.|-).*)?$', l)
 
     m1 = m.group(1)
     m2 = m.group(2)
@@ -104,15 +104,15 @@ v = '<ul id="menu">\n'
 b = 1
 for v1k in va:
     v1v = va[v1k]
-    v += ' <li class="menuitem" id="mi0'+str(b)+'" onclick="mf1(this);"><span class="mel" onclick="closeSubMenus();">v'+v1k+'</span>\n'
+    v += ' <li class="menuitem" id="mi0'+str(b)+'" onclick="mf1(this);"><span class="mel" onclick="closeSubMenus();">'+v1k+'</span>\n'
     b += 1
     v += ' <ul class="submenu">\n'
     for v2k in v1v:
         v2v = v1v[v2k]
-        v += '  <li onclick="mf2(this);"><span class="mel2">v'+v2k+'</span>\n'
+        v += '  <li onclick="mf2(this);"><span class="mel2">'+v2k+'</span>\n'
         v += '  <ul class="subsubmenu">\n'
         for v3 in v2v:
-            v += '   <li><a href="'+url2+'v='+v3+'">v'+v3+'</a></li>\n'
+            v += '   <li><a href="'+url2+'v='+v3+'">'+v3+'</a></li>\n'
         v += '  </ul></li>\n'
     v += ' </ul></li>\n'
 v += '</ul>\n'
