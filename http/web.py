@@ -60,13 +60,13 @@ if not (version and search ('^[A-Za-z0-9.-]+$', version)):
     version = 'v4.10'
 
 url = os.environ['SCRIPT_URL']
-m = search ('^/source/(.*)$', url)
+m = search ('^/source(.*)$', url)
 if m:
     mode = 'source'
     path = m.group (1)
     if not search ('^[A-Za-z0-9_/.,+-]*$', path):
         path = 'INVALID'
-    url2 = 'source/'+path+'?'
+    url2 = 'source'+path+'?'
 
 elif url == '/ident':
     mode = 'ident'
@@ -120,19 +120,15 @@ v += '</ul>\n'
 head = sub ('\$versions', v, head)
 
 if mode == 'source':
-    banner = '<a href="source/?v='+version+'">Linux</a>/'
+    banner = '<a href="source?v='+version+'">Linux</a>'
     p2 = ''
-    p3 = path.split ('/')
-    last = p3[-1]
-    p3 = p3[:-1]
+    p3 = path.split ('/') [1:]
     for p in p3:
-        banner += '<a href="source/'+p2+p+'/?v='+version+'">'+p+'</a>/'
-        p2 += p+'/'
-    if last != '':
-        banner += '<a href="source/'+p2+last+'?v='+version+'">'+last+'</a>'
+        banner += '/<a href="source'+p2+'/'+p+'?v='+version+'">'+p+'</a>'
+        p2 += '/'+p
 
     head = sub ('\$banner', banner, head)
-    head = sub ('\$title', 'Linux/'+path+' - Linux Cross Reference - Free Electrons', head)
+    head = sub ('\$title', 'Linux'+path+' - Linux Cross Reference - Free Electrons', head)
     print (head, end='')
 
     lines = ['null - -']
@@ -141,11 +137,12 @@ if mode == 'source':
     if len (type) == 1:
         type = type[0]
         if type == 'tree':
-            if path[-1:] == '/' or path == '':
+            if path[-1:] != '/':
                 lines += shell_exec ('cd ..; ./query.py dir '+version+' \''+path+'\'')
             else:
                 status = 302
-                location = '/source/'+path+'/?v='+version
+                path = path[:-1]
+                location = '/source'+path+'?v='+version
         elif type == 'blob':
             lines += shell_exec ('cd ..; ./query.py file '+version+' \''+path+'\'')
     else:
@@ -165,22 +162,22 @@ if mode == 'source':
             elif type == 'tree':
                 icon = 'folder.gif'
                 size = ''
-                path2 = path+name+'/'
-                name = name+'/'
+                path2 = path+'/'+name
+                name = name
             elif type == 'blob':
                 icon = 'text.gif'
                 size = size+' bytes'
-                path2 = path+name
+                path2 = path+'/'+name
             elif type == 'back':
                 icon = 'back.gif'
                 size = ''
-                path2 = os.path.dirname (path[:-1]) + '/'
-                if path2 == '/': path2 = './'
+                path2 = os.path.dirname (path[:-1])
+                if path2 == '/': path2 = ''
                 name = 'Parent directory'
 
             print ('  <tr>')
-            print ('    <td><a href="source/'+path2+'?v='+version+'"><img src="/icons/'+icon+'" width="20" height="22" border="0" alt="'+icon+'"/></a></td>')
-            print ('    <td><a href="source/'+path2+'?v='+version+'">'+name+'</a></td>')
+            print ('    <td><a href="source'+path2+'?v='+version+'"><img src="/icons/'+icon+'" width="20" height="22" border="0" alt="'+icon+'"/></a></td>')
+            print ('    <td><a href="source'+path2+'?v='+version+'">'+name+'</a></td>')
             print ('    <td>'+size+'</td>')
 
             print ('  </tr>\n')
@@ -198,7 +195,7 @@ if mode == 'source':
         width2 = len (str (num))
         space = ' ' * (width1 - width2)
         for l in lines:
-            print ('  '+space+'<a name="L'+str(num)+'" href="source/'+path+'?v='+version+'#L'+str(num)+'">'+str(num)+'</a> ')
+            print ('  '+space+'<a name="L'+str(num)+'" href="source'+path+'?v='+version+'#L'+str(num)+'">'+str(num)+'</a> ')
             num += 1
             width2 = len (str (num))
             space = ' ' * (width1 - width2)

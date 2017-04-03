@@ -30,6 +30,11 @@ test $# -gt 0 || set help
 cmd=$1
 shift
 
+denormalize()
+{
+    echo $1 | cut -c 2-
+}
+
 case $cmd in
     list-tags)
         git tag |
@@ -37,7 +42,7 @@ case $cmd in
         ;;
 
     get-type)
-        git cat-file -t $1:$2 2>/dev/null
+        git cat-file -t "$1:`denormalize $2`" 2>/dev/null
         ;;
 
     get-blob)
@@ -45,11 +50,11 @@ case $cmd in
         ;;
 
     get-file)
-        git cat-file blob $1:$2 2>/dev/null
+        git cat-file blob "$1:`denormalize $2`" 2>/dev/null
         ;;
 
     get-dir)
-        git ls-tree -l "$1:$2" 2>/dev/null |
+        git ls-tree -l "$1:`denormalize $2`" 2>/dev/null |
         awk '{print $2" "$5" "$4}' |
         grep -v ' \.' |
         sort -t ' ' -k 1,1r -k 2,2
@@ -74,7 +79,7 @@ case $cmd in
         if [ "$1" = -b ]; then
             ref=$2
         else
-            ref=$1:$2
+            ref="$1:`denormalize $2`"
         fi
 
         git cat-file blob $ref 2>/dev/null |
