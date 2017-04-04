@@ -20,7 +20,7 @@
 		<h2><a href="http://free-electrons.com">Free Electrons</a></h2>
 		<h2>Embedded Linux Experts</h2>
 		<p>
-		&nbsp;&bull;&nbsp;<a href="source?v=$vvar">source navigation</a>&nbsp;&bull;&nbsp;<a href="ident?v=$vvar">identifier search</a>&nbsp;&bull;&nbsp;<a href="search?v=$vvar">freetext search</a>&nbsp;&bull;&nbsp;<a href="http://lxr.free-electrons.com" style="color:#00FF00">Back to LXR</a>&nbsp;&bull;&nbsp;
+		&nbsp;&bull;&nbsp;<a href="linux/$vvar/source">source navigation</a>&nbsp;&bull;&nbsp;<a href="linux/$vvar/ident">identifier search</a>&nbsp;&bull;&nbsp;<a href="linux/$vvar/search">freetext search</a>&nbsp;&bull;&nbsp;<a href="http://lxr.free-electrons.com" style="color:#00FF00">Back to LXR</a>&nbsp;&bull;&nbsp;
 		</p>
 	</div>
 </div>
