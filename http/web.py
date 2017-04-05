@@ -101,7 +101,7 @@ elif status == 302:
     exit()
 
 head = open ('template-head').read()
-head = sub ('\$baseurl', 'http://' + os.environ['HTTP_HOST'], head)
+head = sub ('\$baseurl', 'http://' + os.environ['HTTP_HOST'] + '/e/linux/', head)
 head = sub ('\$vvar', version, head)
 
 lines = shell_exec ('cd ..; ./query.py versions')
@@ -133,7 +133,7 @@ for v1k in va:
         v += '  <li onclick="mf2(this);"><span class="mel2">'+v2k+'</span>\n'
         v += '  <ul class="subsubmenu">\n'
         for v3 in v2v:
-            v += '   <li><a href="e/linux/'+v3+'/'+url2+'">'+v3+'</a></li>\n'
+            v += '   <li><a href="'+v3+'/'+url2+'">'+v3+'</a></li>\n'
         v += '  </ul></li>\n'
     v += ' </ul></li>\n'
 v += '</ul>\n'
@@ -141,12 +141,12 @@ v += '</ul>\n'
 head = sub ('\$versions', v, head)
 
 if mode == 'source':
-    banner = '<a href="e/linux/'+version+'/source">Linux</a>'
+    banner = '<a href="'+version+'/source">Linux</a>'
     p2 = ''
     p3 = path.split ('/') [1:]
     for p in p3:
         p2 += '/'+p
-        banner += '/<a href="e/linux/'+version+'/source'+p2+'">'+p+'</a>'
+        banner += '/<a href="'+version+'/source'+p2+'">'+p+'</a>'
 
     head = sub ('\$banner', banner, head)
     head = sub ('\$title', 'Linux'+path+' - Linux Cross Reference - Free Electrons', head)
@@ -192,8 +192,8 @@ if mode == 'source':
                 name = 'Parent directory'
 
             print ('  <tr>')
-            print ('    <td><a href="e/linux/'+version+'/source'+path2+'"><img src="/icons/'+icon+'" width="20" height="22" border="0" alt="'+icon+'"/></a></td>')
-            print ('    <td><a href="e/linux/'+version+'/source'+path2+'">'+name+'</a></td>')
+            print ('    <td><a href="'+version+'/source'+path2+'"><img src="/icons/'+icon+'" width="20" height="22" border="0" alt="'+icon+'"/></a></td>')
+            print ('    <td><a href="'+version+'/source'+path2+'">'+name+'</a></td>')
             print ('    <td>'+size+'</td>')
 
             print ('  </tr>\n')
@@ -211,7 +211,7 @@ if mode == 'source':
         width2 = len (str (num))
         space = ' ' * (width1 - width2)
         for l in lines:
-            print ('  '+space+'<a name="L'+str(num)+'" href="e/linux/'+version+'/source'+path+'#L'+str(num)+'">'+str(num)+'</a> ')
+            print ('  '+space+'<a name="L'+str(num)+'" href="'+version+'/source'+path+'#L'+str(num)+'">'+str(num)+'</a> ')
             num += 1
             width2 = len (str (num))
             space = ' ' * (width1 - width2)
@@ -221,7 +221,7 @@ if mode == 'source':
         for l in lines:
             l = cgi.escape (l)
             l = sub ('"', '&quot;', l)
-            l = sub ('\033\[31m(.*?)\033\[0m', '<a href="e/linux/'+version+'/ident/\\1">\\1</a>', l)
+            l = sub ('\033\[31m(.*?)\033\[0m', '<a href="'+version+'/ident/\\1">\\1</a>', l)
             l = sub ('\033\[32m', '<i>', l)
             l = sub ('\033\[33m', '<i>', l)
             l = sub ('\033\[0m', '</i>', l)
@@ -232,7 +232,7 @@ if mode == 'source':
 
 
 elif mode == 'ident':
-    field = '</h1>\n<form method="get" action="e/linux/'+version+'/ident">\nIdentifier: <input type="text" name="i" value="'+ident+'"size="60"/>\n<input type="submit" value="Go get it"/>\n</form>\n<h1>' + ident
+    field = '</h1>\n<form method="get" action="'+version+'/ident">\nIdentifier: <input type="text" name="i" value="'+ident+'"size="60"/>\n<input type="submit" value="Go get it"/>\n</form>\n<h1>' + ident
     head = sub ('\$banner', field, head)
     head = sub ('\$title', 'Linux identifier search "'+ident+'" - Linux Cross Reference - Free Electrons', head)
     print (head, end='')
@@ -252,7 +252,7 @@ elif mode == 'ident':
             l = next (lines)
             m = search ('^(.*): (\d*) \((.*)\)$', l)
             f, n, t = m.groups()
-            print ('<li><a href="e/linux/'+version+'/source/'+f+'#L'+n+'">'+f+', line '+n+' (as a '+t+')</a>', end='')
+            print ('<li><a href="'+version+'/source/'+f+'#L'+n+'">'+f+', line '+n+' (as a '+t+')</a>', end='')
         print ('</ul>')
 
         next (lines)
@@ -269,16 +269,16 @@ elif mode == 'ident':
             ln = m.group (2).split (',')
             if len (ln) == 1:
                 n = ln[0]
-                print ('<li><a href="e/linux/'+version+'/source/'+f+'#L'+str(n)+'">'+f+', line '+str(n)+'</a>', end='')
+                print ('<li><a href="'+version+'/source/'+f+'#L'+str(n)+'">'+f+', line '+str(n)+'</a>', end='')
             else:
                 if num > 100:    # Concise display
                     n = len (ln)
-                    print ('<li><a href="e/linux/'+version+'/source/'+f+'">'+f+'</a>, '+str(n)+' times')
+                    print ('<li><a href="'+version+'/source/'+f+'">'+f+'</a>, '+str(n)+' times')
                 else:    # Verbose display
                     print ('<li>'+f)
                     print ('<ul>')
                     for n in ln:
-                        print ('<li><a href="e/linux/'+version+'/source/'+f+'#L'+str(n)+'">line '+str(n)+'</a>')
+                        print ('<li><a href="'+version+'/source/'+f+'#L'+str(n)+'">line '+str(n)+'</a>')
                     print ('</ul>')
         print ('</ul>')
     else:
