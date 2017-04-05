@@ -92,6 +92,8 @@ if m:
     elif cmd == 'search':
         mode = 'search'
         url2 = 'search'
+else:
+    status = 404
 
 if status == 301:
     realprint ('Status: 301 Moved Permanently')
@@ -100,6 +102,9 @@ if status == 301:
 elif status == 302:
     realprint ('Status: 302 Found')
     realprint ('Location: '+location+'\n')
+    exit()
+elif status == 404:
+    realprint ('Status: 404 Not Found\n')
     exit()
 
 head = open ('template-head').read()
