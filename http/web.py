@@ -71,7 +71,7 @@ if m:
         if len (path) > 0 and path[-1] == '/':
             path = path[:-1]
             status = 301
-            location = '/linux/'+version+'/source'+path
+            location = '/'+project+'/'+version+'/source'+path
         else:
             mode = 'source'
             if not search ('^[A-Za-z0-9_/.,+-]*$', path):
@@ -83,7 +83,7 @@ if m:
         ident2 = form.getvalue ('i')
         if ident == '' and ident2:
             status = 302
-            location = '/linux/'+version+'/ident/'+ident2
+            location = '/'+project+'/'+version+'/ident/'+ident2
         else:
             mode = 'ident'
             if not (ident and search ('^[A-Za-z0-9_-]*$', ident)):
