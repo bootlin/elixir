@@ -55,21 +55,23 @@ from collections import OrderedDict
 status = 200
 
 url = os.environ['SCRIPT_URL']
-m = search ('^/e/linux/([^/]*)/([^/]*)(.*)$', url)
+m = search ('^/([^/]*)/([^/]*)/([^/]*)(.*)$', url)
 if m:
-    version = m.group (1)
-    cmd = m.group (2)
-    arg = m.group (3)
-    if not (version and search ('^[A-Za-z0-9.-]+$', version)):
+    project = m.group (1)
+    version = m.group (2)
+    cmd = m.group (3)
+    arg = m.group (4)
+    if not (project and search ('^[A-Za-z0-9-]+$', project)) \
+    or not (version and search ('^[A-Za-z0-9.-]+$', version)):
         status = 302
-        location = '/e/linux/v4.10/'+cmd+arg
+        location = '/linux/v4.10/'+cmd+arg
         cmd = ''
     if cmd == 'source':
         path = arg
         if len (path) > 0 and path[-1] == '/':
             path = path[:-1]
             status = 301
-            location = '/e/linux/'+version+'/source'+path
+            location = '/linux/'+version+'/source'+path
         else:
             mode = 'source'
             if not search ('^[A-Za-z0-9_/.,+-]*$', path):
@@ -81,7 +83,7 @@ if m:
         ident2 = form.getvalue ('i')
         if ident == '' and ident2:
             status = 302
-            location = '/e/linux/'+version+'/ident/'+ident2
+            location = '/linux/'+version+'/ident/'+ident2
         else:
             mode = 'ident'
             if not (ident and search ('^[A-Za-z0-9_-]*$', ident)):
@@ -101,8 +103,12 @@ elif status == 302:
     exit()
 
 head = open ('template-head').read()
-head = sub ('\$baseurl', 'http://' + os.environ['HTTP_HOST'] + '/e/linux/', head)
+head = sub ('\$baseurl', 'http://' + os.environ['HTTP_HOST'] + '/' + project + '/', head)
 head = sub ('\$vvar', version, head)
+
+basedir = os.environ['LXR_PROJ_DIR']
+os.environ['LXR_DATA_DIR'] = basedir + '/' + project + '/data';
+os.environ['LXR_REPO_DIR'] = basedir + '/' + project + '/repo';
 
 lines = shell_exec ('cd ..; ./query.py versions')
 va = OrderedDict()
@@ -141,7 +147,7 @@ v += '</ul>\n'
 head = sub ('\$versions', v, head)
 
 if mode == 'source':
-    banner = '<a href="'+version+'/source">Linux</a>'
+    banner = '<a href="'+version+'/source">'+project+'</a>'
     p2 = ''
     p3 = path.split ('/') [1:]
     for p in p3:
@@ -149,7 +155,7 @@ if mode == 'source':
         banner += '/<a href="'+version+'/source'+p2+'">'+p+'</a>'
 
     head = sub ('\$banner', banner, head)
-    head = sub ('\$title', 'Linux'+path+' - Linux Cross Reference - Free Electrons', head)
+    head = sub ('\$title', project+path+' - Elixir Cross Referencer - Free Electrons', head)
     print (head, end='')
 
     lines = ['null - -']
@@ -234,7 +240,7 @@ if mode == 'source':
 elif mode == 'ident':
     field = '</h1>\n<form method="get" action="'+version+'/ident">\nIdentifier: <input type="text" name="i" value="'+ident+'"size="60"/>\n<input type="submit" value="Go get it"/>\n</form>\n<h1>' + ident
     head = sub ('\$banner', field, head)
-    head = sub ('\$title', 'Linux identifier search "'+ident+'" - Linux Cross Reference - Free Electrons', head)
+    head = sub ('\$title', project+' identifier search "'+ident+'" - Elixir Cross Referencer - Free Electrons', head)
     print (head, end='')
 
     lines = shell_exec ('cd .. ; ./query.py ident '+version+" '"+ident+"'")
@@ -288,7 +294,7 @@ elif mode == 'ident':
 
 elif mode == 'search':
     head = sub ('\$banner', '', head)
-    head = sub ('\$title', 'Linux freetext search - Linux Cross Reference - Free Electrons', head)
+    head = sub ('\$title', project+' freetext search - Elixir Cross Referencer - Free Electrons', head)
     print (head, end='')
 
     print ('<form method="get" action="http://www.google.com/search"><input type="text"   name="q" size="31" maxlength="255" value="" /><input type="submit" value="Google Search" /><input type="radio"  name="sitesearch" value="" /> The Web<input type="radio"  name="sitesearch" value="lxr.free-electrons.com/source" checked="checked"/>lxr.free-electrons.com/source</form>')
