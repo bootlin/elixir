@@ -118,19 +118,18 @@ os.environ['LXR_REPO_DIR'] = basedir + '/' + project + '/repo';
 lines = shell_exec ('cd ..; ./query.py versions')
 va = OrderedDict()
 for l in lines:
-    if search ('^v2\.6', l):
-        m = search ('^(v2\.6)(\.[0-9]*)((\.|-).*)?$', l)
-    else:
-        m = search ('^(v[0-9]*)(\.[0-9]*)((\.|-).*)?$', l)
-
+    m = search ('^([^ ]*) ([^ ]*) ([^ ]*)$', l)
+    if not m:
+        continue
     m1 = m.group(1)
     m2 = m.group(2)
+    l = m.group(3)
 
     if m1 not in va:
         va[m1] = OrderedDict()
-    if m1+m2 not in va[m1]:
-        va[m1][m1+m2] = []
-    va[m1][m1+m2].append (l)
+    if m2 not in va[m1]:
+        va[m1][m2] = []
+    va[m1][m2].append (l)
 
 v = '<ul id="menu">\n'
 b = 1

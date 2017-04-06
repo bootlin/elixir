@@ -35,8 +35,8 @@ db = data.DB (dbDir, readonly=True)
 cmd = argv[1]
 
 if cmd == 'versions':
-    for p in scriptLines ('list-tags', '-r'):
-        if db.vers.exists (p):
+    for p in scriptLines ('list-tags', '-h'):
+        if db.vers.exists (p.split(b' ')[2]):
             echo (p + b'\n')
 
 elif cmd == 'type':

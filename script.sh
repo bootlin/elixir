@@ -37,8 +37,51 @@ denormalize()
 
 case $cmd in
     list-tags)
-        git tag |
-        sort $1 -V
+        tags=$(
+            git tag |
+            sed 's/$/.0/' |
+            sort -V |
+            sed 's/\.0$//'
+        )
+        if [ $1 = '-h' ]; then
+            project=$(basename `dirname $LXR_REPO_DIR`)
+            case $project in
+              linux)
+                echo "$tags" |
+                tac |
+                sed -r 's/^(((v2.6)\.([0-9]*)(.*))|(v[0-9])\.([0-9]*)(.*))$/\3\6 \3\6.\4\7 \3\6.\4\7\5\8/'
+              ;;
+              u-boot)
+                echo "$tags" |
+                grep '^v20' |
+                tac |
+                sed -r 's/^(v20..)(.*)$/new \1 \1\2/'
+
+                echo "$tags" |
+                grep -E '^(v1|U)' |
+                tac |
+                sed -r 's/^/old by-version /'
+
+                echo "$tags" |
+                grep -E '^(LABEL|DENX)' |
+                tac |
+                sed -r 's/^/old by-date /'
+
+              ;;
+              busybox)
+                echo "$tags" |
+                tac |
+                sed -r 's/^([0-9])_([0-9]*)(.*)$/v\1 \1_\2 \1_\2\3/'
+              ;;
+              *)
+                echo "$tags" |
+                tac |
+                sed -r 's/^/XXX XXX /'
+              ;;
+            esac
+        else
+            echo "$tags"
+        fi
         ;;
 
     get-type)
