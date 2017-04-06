@@ -62,7 +62,7 @@ if m:
     cmd = m.group (3)
     arg = m.group (4)
     if not (project and search ('^[A-Za-z0-9-]+$', project)) \
-    or not (version and search ('^[A-Za-z0-9.-]+$', version)):
+    or not (version and search ('^[A-Za-z0-9._-]+$', version)):
         status = 302
         location = '/linux/v4.10/'+cmd+arg
         cmd = ''
@@ -302,7 +302,7 @@ elif mode == 'search':
     head = sub ('\$title', project+' freetext search - Elixir Cross Referencer - Free Electrons', head)
     print (head, end='')
 
-    print ('<form method="get" action="http://www.google.com/search"><input type="text"   name="q" size="31" maxlength="255" value="" /><input type="submit" value="Google Search" /><input type="radio"  name="sitesearch" value="" /> The Web<input type="radio"  name="sitesearch" value="lxr.free-electrons.com/source" checked="checked"/>lxr.free-electrons.com/source</form>')
+    print ('<form method="get" action="http://www.google.com/search"><input type="text"   name="q" size="31" maxlength="255" value="" /><input type="submit" value="Google Search" /><input type="radio"  name="sitesearch" value="" /> The Web<input type="radio"  name="sitesearch" value="elixir.free-electrons.com/'+project+'" checked="checked"/>elixir.free-electrons.com/'+project+'</form>')
 
 else:
     print (head)
