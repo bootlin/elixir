@@ -54,65 +54,96 @@ from collections import OrderedDict
 
 status = 200
 
-form = cgi.FieldStorage()
-version = form.getvalue ('v')
-if not (version and search ('^[A-Za-z0-9.-]+$', version)):
-    version = '4.10'
-
 url = os.environ['SCRIPT_URL']
-m = search ('^/source/(.*)$', url)
+m = search ('^/([^/]*)/([^/]*)/([^/]*)(.*)$', url)
 if m:
-    mode = 'source'
-    path = m.group (1)
-    if not search ('^[A-Za-z0-9_/.,+-]*$', path):
-        path = 'INVALID'
-    url2 = 'source/'+path+'?'
+    project = m.group (1)
+    version = m.group (2)
+    cmd = m.group (3)
+    arg = m.group (4)
+    if not (project and search ('^[A-Za-z0-9-]+$', project)) \
+    or not (version and search ('^[A-Za-z0-9._-]+$', version)):
+        status = 302
+        location = '/linux/v4.10/'+cmd+arg
+        cmd = ''
+    if cmd == 'source':
+        path = arg
+        if len (path) > 0 and path[-1] == '/':
+            path = path[:-1]
+            status = 301
+            location = '/'+project+'/'+version+'/source'+path
+        else:
+            mode = 'source'
+            if not search ('^[A-Za-z0-9_/.,+-]*$', path):
+                path = 'INVALID'
+            url2 = 'source'+path
+    elif cmd == 'ident':
+        ident = arg[1:]
+        form = cgi.FieldStorage()
+        ident2 = form.getvalue ('i')
+        if ident == '' and ident2:
+            status = 302
+            location = '/'+project+'/'+version+'/ident/'+ident2
+        else:
+            mode = 'ident'
+            if not (ident and search ('^[A-Za-z0-9_-]*$', ident)):
+                ident = ''
+            url2 = 'ident/'+ident
+    elif cmd == 'search':
+        mode = 'search'
+        url2 = 'search'
+else:
+    status = 404
 
-elif url == '/ident':
-    mode = 'ident'
-    ident = form.getvalue ('i')
-    if not (ident and search ('^[A-Za-z0-9_-]*$', ident)):
-        ident = ''
-    url2 = 'ident?i='+ident+'&'
-
-elif url == '/search':
-    mode = 'search'
-    url2 = 'search?'
+if status == 301:
+    realprint ('Status: 301 Moved Permanently')
+    realprint ('Location: '+location+'\n')
+    exit()
+elif status == 302:
+    realprint ('Status: 302 Found')
+    realprint ('Location: '+location+'\n')
+    exit()
+elif status == 404:
+    realprint ('Status: 404 Not Found\n')
+    exit()
 
 head = open ('template-head').read()
-head = sub ('\$baseurl', 'http://' + os.environ['HTTP_HOST'], head)
+head = sub ('\$baseurl', 'http://' + os.environ['HTTP_HOST'] + '/' + project + '/', head)
 head = sub ('\$vvar', version, head)
+
+basedir = os.environ['LXR_PROJ_DIR']
+os.environ['LXR_DATA_DIR'] = basedir + '/' + project + '/data';
+os.environ['LXR_REPO_DIR'] = basedir + '/' + project + '/repo';
 
 lines = shell_exec ('cd ..; ./query.py versions')
 va = OrderedDict()
 for l in lines:
-    if search ('^2\.6', l):
-        m = search ('^(2\.6)(\.[0-9]*)((\.|-).*)?$', l)
-    else:
-        m = search ('^([0-9]*)(\.[0-9]*)((\.|-).*)?$', l)
-
+    m = search ('^([^ ]*) ([^ ]*) ([^ ]*)$', l)
+    if not m:
+        continue
     m1 = m.group(1)
     m2 = m.group(2)
+    l = m.group(3)
 
     if m1 not in va:
         va[m1] = OrderedDict()
-    if m1+m2 not in va[m1]:
-        va[m1][m1+m2] = []
-    va[m1][m1+m2].append (l)
+    if m2 not in va[m1]:
+        va[m1][m2] = []
+    va[m1][m2].append (l)
 
 v = '<ul id="menu">\n'
 b = 1
 for v1k in va:
     v1v = va[v1k]
-    v += ' <li class="menuitem" id="mi0'+str(b)+'" onclick="mf1(this);"><span class="mel" onclick="closeSubMenus();">v'+v1k+'</span>\n'
+    v += ' <li class="menuitem" id="mi0'+str(b)+'" onclick="mf1(this);"><span class="mel" onclick="closeSubMenus();">'+v1k+'</span>\n'
     b += 1
     v += ' <ul class="submenu">\n'
     for v2k in v1v:
         v2v = v1v[v2k]
-        v += '  <li onclick="mf2(this);"><span class="mel2">v'+v2k+'</span>\n'
+        v += '  <li onclick="mf2(this);"><span class="mel2">'+v2k+'</span>\n'
         v += '  <ul class="subsubmenu">\n'
         for v3 in v2v:
-            v += '   <li><a href="'+url2+'v='+v3+'">v'+v3+'</a></li>\n'
+            v += '   <li><a href="'+v3+'/'+url2+'">'+v3+'</a></li>\n'
         v += '  </ul></li>\n'
     v += ' </ul></li>\n'
 v += '</ul>\n'
@@ -120,19 +151,15 @@ v += '</ul>\n'
 head = sub ('\$versions', v, head)
 
 if mode == 'source':
-    banner = '<a href="source/?v='+version+'">Linux</a>/'
+    banner = '<a href="'+version+'/source">'+project+'</a>'
     p2 = ''
-    p3 = path.split ('/')
-    last = p3[-1]
-    p3 = p3[:-1]
+    p3 = path.split ('/') [1:]
     for p in p3:
-        banner += '<a href="source/'+p2+p+'/?v='+version+'">'+p+'</a>/'
-        p2 += p+'/'
-    if last != '':
-        banner += '<a href="source/'+p2+last+'?v='+version+'">'+last+'</a>'
+        p2 += '/'+p
+        banner += '/<a href="'+version+'/source'+p2+'">'+p+'</a>'
 
     head = sub ('\$banner', banner, head)
-    head = sub ('\$title', 'Linux/'+path+' - Linux Cross Reference - Free Electrons', head)
+    head = sub ('\$title', project+path+' - Elixir Cross Referencer - Free Electrons', head)
     print (head, end='')
 
     lines = ['null - -']
@@ -141,11 +168,7 @@ if mode == 'source':
     if len (type) == 1:
         type = type[0]
         if type == 'tree':
-            if path[-1:] == '/' or path == '':
-                lines += shell_exec ('cd ..; ./query.py dir '+version+' \''+path+'\'')
-            else:
-                status = 302
-                location = '/source/'+path+'/?v='+version
+            lines += shell_exec ('cd ..; ./query.py dir '+version+' \''+path+'\'')
         elif type == 'blob':
             lines += shell_exec ('cd ..; ./query.py file '+version+' \''+path+'\'')
     else:
@@ -165,22 +188,22 @@ if mode == 'source':
             elif type == 'tree':
                 icon = 'folder.gif'
                 size = ''
-                path2 = path+name+'/'
-                name = name+'/'
+                path2 = path+'/'+name
+                name = name
             elif type == 'blob':
                 icon = 'text.gif'
                 size = size+' bytes'
-                path2 = path+name
+                path2 = path+'/'+name
             elif type == 'back':
                 icon = 'back.gif'
                 size = ''
-                path2 = os.path.dirname (path[:-1]) + '/'
-                if path2 == '/': path2 = './'
+                path2 = os.path.dirname (path[:-1])
+                if path2 == '/': path2 = ''
                 name = 'Parent directory'
 
             print ('  <tr>')
-            print ('    <td><a href="source/'+path2+'?v='+version+'"><img src="/icons/'+icon+'" width="20" height="22" border="0" alt="'+icon+'"/></a></td>')
-            print ('    <td><a href="source/'+path2+'?v='+version+'">'+name+'</a></td>')
+            print ('    <td><a href="'+version+'/source'+path2+'"><img src="/icons/'+icon+'" width="20" height="22" border="0" alt="'+icon+'"/></a></td>')
+            print ('    <td><a href="'+version+'/source'+path2+'">'+name+'</a></td>')
             print ('    <td>'+size+'</td>')
 
             print ('  </tr>\n')
@@ -198,7 +221,7 @@ if mode == 'source':
         width2 = len (str (num))
         space = ' ' * (width1 - width2)
         for l in lines:
-            print ('  '+space+'<a name="L'+str(num)+'" href="source/'+path+'?v='+version+'#L'+str(num)+'">'+str(num)+'</a> ')
+            print ('  '+space+'<a name="L'+str(num)+'" href="'+version+'/source'+path+'#L'+str(num)+'">'+str(num)+'</a> ')
             num += 1
             width2 = len (str (num))
             space = ' ' * (width1 - width2)
@@ -208,7 +231,7 @@ if mode == 'source':
         for l in lines:
             l = cgi.escape (l)
             l = sub ('"', '&quot;', l)
-            l = sub ('\033\[31m(.*?)\033\[0m', '<a href="ident?v='+version+'&i=\\1">\\1</a>', l)
+            l = sub ('\033\[31m(.*?)\033\[0m', '<a href="'+version+'/ident/\\1">\\1</a>', l)
             l = sub ('\033\[32m', '<i>', l)
             l = sub ('\033\[33m', '<i>', l)
             l = sub ('\033\[0m', '</i>', l)
@@ -219,9 +242,9 @@ if mode == 'source':
 
 
 elif mode == 'ident':
-    field = '</h1>\n<form method="get" action="ident">\n<input type=hidden name="v" value="'+version+'">\nIdentifier: <input type="text" name="i" value="'+ident+'"size="60"/>\n<input type="submit" value="Go get it"/>\n</form>\n<h1>' + ident
+    field = '</h1>\n<form method="get" action="'+version+'/ident">\nIdentifier: <input type="text" name="i" value="'+ident+'"size="60"/>\n<input type="submit" value="Go get it"/>\n</form>\n<h1>' + ident
     head = sub ('\$banner', field, head)
-    head = sub ('\$title', 'Linux identifier search "'+ident+'" - Linux Cross Reference - Free Electrons', head)
+    head = sub ('\$title', project+' identifier search "'+ident+'" - Elixir Cross Referencer - Free Electrons', head)
     print (head, end='')
 
     lines = shell_exec ('cd .. ; ./query.py ident '+version+" '"+ident+"'")
@@ -239,7 +262,7 @@ elif mode == 'ident':
             l = next (lines)
             m = search ('^(.*): (\d*) \((.*)\)$', l)
             f, n, t = m.groups()
-            print ('<li><a href="source/'+f+'?v='+version+'#L'+n+'">'+f+', line '+n+' (as a '+t+')</a>', end='')
+            print ('<li><a href="'+version+'/source/'+f+'#L'+n+'">'+f+', line '+n+' (as a '+t+')</a>', end='')
         print ('</ul>')
 
         next (lines)
@@ -256,16 +279,16 @@ elif mode == 'ident':
             ln = m.group (2).split (',')
             if len (ln) == 1:
                 n = ln[0]
-                print ('<li><a href="source/'+f+'?v='+version+'#L'+str(n)+'">'+f+', line '+str(n)+'</a>', end='')
+                print ('<li><a href="'+version+'/source/'+f+'#L'+str(n)+'">'+f+', line '+str(n)+'</a>', end='')
             else:
                 if num > 100:    # Concise display
                     n = len (ln)
-                    print ('<li><a href="source/'+f+'?v='+version+'">'+f+'</a>, '+str(n)+' times')
+                    print ('<li><a href="'+version+'/source/'+f+'">'+f+'</a>, '+str(n)+' times')
                 else:    # Verbose display
                     print ('<li>'+f)
                     print ('<ul>')
                     for n in ln:
-                        print ('<li><a href="source/'+f+'?v='+version+'#L'+str(n)+'">line '+str(n)+'</a>')
+                        print ('<li><a href="'+version+'/source/'+f+'#L'+str(n)+'">line '+str(n)+'</a>')
                     print ('</ul>')
         print ('</ul>')
     else:
@@ -275,10 +298,10 @@ elif mode == 'ident':
 
 elif mode == 'search':
     head = sub ('\$banner', '', head)
-    head = sub ('\$title', 'Linux freetext search - Linux Cross Reference - Free Electrons', head)
+    head = sub ('\$title', project+' freetext search - Elixir Cross Referencer - Free Electrons', head)
     print (head, end='')
 
-    print ('<form method="get" action="http://www.google.com/search"><input type="text"   name="q" size="31" maxlength="255" value="" /><input type="submit" value="Google Search" /><input type="radio"  name="sitesearch" value="" /> The Web<input type="radio"  name="sitesearch" value="lxr.free-electrons.com/source" checked="checked"/>lxr.free-electrons.com/source</form>')
+    print ('<form method="get" action="http://www.google.com/search"><input type="text"   name="q" size="31" maxlength="255" value="" /><input type="submit" value="Google Search" /><input type="radio"  name="sitesearch" value="" /> The Web<input type="radio"  name="sitesearch" value="elixir.free-electrons.com/'+project+'" checked="checked"/>elixir.free-electrons.com/'+project+'</form>')
 
 else:
     print (head)
@@ -288,10 +311,6 @@ print (open ('template-tail').read(), end='')
 
 if status == 404:
     realprint ('Status: 404 Not Found')
-elif status == 302:
-    realprint ('Status: 302 Found')
-    realprint ('Location: '+location+'\n')
-    exit()
 
 realprint ('Content-Type: text/html;charset=utf-8\n')
 realprint (outputBuffer, end='')

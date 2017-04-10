@@ -30,17 +30,62 @@ test $# -gt 0 || set help
 cmd=$1
 shift
 
+denormalize()
+{
+    echo $1 | cut -c 2-
+}
+
 case $cmd in
     list-tags)
-        git tag |
-        sed 's/^v//' |
-        sed 's/$/.0/' |
-        sort $1 -V |
-        sed 's/\.0$//'
+        tags=$(
+            git tag |
+            sed 's/$/.0/' |
+            sort -V |
+            sed 's/\.0$//'
+        )
+        if [ $1 = '-h' ]; then
+            project=$(basename `dirname $LXR_REPO_DIR`)
+            case $project in
+              linux)
+                echo "$tags" |
+                tac |
+                sed -r 's/^(((v2.6)\.([0-9]*)(.*))|(v[0-9])\.([0-9]*)(.*))$/\3\6 \3\6.\4\7 \3\6.\4\7\5\8/'
+              ;;
+              u-boot)
+                echo "$tags" |
+                grep '^v20' |
+                tac |
+                sed -r 's/^(v20..)(.*)$/new \1 \1\2/'
+
+                echo "$tags" |
+                grep -E '^(v1|U)' |
+                tac |
+                sed -r 's/^/old by-version /'
+
+                echo "$tags" |
+                grep -E '^(LABEL|DENX)' |
+                tac |
+                sed -r 's/^/old by-date /'
+
+              ;;
+              busybox)
+                echo "$tags" |
+                tac |
+                sed -r 's/^([0-9])_([0-9]*)(.*)$/v\1 \1_\2 \1_\2\3/'
+              ;;
+              *)
+                echo "$tags" |
+                tac |
+                sed -r 's/^/XXX XXX /'
+              ;;
+            esac
+        else
+            echo "$tags"
+        fi
         ;;
 
     get-type)
-        git cat-file -t v$1:$2 2>/dev/null
+        git cat-file -t "$1:`denormalize $2`" 2>/dev/null
         ;;
 
     get-blob)
@@ -48,11 +93,11 @@ case $cmd in
         ;;
 
     get-file)
-        git cat-file blob v$1:$2 2>/dev/null
+        git cat-file blob "$1:`denormalize $2`" 2>/dev/null
         ;;
 
     get-dir)
-        git ls-tree -l "v$1:$2" 2>/dev/null |
+        git ls-tree -l "$1:`denormalize $2`" 2>/dev/null |
         awk '{print $2" "$5" "$4}' |
         grep -v ' \.' |
         sort -t ' ' -k 1,1r -k 2,2
@@ -69,7 +114,7 @@ case $cmd in
             format='\1'
         fi
 
-        git ls-tree -r "v$1" |
+        git ls-tree -r "$1" |
         sed -r "s/^\S* blob (\S*)\t(([^/]*\/)*(.*))$/$format/"
         ;;
 
@@ -77,7 +122,7 @@ case $cmd in
         if [ "$1" = -b ]; then
             ref=$2
         else
-            ref=v$1:$2
+            ref="$1:`denormalize $2`"
         fi
 
         git cat-file blob $ref 2>/dev/null |
@@ -102,7 +147,7 @@ case $cmd in
     parse-defs)
         tmp=`mktemp -d`
         git cat-file blob "$1" > $tmp/$2
-        ctags -x --c-kinds=+p $tmp/$2 | awk '{print $1" "$2" "$3}'
+        ctags -x --c-kinds=+p-m $tmp/$2 | awk '{print $1" "$2" "$3}'
         rm $tmp/$2
         rmdir $tmp
         ;;
