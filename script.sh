@@ -35,16 +35,29 @@ denormalize()
     echo $1 | cut -c 2-
 }
 
+project=$(basename `dirname $LXR_REPO_DIR`)
+
+case $project in
+    busybox)
+        version_dir() { tr '_.' '._'; }
+        version_rev() { tr '._' '_.'; }
+    ;;
+    *)
+        version_dir() { cat; }
+        version_rev() { cat; }
+    ;;
+esac
+
 case $cmd in
     list-tags)
         tags=$(
             git tag |
+            version_dir |
             sed 's/$/.0/' |
             sort -V |
             sed 's/\.0$//'
         )
-        if [ $1 = '-h' ]; then
-            project=$(basename `dirname $LXR_REPO_DIR`)
+        if [ "$1" = '-h' ]; then
             case $project in
               linux)
                 echo "$tags" |
@@ -71,7 +84,7 @@ case $cmd in
               busybox)
                 echo "$tags" |
                 tac |
-                sed -r 's/^([0-9])_([0-9]*)(.*)$/v\1 \1_\2 \1_\2\3/'
+                sed -r 's/^([0-9])\.([0-9]*)(.*)$/v\1 \1.\2 \1.\2\3/'
               ;;
               *)
                 echo "$tags" |
@@ -85,7 +98,8 @@ case $cmd in
         ;;
 
     get-type)
-        git cat-file -t "$1:`denormalize $2`" 2>/dev/null
+        v=`echo $1 | version_rev`
+        git cat-file -t "$v:`denormalize $2`" 2>/dev/null
         ;;
 
     get-blob)
@@ -93,11 +107,13 @@ case $cmd in
         ;;
 
     get-file)
-        git cat-file blob "$1:`denormalize $2`" 2>/dev/null
+        v=`echo $1 | version_rev`
+        git cat-file blob "$v:`denormalize $2`" 2>/dev/null
         ;;
 
     get-dir)
-        git ls-tree -l "$1:`denormalize $2`" 2>/dev/null |
+        v=`echo $1 | version_rev`
+        git ls-tree -l "$v:`denormalize $2`" 2>/dev/null |
         awk '{print $2" "$5" "$4}' |
         grep -v ' \.' |
         sort -t ' ' -k 1,1r -k 2,2
@@ -114,7 +130,8 @@ case $cmd in
             format='\1'
         fi
 
-        git ls-tree -r "$1" |
+        v=`echo $1 | version_rev`
+        git ls-tree -r "$v" |
         sed -r "s/^\S* blob (\S*)\t(([^/]*\/)*(.*))$/$format/"
         ;;
 
@@ -122,7 +139,8 @@ case $cmd in
         if [ "$1" = -b ]; then
             ref=$2
         else
-            ref="$1:`denormalize $2`"
+            v=`echo $1 | version_rev`
+            ref="$v:`denormalize $2`"
         fi
 
         git cat-file blob $ref 2>/dev/null |
