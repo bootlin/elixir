@@ -232,9 +232,9 @@ if mode == 'source':
             l = cgi.escape (l)
             l = sub ('"', '&quot;', l)
             l = sub ('\033\[31m(.*?)\033\[0m', '<a href="'+version+'/ident/\\1">\\1</a>', l)
-            l = sub ('\033\[32m', '<i>', l)
-            l = sub ('\033\[33m', '<i>', l)
-            l = sub ('\033\[0m', '</i>', l)
+            l = sub ('\033\[32m', '', l)
+            l = sub ('\033\[33m', '', l)
+            l = sub ('\033\[0m', '', l)
             print (l)
 
         print ('</pre></td></tr></table>')
