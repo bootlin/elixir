@@ -97,6 +97,10 @@ case $cmd in
         fi
         ;;
 
+    get-latest)
+        git tag | version_dir | grep -v '\-rc' | sort -V | tail -n 1
+        ;;
+
     get-type)
         v=`echo $1 | version_rev`
         git cat-file -t "$v:`denormalize $2`" 2>/dev/null

@@ -18,7 +18,7 @@
 	<div id="logo">
 		<h1>Linux Cross Reference</h1>
 		<h2><a href="http://free-electrons.com">Free Electrons: Embedded Linux Experts</a></h2>
-        <p>&nbsp;&bull;&nbsp;<a href="/linux/v4.9/source">Linux</a>&nbsp;&bull;&nbsp;<a href="/u-boot/v2016.11/source">U-Boot</a>&nbsp;&bull;&nbsp;<a href="/busybox/1.26.1/source">Busybox</a>&nbsp;&bull;&nbsp;</p>
+        <p>&nbsp;&bull;&nbsp;<a href="/linux/latest/source">Linux</a>&nbsp;&bull;&nbsp;<a href="/u-boot/latest/source">U-Boot</a>&nbsp;&bull;&nbsp;<a href="/busybox/latest/source">Busybox</a>&nbsp;&bull;&nbsp;</p>
 		<p>
 		&nbsp;&bull;&nbsp;<a href="$vvar/source">source navigation</a>&nbsp;&bull;&nbsp;<a href="$vvar/ident">identifier search</a>&nbsp;&bull;&nbsp;<a href="$vvar/search">freetext search</a>&nbsp;&bull;&nbsp;<a href="http://lxr.free-electrons.com" style="color:#00FF00">Back to LXR</a>&nbsp;&bull;&nbsp;
 		</p>
@@ -26,7 +26,7 @@
 </div>
 
 <div id="topbar">
-<p>Version: $vvar $versions
+<p>Version: $vvar2 $versions
 </div>
 
 <h1>$banner</h1>

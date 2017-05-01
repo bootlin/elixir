@@ -39,6 +39,10 @@ if cmd == 'versions':
         if db.vers.exists (p.split(b' ')[2]):
             echo (p + b'\n')
 
+elif cmd == 'latest':
+    p = script ('get-latest')
+    echo (p)
+
 elif cmd == 'type':
     version = argv[2]
     path = argv[3]

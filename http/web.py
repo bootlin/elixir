@@ -64,7 +64,7 @@ if m:
     if not (project and search ('^[A-Za-z0-9-]+$', project)) \
     or not (version and search ('^[A-Za-z0-9._-]+$', version)):
         status = 302
-        location = '/linux/v4.10/'+cmd+arg
+        location = '/linux/latest/'+cmd+arg
         cmd = ''
     if cmd == 'source':
         path = arg
@@ -107,13 +107,19 @@ elif status == 404:
     realprint ('Status: 404 Not Found\n')
     exit()
 
-head = open ('template-head').read()
-head = sub ('\$baseurl', 'http://' + os.environ['HTTP_HOST'] + '/' + project + '/', head)
-head = sub ('\$vvar', version, head)
-
 basedir = os.environ['LXR_PROJ_DIR']
 os.environ['LXR_DATA_DIR'] = basedir + '/' + project + '/data';
 os.environ['LXR_REPO_DIR'] = basedir + '/' + project + '/repo';
+
+if version == 'latest':
+    version2 = shell_exec ('cd ..; ./query.py latest')[0]
+else:
+    version2 = version
+
+head = open ('template-head').read()
+head = sub ('\$baseurl', 'http://' + os.environ['HTTP_HOST'] + '/' + project + '/', head)
+head = sub ('\$vvar2', version2, head)
+head = sub ('\$vvar', version, head)
 
 lines = shell_exec ('cd ..; ./query.py versions')
 va = OrderedDict()
@@ -164,13 +170,13 @@ if mode == 'source':
 
     lines = ['null - -']
     
-    type = shell_exec ('cd ..; ./query.py type '+version+' \''+path+'\'')
+    type = shell_exec ('cd ..; ./query.py type '+version2+' \''+path+'\'')
     if len (type) == 1:
         type = type[0]
         if type == 'tree':
-            lines += shell_exec ('cd ..; ./query.py dir '+version+' \''+path+'\'')
+            lines += shell_exec ('cd ..; ./query.py dir '+version2+' \''+path+'\'')
         elif type == 'blob':
-            lines += shell_exec ('cd ..; ./query.py file '+version+' \''+path+'\'')
+            lines += shell_exec ('cd ..; ./query.py file '+version2+' \''+path+'\'')
     else:
         print ('<br><b>This file does not exist.</b>')
         status = 404
@@ -247,7 +253,7 @@ elif mode == 'ident':
     head = sub ('\$title', project+' identifier search "'+ident+'" - Elixir Cross Referencer - Free Electrons', head)
     print (head, end='')
 
-    lines = shell_exec ('cd .. ; ./query.py ident '+version+" '"+ident+"'")
+    lines = shell_exec ('cd .. ; ./query.py ident '+version2+" '"+ident+"'")
     lines = iter (lines)
 
     m = search ('Defined in (\d*) file', next (lines))
