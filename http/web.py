@@ -165,7 +165,7 @@ if mode == 'source':
         banner += '/<a href="'+version+'/source'+p2+'">'+p+'</a>'
 
     head = sub ('\$banner', banner, head)
-    head = sub ('\$title', project+path+' - Elixir Cross Referencer - Free Electrons', head)
+    head = sub ('\$title', project+path+' - Elixir - Free Electrons', head)
     print (head, end='')
 
     lines = ['null - -']
@@ -250,7 +250,7 @@ if mode == 'source':
 elif mode == 'ident':
     field = '</h1>\n<form method="get" action="'+version+'/ident">\nIdentifier: <input type="text" name="i" value="'+ident+'"size="60"/>\n<input type="submit" value="Go get it"/>\n</form>\n<h1>' + ident
     head = sub ('\$banner', field, head)
-    head = sub ('\$title', project+' identifier search "'+ident+'" - Elixir Cross Referencer - Free Electrons', head)
+    head = sub ('\$title', ident+' - Elixir - Free Electrons', head)
     print (head, end='')
 
     lines = shell_exec ('cd .. ; ./query.py ident '+version2+" '"+ident+"'")
@@ -304,10 +304,10 @@ elif mode == 'ident':
 
 elif mode == 'search':
     head = sub ('\$banner', '', head)
-    head = sub ('\$title', project+' freetext search - Elixir Cross Referencer - Free Electrons', head)
+    head = sub ('\$title', 'Freetext search - Elixir - Free Electrons', head)
     print (head, end='')
 
-    print ('<form method="get" action="http://www.google.com/search"><input type="text"   name="q" size="31" maxlength="255" value="" /><input type="submit" value="Google Search" /><input type="radio"  name="sitesearch" value="" /> The Web<input type="radio"  name="sitesearch" value="elixir.free-electrons.com/'+project+'" checked="checked"/>elixir.free-electrons.com/'+project+'</form>')
+    print ('<form method="get" action="http://www.google.com/search"><input type="text"   name="q" size="31" maxlength="255" value="" /><input type="submit" value="Google Search" /><input type="radio"  name="sitesearch" value="" /> The Web<input type="radio"  name="sitesearch" value="elixir.free-electrons.com/'+project+'/'+version+'" checked="checked"/>elixir.free-electrons.com/'+project+'/'+version+'</form>')
 
 else:
     print (head)
