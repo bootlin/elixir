@@ -149,7 +149,7 @@ case $cmd in
 
         git cat-file blob $ref 2>/dev/null |
         tr '\n' '\1' |
-        perl -pe 's%((/\*.*?\*/|//.*?\001|".*?"|#include *<.*?>|\W)+)(\w+)?%\1\n\3\n%g' |
+        perl -pe 's%((/\*.*?\*/|//.*?\001|"(\\"|.)*?"|# *include *<.*?>|\W)+)(\w+)?%\1\n\4\n%g' |
         head -n -1
         ;;
 
