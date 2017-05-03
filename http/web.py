@@ -36,12 +36,14 @@ def shell_exec (cmd):
     del a[-1]
     return a
 
+from io import StringIO
+
 realprint = print
-outputBuffer = ''
+outputBuffer = StringIO()
 
 def print (arg, end='\n'):
     global outputBuffer
-    outputBuffer += arg + end
+    outputBuffer.write (arg + end)
 
 # enable debugging
 import cgitb
@@ -319,4 +321,4 @@ if status == 404:
     realprint ('Status: 404 Not Found')
 
 realprint ('Content-Type: text/html;charset=utf-8\n')
-realprint (outputBuffer, end='')
+realprint (outputBuffer.getvalue(), end='')
