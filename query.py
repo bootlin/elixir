@@ -18,8 +18,7 @@
 #  You should have received a copy of the GNU General Public License
 #  along with Elixir.  If not, see <http://www.gnu.org/licenses/>.
 
-from sys import argv
-from lib import echo, script, scriptLines
+from lib import script, scriptLines
 import lib
 import data
 import os
@@ -27,13 +26,18 @@ import os
 try:
     dbDir = os.environ['LXR_DATA_DIR']
 except KeyError:
-    print (argv[0] + ': LXR_DATA_DIR needs to be set')
+    print ('LXR_DATA_DIR needs to be set')
     exit (1)
 
 db = data.DB (dbDir, readonly=True)
 
-if True:
-    cmd = argv[1]
+from io import BytesIO
+
+def query (cmd, *args):
+    buffer = BytesIO()
+
+    def echo (arg):
+        buffer.write (arg)
 
     if cmd == 'versions':
         for p in scriptLines ('list-tags', '-h'):
@@ -45,20 +49,20 @@ if True:
         echo (p)
 
     elif cmd == 'type':
-        version = argv[2]
-        path = argv[3]
+        version = args[0]
+        path = args[1]
         p = script ('get-type', version, path)
         echo (p)
 
     elif cmd == 'dir':
-        version = argv[2]
-        path = argv[3]
+        version = args[0]
+        path = args[1]
         p = script ('get-dir', version, path)
         echo (p)
 
     elif cmd == 'file':
-        version = argv[2]
-        path = argv[3]
+        version = args[0]
+        path = args[1]
         ext = path[-2:]
 
         if ext == '.c' or ext == '.h':
@@ -76,16 +80,16 @@ if True:
             echo (p)
 
     elif cmd == 'ident':
-        version = argv[2]
-        ident = argv[3]
+        version = args[0]
+        ident = args[1]
 
         if not db.defs.exists (ident):
-            print (argv[0] + ': Unknown identifier: ' + ident)
-            exit()
+            echo (('Unknown identifier: ' + ident + '\n').encode())
+            return buffer.getvalue()
 
         if not db.vers.exists (version):
-            print (argv[0] + ': Unknown version: ' + version)
-            exit()
+            echo (('Unknown version: ' + version + '\n').encode())
+            return buffer.getvalue()
 
         vers = db.vers.get (version).iter()
         defs = db.defs.get (ident).iter (dummy=True)
@@ -112,13 +116,21 @@ if True:
             if id1 == id3:
                 rBuf.append ((path, rlines))
 
-        print ('Defined in', len (dBuf), 'files:')
+        echo (('Defined in ' + str(len(dBuf)) + ' files:\n').encode())
         for path, type, dline in sorted (dBuf):
-            print (path + ': ' + str (dline) + ' (' + type + ')')
+            echo ((path + ': ' + str (dline) + ' (' + type + ')\n').encode())
 
-        print ('\nReferenced in', len (rBuf), 'files:')
+        echo (('\nReferenced in ' + str(len(rBuf)) + ' files:\n').encode())
         for path, rlines in sorted (rBuf):
-            print (path + ': ' + rlines)
+            echo ((path + ': ' + rlines + '\n').encode())
 
     else:
-        print (argv[0] + ': Unknown subcommand: ' + cmd)
+        echo (('Unknown subcommand: ' + cmd + '\n').encode())
+
+    return buffer.getvalue()
+
+if __name__ == "__main__":
+    import sys
+
+    output = query (*(sys.argv[1:]))
+    sys.stdout.buffer.write (output)

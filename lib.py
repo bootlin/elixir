@@ -22,9 +22,6 @@ import subprocess
 import re
 import sys
 
-def echo (bstr):
-    sys.stdout.buffer.write (bstr)
-
 def script (*args):
     args = ('./script.sh',) + args
     p = subprocess.run (args, stdout=subprocess.PIPE)
