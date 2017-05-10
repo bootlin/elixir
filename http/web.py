@@ -18,30 +18,14 @@
 #  You should have received a copy of the GNU General Public License
 #  along with Elixir.  If not, see <http://www.gnu.org/licenses/>.
 
-from subprocess import check_output
-
-def shell_exec (cmd):
-    try:
-        a = check_output (cmd, shell=True)
-    except:
-        a = b'error\n'
-
-    # decode('ascii') fails on special chars
-    # FIXME: major hack until we handle everything as bytestrings
-    try:
-        a = a.decode ('utf-8')
-    except UnicodeDecodeError:
-        a = a.decode ('iso-8859-1')
-    a = a.split ('\n')
-    del a[-1]
-    return a
+from io import StringIO
 
 realprint = print
-outputBuffer = ''
+outputBuffer = StringIO()
 
 def print (arg, end='\n'):
     global outputBuffer
-    outputBuffer += arg + end
+    outputBuffer.write (arg + end)
 
 # enable debugging
 import cgitb
@@ -111,8 +95,28 @@ basedir = os.environ['LXR_PROJ_DIR']
 os.environ['LXR_DATA_DIR'] = basedir + '/' + project + '/data';
 os.environ['LXR_REPO_DIR'] = basedir + '/' + project + '/repo';
 
+import sys
+sys.path = [ sys.path[0] + '/..' ] + sys.path
+import query
+
+def do_query (*args):
+    cwd = os.getcwd()
+    os.chdir ('..')
+    a = query.query (*args)
+    os.chdir (cwd)
+
+    # decode('ascii') fails on special chars
+    # FIXME: major hack until we handle everything as bytestrings
+    try:
+        a = a.decode ('utf-8')
+    except UnicodeDecodeError:
+        a = a.decode ('iso-8859-1')
+    a = a.split ('\n')
+    del a[-1]
+    return a
+
 if version == 'latest':
-    version2 = shell_exec ('cd ..; ./query.py latest')[0]
+    version2 = do_query ('latest')[0]
 else:
     version2 = version
 
@@ -121,7 +125,7 @@ head = sub ('\$baseurl', 'http://' + os.environ['HTTP_HOST'] + '/' + project + '
 head = sub ('\$vvar2', version2, head)
 head = sub ('\$vvar', version, head)
 
-lines = shell_exec ('cd ..; ./query.py versions')
+lines = do_query ('versions')
 va = OrderedDict()
 for l in lines:
     m = search ('^([^ ]*) ([^ ]*) ([^ ]*)$', l)
@@ -170,13 +174,13 @@ if mode == 'source':
 
     lines = ['null - -']
     
-    type = shell_exec ('cd ..; ./query.py type '+version2+' \''+path+'\'')
+    type = do_query ('type', version2, path)
     if len (type) == 1:
         type = type[0]
         if type == 'tree':
-            lines += shell_exec ('cd ..; ./query.py dir '+version2+' \''+path+'\'')
+            lines += do_query ('dir', version2, path)
         elif type == 'blob':
-            lines += shell_exec ('cd ..; ./query.py file '+version2+' \''+path+'\'')
+            lines += do_query ('file', version2, path)
     else:
         print ('<br><b>This file does not exist.</b>')
         status = 404
@@ -253,7 +257,7 @@ elif mode == 'ident':
     head = sub ('\$title', ident+' - Elixir - Free Electrons', head)
     print (head, end='')
 
-    lines = shell_exec ('cd .. ; ./query.py ident '+version2+" '"+ident+"'")
+    lines = do_query ('ident', version2, ident)
     lines = iter (lines)
 
     m = search ('Defined in (\d*) file', next (lines))
@@ -319,4 +323,4 @@ if status == 404:
     realprint ('Status: 404 Not Found')
 
 realprint ('Content-Type: text/html;charset=utf-8\n')
-realprint (outputBuffer, end='')
+realprint (outputBuffer.getvalue(), end='')

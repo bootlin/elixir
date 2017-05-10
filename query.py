@@ -18,8 +18,7 @@
 #  You should have received a copy of the GNU General Public License
 #  along with Elixir.  If not, see <http://www.gnu.org/licenses/>.
 
-from sys import argv
-from lib import echo, script, scriptLines
+from lib import script, scriptLines
 import lib
 import data
 import os
@@ -27,97 +26,111 @@ import os
 try:
     dbDir = os.environ['LXR_DATA_DIR']
 except KeyError:
-    print (argv[0] + ': LXR_DATA_DIR needs to be set')
+    print ('LXR_DATA_DIR needs to be set')
     exit (1)
 
 db = data.DB (dbDir, readonly=True)
 
-cmd = argv[1]
+from io import BytesIO
 
-if cmd == 'versions':
-    for p in scriptLines ('list-tags', '-h'):
-        if db.vers.exists (p.split(b' ')[2]):
-            echo (p + b'\n')
+def query (cmd, *args):
+    buffer = BytesIO()
 
-elif cmd == 'latest':
-    p = script ('get-latest')
-    echo (p)
+    def echo (arg):
+        buffer.write (arg)
 
-elif cmd == 'type':
-    version = argv[2]
-    path = argv[3]
-    p = script ('get-type', version, path)
-    echo (p)
+    if cmd == 'versions':
+        for p in scriptLines ('list-tags', '-h'):
+            if db.vers.exists (p.split(b' ')[2]):
+                echo (p + b'\n')
 
-elif cmd == 'dir':
-    version = argv[2]
-    path = argv[3]
-    p = script ('get-dir', version, path)
-    echo (p)
-
-elif cmd == 'file':
-    version = argv[2]
-    path = argv[3]
-    ext = path[-2:]
-
-    if ext == '.c' or ext == '.h':
-        tokens = scriptLines ('tokenize-file', version, path)
-        even = True
-        for tok in tokens:
-            even = not even
-            if even and db.defs.exists (tok) and lib.isIdent (tok):
-                tok = b'\033[31m' + tok + b'\033[0m'
-            else:
-                tok = lib.unescape (tok)
-            echo (tok)
-    else:
-        p = script ('get-file', version, path)
+    elif cmd == 'latest':
+        p = script ('get-latest')
         echo (p)
 
-elif cmd == 'ident':
-    version = argv[2]
-    ident = argv[3]
+    elif cmd == 'type':
+        version = args[0]
+        path = args[1]
+        p = script ('get-type', version, path)
+        echo (p)
 
-    if not db.defs.exists (ident):
-        print (argv[0] + ': Unknown identifier: ' + ident)
-        exit()
+    elif cmd == 'dir':
+        version = args[0]
+        path = args[1]
+        p = script ('get-dir', version, path)
+        echo (p)
 
-    if not db.vers.exists (version):
-        print (argv[0] + ': Unknown version: ' + version)
-        exit()
+    elif cmd == 'file':
+        version = args[0]
+        path = args[1]
+        ext = path[-2:]
 
-    vers = db.vers.get (version).iter()
-    defs = db.defs.get (ident).iter (dummy=True)
-    # FIXME: see why we can have a discrepancy between defs and refs
-    if db.refs.exists (ident):
-        refs = db.refs.get (ident).iter (dummy=True)
+        if ext == '.c' or ext == '.h':
+            tokens = scriptLines ('tokenize-file', version, path)
+            even = True
+            for tok in tokens:
+                even = not even
+                if even and db.defs.exists (tok) and lib.isIdent (tok):
+                    tok = b'\033[31m' + tok + b'\033[0m'
+                else:
+                    tok = lib.unescape (tok)
+                echo (tok)
+        else:
+            p = script ('get-file', version, path)
+            echo (p)
+
+    elif cmd == 'ident':
+        version = args[0]
+        ident = args[1]
+
+        if not db.defs.exists (ident):
+            echo (('Unknown identifier: ' + ident + '\n').encode())
+            return buffer.getvalue()
+
+        if not db.vers.exists (version):
+            echo (('Unknown version: ' + version + '\n').encode())
+            return buffer.getvalue()
+
+        vers = db.vers.get (version).iter()
+        defs = db.defs.get (ident).iter (dummy=True)
+        # FIXME: see why we can have a discrepancy between defs and refs
+        if db.refs.exists (ident):
+            refs = db.refs.get (ident).iter (dummy=True)
+        else:
+            refs = data.RefList().iter (dummy=True)
+
+        id2, type, dline = next (defs)
+        id3, rlines = next (refs)
+
+        dBuf = []
+        rBuf = []
+
+        for id1, path in vers:
+            while id1 > id2:
+                id2, type, dline = next (defs)
+            while id1 > id3:
+                id3, rlines = next (refs)
+            while id1 == id2:
+                dBuf.append ((path, type, dline))
+                id2, type, dline = next (defs)
+            if id1 == id3:
+                rBuf.append ((path, rlines))
+
+        echo (('Defined in ' + str(len(dBuf)) + ' files:\n').encode())
+        for path, type, dline in sorted (dBuf):
+            echo ((path + ': ' + str (dline) + ' (' + type + ')\n').encode())
+
+        echo (('\nReferenced in ' + str(len(rBuf)) + ' files:\n').encode())
+        for path, rlines in sorted (rBuf):
+            echo ((path + ': ' + rlines + '\n').encode())
+
     else:
-        refs = data.RefList().iter (dummy=True)
+        echo (('Unknown subcommand: ' + cmd + '\n').encode())
 
-    id2, type, dline = next (defs)
-    id3, rlines = next (refs)
+    return buffer.getvalue()
 
-    dBuf = []
-    rBuf = []
+if __name__ == "__main__":
+    import sys
 
-    for id1, path in vers:
-        while id1 > id2:
-            id2, type, dline = next (defs)
-        while id1 > id3:
-            id3, rlines = next (refs)
-        while id1 == id2:
-            dBuf.append ((path, type, dline))
-            id2, type, dline = next (defs)
-        if id1 == id3:
-            rBuf.append ((path, rlines))
-
-    print ('Defined in', len (dBuf), 'files:')
-    for path, type, dline in sorted (dBuf):
-        print (path + ': ' + str (dline) + ' (' + type + ')')
-
-    print ('\nReferenced in', len (rBuf), 'files:')
-    for path, rlines in sorted (rBuf):
-        print (path + ': ' + rlines)
-
-else:
-    print (argv[0] + ': Unknown subcommand: ' + cmd)
+    output = query (*(sys.argv[1:]))
+    sys.stdout.buffer.write (output)
