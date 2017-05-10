@@ -307,7 +307,7 @@ elif mode == 'search':
     head = sub ('\$title', 'Freetext search - Elixir - Free Electrons', head)
     print (head, end='')
 
-    print ('<form method="get" action="http://www.google.com/search"><input type="text"   name="q" size="31" maxlength="255" value="" /><input type="submit" value="Google Search" /><input type="radio"  name="sitesearch" value="" /> The Web<input type="radio"  name="sitesearch" value="elixir.free-electrons.com/'+project+'/'+version+'" checked="checked"/>elixir.free-electrons.com/'+project+'/'+version+'</form>')
+    print ('<form method="get" action="http://www.google.com/search"><input type="text"   name="q" size="31" maxlength="255" value="" /><input type="submit" value="Google Search" /><input type="radio"  name="sitesearch" value="" /> The Web<input type="radio"  name="sitesearch" value="lxr.free-electrons.com" checked="checked"/>LXR<input type="radio"  name="sitesearch" value="elixir.free-electrons.com/'+project+'/'+version+'"/>Elixir</form>')
 
 else:
     print (head)
