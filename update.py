@@ -19,7 +19,7 @@
 #  along with Elixir.  If not, see <http://www.gnu.org/licenses/>.
 
 from sys import argv
-from lib import echo, script, scriptLines
+from lib import script, scriptLines
 import lib
 import data
 import os
