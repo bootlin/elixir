@@ -127,6 +127,7 @@ data = {
     'tag': tag,
     'version': version,
     'url': url,
+    'project': project,
     'projects': projects,
     'ident': ident,
     'breadcrumb': '<a class="project" href="'+version+'/source">'+project+'</a>'
