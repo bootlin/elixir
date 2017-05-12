@@ -73,9 +73,6 @@ if m:
             if not (ident and search ('^[A-Za-z0-9_-]*$', ident)):
                 ident = ''
             url2 = 'ident/'+ident
-    elif cmd == 'search':
-        mode = 'search'
-        url2 = 'search'
 else:
     status = 404
 
@@ -305,13 +302,6 @@ elif mode == 'ident':
         if ident != '':
             print ('<br><b>Not used</b>')
             status = 404
-
-elif mode == 'search':
-    head = sub ('\$banner', '', head)
-    head = sub ('\$title', 'Freetext search - Elixir - Free Electrons', head)
-    print (head, end='')
-
-    print ('<form method="get" action="http://www.google.com/search"><input type="text"   name="q" size="31" maxlength="255" value="" /><input type="submit" value="Google Search" /><input type="radio"  name="sitesearch" value="" /> The Web<input type="radio"  name="sitesearch" value="lxr.free-electrons.com" checked="checked"/>LXR<input type="radio"  name="sitesearch" value="elixir.free-electrons.com/'+project+'/'+version+'"/>Elixir</form>')
 
 else:
     print (head)
