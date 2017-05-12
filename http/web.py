@@ -117,10 +117,12 @@ if version == 'latest':
 else:
     tag = version
 
-head = open ('template-head').read()
-head = sub ('{{baseurl}}', 'http://' + os.environ['HTTP_HOST'] + '/' + project + '/', head)
-head = sub ('{{tag}}', tag, head)
-head = sub ('{{version}}', version, head)
+data = {
+    'baseurl': 'http://' + os.environ['HTTP_HOST'] + '/' + project + '/',
+    'tag': tag,
+    'version': version,
+    'url': url,
+}
 
 lines = do_query ('versions')
 va = OrderedDict()
@@ -155,7 +157,7 @@ for v1k in va:
     v += ' </ul></li>\n'
 v += '</ul>\n'
 
-head = sub ('{{versions}}', v, head)
+data['versions'] = v
 
 if mode == 'source':
     breadcrumb = '<a href="'+version+'/source">'+project+'</a>'
@@ -165,10 +167,9 @@ if mode == 'source':
         p2 += '/'+p
         breadcrumb += '/<a href="'+version+'/source'+p2+'">'+p+'</a>'
 
-    head = sub ('{{breadcrumb}}', breadcrumb, head)
-    head = sub ('{{ident}}', ident, head)
-    head = sub ('{{title}}', project+path+' - Elixir - Free Electrons', head)
-    print (head, end='')
+    data['breadcrumb'] = breadcrumb
+    data['ident'] = ident
+    data['title'] = project+path+' - Elixir - Free Electrons'
 
     lines = ['null - -']
 
@@ -251,9 +252,8 @@ if mode == 'source':
 
 elif mode == 'ident':
     field = '</h1>\n<form method="get" action="'+version+'/ident">\nIdentifier: <input type="text" name="i" value="'+ident+'"size="60"/>\n<input type="submit" value="Go get it"/>\n</form>\n<h1>' + ident
-    head = sub ('{{breadcrumb}}', field, head)
-    head = sub ('{{title}}', ident+' - Elixir - Free Electrons', head)
-    print (head, end='')
+    data['breadcrumb'] = field
+    data['title'] = ident+' - Elixir - Free Electrons'
 
     lines = do_query ('ident', tag, ident)
     lines = iter (lines)
@@ -305,13 +305,16 @@ elif mode == 'ident':
             status = 404
 
 else:
-    print (head)
     print ('Invalid request')
-
-print (open ('template-tail').read(), end='')
 
 if status == 404:
     realprint ('Status: 404 Not Found')
 
+import jinja2
+loader = jinja2.FileSystemLoader (os.path.join (os.path.dirname (__file__), '../templates/'))
+environment = jinja2.Environment (loader=loader)
+template = environment.get_template ('layout.html')
+
 realprint ('Content-Type: text/html;charset=utf-8\n')
-realprint (outputBuffer.getvalue(), end='')
+data['main'] = outputBuffer.getvalue()
+realprint (template.render(data), end='')
