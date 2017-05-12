@@ -237,32 +237,42 @@ if mode == 'source':
     elif type == 'blob':
         del (lines[0])
 
-        print ('<div class="lxrcode">')
-        print ('<table><tr><td><pre>')
+        import pygments
+        import pygments.lexers
+        import pygments.formatters
+        links = []
+        code = StringIO()
 
-        width1 = len (str (len (lines)))
-        num = 1
-        width2 = len (str (num))
-        space = ' ' * (width1 - width2)
+        def keep_links(match):
+            links.append (match.group (1))
+            g = match.group(1)
+            return '__KEEPLINKS__' + str(len(links))
+
+        def replace_links(match):
+            i = links[int (match.group (1)) - 1]
+            return '<a href="'+version+'/ident/'+i+'">'+i+'</a>'
+
         for l in lines:
-            print ('  '+space+'<a name="L'+str(num)+'" href="'+version+'/source'+path+'#L'+str(num)+'">'+str(num)+'</a> ')
-            num += 1
-            width2 = len (str (num))
-            space = ' ' * (width1 - width2)
-
-        print ('</pre></td><td><pre>')
-
-        for l in lines:
-            l = cgi.escape (l)
-            l = sub ('"', '&quot;', l)
-            l = sub ('\033\[31m(.*?)\033\[0m', '<a href="'+version+'/ident/\\1">\\1</a>', l)
+            l = sub ('\033\[31m(.*?)\033\[0m', keep_links, l)
             l = sub ('\033\[32m', '', l)
             l = sub ('\033\[33m', '', l)
             l = sub ('\033\[0m', '', l)
-            print (l)
+            code.write (l + '\n')
 
-        print ('</pre></td></tr></table>')
-        print ('</div>', end='')
+        code = code.getvalue()
+
+        try:
+            lexer = pygments.lexers.guess_lexer_for_filename (path, code)
+        except:
+            lexer = pygments.lexers.get_lexer_by_name ('text')
+
+        formatter = pygments.formatters.HtmlFormatter (linenos=True, anchorlinenos=True)
+        result = pygments.highlight (code, lexer, formatter)
+
+        result = sub ('href="#-(\d+)', 'name="L\\1" href="'+version+'/source'+path+'#L\\1', result)
+        result = sub ('__KEEPLINKS__(\d+)', replace_links, result)
+
+        print ('<div class="lxrcode">' + result + '</div>')
 
 
 elif mode == 'ident':
