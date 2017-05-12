@@ -128,6 +128,7 @@ data = {
     'version': version,
     'url': url,
     'projects': projects,
+    'ident': ident,
     'breadcrumb': '<a class="project" href="'+version+'/source">'+project+'</a>'
 }
 
@@ -196,13 +197,14 @@ if mode == 'source':
         elif type == 'blob':
             lines += do_query ('file', tag, path)
     else:
-        print ('<br><b>This file does not exist.</b>')
+        print ('<div class="lxrerror"><h2>This file does not exist.</h2></div>')
         status = 404
 
     if type == 'tree':
         if path != '':
             lines[0] = 'back - -'
 
+        print ('<div class="lxrtree">')
         print ('<table>\n')
         for l in lines:
             type, name, size = l.split (' ')
@@ -210,29 +212,27 @@ if mode == 'source':
             if type == 'null':
                 continue
             elif type == 'tree':
-                icon = 'folder.gif'
                 size = ''
                 path2 = path+'/'+name
                 name = name
             elif type == 'blob':
-                icon = 'text.gif'
                 size = size+' bytes'
                 path2 = path+'/'+name
             elif type == 'back':
-                icon = 'back.gif'
                 size = ''
                 path2 = os.path.dirname (path[:-1])
                 if path2 == '/': path2 = ''
                 name = 'Parent directory'
 
-            print ('  <tr>')
-            print ('    <td><a href="'+version+'/source'+path2+'"><img src="/icons/'+icon+'" width="20" height="22" border="0" alt="'+icon+'"/></a></td>')
-            print ('    <td><a href="'+version+'/source'+path2+'">'+name+'</a></td>')
-            print ('    <td>'+size+'</td>')
+            print ('  <tr>\n')
+            print ('    <td><a class="tree-icon icon-'+type+'" href="'+version+'/source'+path2+'">'+name+'</a></td>\n')
+            print ('    <td><a tabindex="-1" class="size" href="'+version+'/source'+path2+'">'+size+'</a></td>\n')
+            print ('    </tr>\n')
 
             print ('  </tr>\n')
 
         print ('</table>', end='')
+        print ('</div>')
 
     elif type == 'blob':
         del (lines[0])
@@ -271,13 +271,14 @@ elif mode == 'ident':
     lines = do_query ('ident', tag, ident)
     lines = iter (lines)
 
+    print ('<div id="lxrident">')
     m = search ('Defined in (\d*) file', next (lines))
     if m:
         num = int (m.group(1))
         if num == 0:
             status = 404
 
-        print ('Defined in '+str(num)+' files:')
+        print ('<h2>Defined in '+str(num)+' files:</h2>')
         print ('<ul>')
         for i in range (0, num):
             l = next (lines)
@@ -291,7 +292,7 @@ elif mode == 'ident':
         m = search ('Referenced in (\d*) file', next (lines))
         num = int (m.group(1))
 
-        print ('Referenced in '+str(num)+' files:')
+        print ('<h2>Referenced in '+str(num)+' files:</h2>')
         print ('<ul>')
         for i in range (0, num):
             l = next (lines)
@@ -314,8 +315,9 @@ elif mode == 'ident':
         print ('</ul>')
     else:
         if ident != '':
-            print ('<br><b>Not used</b>')
+            print ('<h2>Identifier not used</h2>')
             status = 404
+    print ('</div>')
 
 else:
     print ('Invalid request')
