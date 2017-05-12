@@ -36,10 +36,10 @@ import os
 from re import search, sub
 from collections import OrderedDict
 
+ident = ''
 status = 200
 
-url = os.environ['SCRIPT_URL']
-m = search ('^/([^/]*)/([^/]*)/([^/]*)(.*)$', url)
+m = search ('^/([^/]*)/([^/]*)/([^/]*)(.*)$', os.environ['SCRIPT_URL'])
 if m:
     project = m.group (1)
     version = m.group (2)
@@ -60,7 +60,7 @@ if m:
             mode = 'source'
             if not search ('^[A-Za-z0-9_/.,+-]*$', path):
                 path = 'INVALID'
-            url2 = 'source'+path
+            url = 'source'+path
     elif cmd == 'ident':
         ident = arg[1:]
         form = cgi.FieldStorage()
@@ -72,7 +72,7 @@ if m:
             mode = 'ident'
             if not (ident and search ('^[A-Za-z0-9_-]*$', ident)):
                 ident = ''
-            url2 = 'ident/'+ident
+            url = 'ident/'+ident
 else:
     status = 404
 
@@ -113,14 +113,14 @@ def do_query (*args):
     return a
 
 if version == 'latest':
-    version2 = do_query ('latest')[0]
+    tag = do_query ('latest')[0]
 else:
-    version2 = version
+    tag = version
 
 head = open ('template-head').read()
-head = sub ('\$baseurl', 'http://' + os.environ['HTTP_HOST'] + '/' + project + '/', head)
-head = sub ('\$vvar2', version2, head)
-head = sub ('\$vvar', version, head)
+head = sub ('{{baseurl}}', 'http://' + os.environ['HTTP_HOST'] + '/' + project + '/', head)
+head = sub ('{{tag}}', tag, head)
+head = sub ('{{version}}', version, head)
 
 lines = do_query ('versions')
 va = OrderedDict()
@@ -150,34 +150,35 @@ for v1k in va:
         v += '  <li onclick="mf2(this);"><span class="mel2">'+v2k+'</span>\n'
         v += '  <ul class="subsubmenu">\n'
         for v3 in v2v:
-            v += '   <li><a href="'+v3+'/'+url2+'">'+v3+'</a></li>\n'
+            v += '   <li><a href="'+v3+'/'+url+'">'+v3+'</a></li>\n'
         v += '  </ul></li>\n'
     v += ' </ul></li>\n'
 v += '</ul>\n'
 
-head = sub ('\$versions', v, head)
+head = sub ('{{versions}}', v, head)
 
 if mode == 'source':
-    banner = '<a href="'+version+'/source">'+project+'</a>'
+    breadcrumb = '<a href="'+version+'/source">'+project+'</a>'
     p2 = ''
     p3 = path.split ('/') [1:]
     for p in p3:
         p2 += '/'+p
-        banner += '/<a href="'+version+'/source'+p2+'">'+p+'</a>'
+        breadcrumb += '/<a href="'+version+'/source'+p2+'">'+p+'</a>'
 
-    head = sub ('\$banner', banner, head)
-    head = sub ('\$title', project+path+' - Elixir - Free Electrons', head)
+    head = sub ('{{breadcrumb}}', breadcrumb, head)
+    head = sub ('{{ident}}', ident, head)
+    head = sub ('{{title}}', project+path+' - Elixir - Free Electrons', head)
     print (head, end='')
 
     lines = ['null - -']
 
-    type = do_query ('type', version2, path)
+    type = do_query ('type', tag, path)
     if len (type) == 1:
         type = type[0]
         if type == 'tree':
-            lines += do_query ('dir', version2, path)
+            lines += do_query ('dir', tag, path)
         elif type == 'blob':
-            lines += do_query ('file', version2, path)
+            lines += do_query ('file', tag, path)
     else:
         print ('<br><b>This file does not exist.</b>')
         status = 404
@@ -250,11 +251,11 @@ if mode == 'source':
 
 elif mode == 'ident':
     field = '</h1>\n<form method="get" action="'+version+'/ident">\nIdentifier: <input type="text" name="i" value="'+ident+'"size="60"/>\n<input type="submit" value="Go get it"/>\n</form>\n<h1>' + ident
-    head = sub ('\$banner', field, head)
-    head = sub ('\$title', ident+' - Elixir - Free Electrons', head)
+    head = sub ('{{breadcrumb}}', field, head)
+    head = sub ('{{title}}', ident+' - Elixir - Free Electrons', head)
     print (head, end='')
 
-    lines = do_query ('ident', version2, ident)
+    lines = do_query ('ident', tag, ident)
     lines = iter (lines)
 
     m = search ('Defined in (\d*) file', next (lines))
