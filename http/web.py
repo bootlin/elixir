@@ -228,8 +228,6 @@ if mode == 'source':
             print ('  <tr>\n')
             print ('    <td><a class="tree-icon icon-'+type+'" href="'+version+'/source'+path2+'">'+name+'</a></td>\n')
             print ('    <td><a tabindex="-1" class="size" href="'+version+'/source'+path2+'">'+size+'</a></td>\n')
-            print ('    </tr>\n')
-
             print ('  </tr>\n')
 
         print ('</table>', end='')
