@@ -284,7 +284,7 @@ elif mode == 'ident':
             l = next (lines)
             m = search ('^(.*): (\d*) \((.*)\)$', l)
             f, n, t = m.groups()
-            print ('<li><a href="'+version+'/source/'+f+'#L'+n+'">'+f+', line '+n+' (as a '+t+')</a>', end='')
+            print ('<li><a href="'+version+'/source/'+f+'#L'+n+'"><strong>'+f+'</strong>, line '+n+' <em>(as a '+t+')</em></a>')
         print ('</ul>')
 
         next (lines)
@@ -301,13 +301,13 @@ elif mode == 'ident':
             ln = m.group (2).split (',')
             if len (ln) == 1:
                 n = ln[0]
-                print ('<li><a href="'+version+'/source/'+f+'#L'+str(n)+'">'+f+', line '+str(n)+'</a>', end='')
+                print ('<li><a href="'+version+'/source/'+f+'#L'+str(n)+'"><strong>'+f+'</strong>, line '+str(n)+'</a>')
             else:
                 if num > 100:    # Concise display
                     n = len (ln)
-                    print ('<li><a href="'+version+'/source/'+f+'">'+f+'</a>, '+str(n)+' times')
+                    print ('<li><a href="'+version+'/source/'+f+'"><strong>'+f+'</strong>, <em>'+str(n)+' times</em></a>')
                 else:    # Verbose display
-                    print ('<li>'+f)
+                    print ('<li><a href="'+version+'/source/'+f+'#L'+str(ln[0])+'"><strong>'+f+'</strong></a>')
                     print ('<ul>')
                     for n in ln:
                         print ('<li><a href="'+version+'/source/'+f+'#L'+str(n)+'">line '+str(n)+'</a>')
