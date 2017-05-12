@@ -173,7 +173,7 @@ if mode == 'source':
     print (head, end='')
 
     lines = ['null - -']
-    
+
     type = do_query ('type', version2, path)
     if len (type) == 1:
         type = type[0]
