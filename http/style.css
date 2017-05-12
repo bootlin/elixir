@@ -684,6 +684,9 @@ main > div {
 .icon-up:before {
   content: "\70";
 }
+.icon-tag:before {
+  content: "\63";
+}
 
 
 /* highlight */
