@@ -140,22 +140,28 @@ for l in lines:
         va[m1][m2] = []
     va[m1][m2].append (l)
 
-v = '<ul id="menu">\n'
+v = ''
 b = 1
 for v1k in va:
     v1v = va[v1k]
-    v += ' <li class="menuitem" id="mi0'+str(b)+'" onclick="mf1(this);"><span class="mel" onclick="closeSubMenus();">'+v1k+'</span>\n'
+    v += '<li>\n'
+    v += '\t<span>'+v1k+'</span>\n'
+    v += '\t<ul>\n'
     b += 1
-    v += ' <ul class="submenu">\n'
     for v2k in v1v:
         v2v = v1v[v2k]
-        v += '  <li onclick="mf2(this);"><span class="mel2">'+v2k+'</span>\n'
-        v += '  <ul class="subsubmenu">\n'
-        for v3 in v2v:
-            v += '   <li><a href="'+v3+'/'+url+'">'+v3+'</a></li>\n'
-        v += '  </ul></li>\n'
-    v += ' </ul></li>\n'
-v += '</ul>\n'
+        if v2k == v2v[0]:
+            if v2k == tag: v += '\t\t<li class="li-link active"><a href="'+v2k+'/'+url+'">'+v2k+'</a></li>\n'
+            else: v += '\t\t<li class="li-link"><a href="'+v2k+'/'+url+'">'+v2k+'</a></li>\n'
+        else:
+            v += '\t\t<li>\n'
+            v += '\t\t\t<span>'+v2k+'</span>\n'
+            v += '\t\t\t<ul>\n'
+            for v3 in v2v:
+                if v3 == tag: v += '\t\t\t\t<li class="li-link active"><a href="'+v3+'/'+url+'">'+v3+'</a></li>\n'
+                else: v += '\t\t\t\t<li class="li-link"><a href="'+v3+'/'+url+'">'+v3+'</a></li>\n'
+            v += '\t\t\t</ul></li>\n'
+    v += '\t</ul></li>\n'
 
 data['versions'] = v
 
