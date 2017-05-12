@@ -237,7 +237,7 @@ if mode == 'source':
     elif type == 'blob':
         del (lines[0])
 
-        print ('<div id="lxrcode">')
+        print ('<div class="lxrcode">')
         print ('<table><tr><td><pre>')
 
         width1 = len (str (len (lines)))
@@ -271,7 +271,7 @@ elif mode == 'ident':
     lines = do_query ('ident', tag, ident)
     lines = iter (lines)
 
-    print ('<div id="lxrident">')
+    print ('<div class="lxrident">')
     m = search ('Defined in (\d*) file', next (lines))
     if m:
         num = int (m.group(1))
