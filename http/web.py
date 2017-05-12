@@ -92,6 +92,11 @@ basedir = os.environ['LXR_PROJ_DIR']
 os.environ['LXR_DATA_DIR'] = basedir + '/' + project + '/data';
 os.environ['LXR_REPO_DIR'] = basedir + '/' + project + '/repo';
 
+projects = []
+for (dirpath, dirnames, filenames) in os.walk (basedir):
+    projects.extend (dirnames)
+    break
+
 import sys
 sys.path = [ sys.path[0] + '/..' ] + sys.path
 import query
@@ -122,6 +127,7 @@ data = {
     'tag': tag,
     'version': version,
     'url': url,
+    'projects': projects,
 }
 
 lines = do_query ('versions')

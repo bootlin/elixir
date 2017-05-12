@@ -37,6 +37,9 @@
 			<aside class="sidebar" id="menu">
 				<nav>
 					<h3 class="screenreader">Projects</h3>
+					{%- for p in projects %}
+					<li{% if p == project %} class="active"{% endif %}><a href="/{{p}}/latest/source">{{p}}</a></li>
+					{%- endfor %}
 					<h3 class="screenreader">Versions</h3>
 					<ul class="versions">
 						{{versions}}
