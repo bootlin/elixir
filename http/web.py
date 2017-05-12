@@ -128,6 +128,7 @@ data = {
     'version': version,
     'url': url,
     'projects': projects,
+    'breadcrumb': '<a class="project" href="'+version+'/source">'+project+'</a>'
 }
 
 lines = do_query ('versions')
@@ -172,14 +173,16 @@ for v1k in va:
 data['versions'] = v
 
 if mode == 'source':
-    breadcrumb = '<a href="'+version+'/source">'+project+'</a>'
     p2 = ''
     p3 = path.split ('/') [1:]
+    links = []
     for p in p3:
         p2 += '/'+p
-        breadcrumb += '/<a href="'+version+'/source'+p2+'">'+p+'</a>'
+        links.append ('<a href="'+version+'/source'+p2+'">'+p+'</a>')
 
-    data['breadcrumb'] = breadcrumb
+    if links:
+        data['breadcrumb'] += ':' + '/'.join (links)
+
     data['ident'] = ident
     data['title'] = project+path+' - Elixir - Free Electrons'
 
@@ -263,8 +266,6 @@ if mode == 'source':
 
 
 elif mode == 'ident':
-    field = '</h1>\n<form method="get" action="'+version+'/ident">\nIdentifier: <input type="text" name="i" value="'+ident+'"size="60"/>\n<input type="submit" value="Go get it"/>\n</form>\n<h1>' + ident
-    data['breadcrumb'] = field
     data['title'] = ident+' - Elixir - Free Electrons'
 
     lines = do_query ('ident', tag, ident)
