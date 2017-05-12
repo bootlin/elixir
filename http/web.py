@@ -130,7 +130,7 @@ data = {
     'project': project,
     'projects': projects,
     'ident': ident,
-    'breadcrumb': '<a class="project" href="'+version+'/source">'+project+'</a>'
+    'breadcrumb': '<a class="project" href="'+version+'/source">/</a>'
 }
 
 lines = do_query ('versions')
@@ -183,7 +183,7 @@ if mode == 'source':
         links.append ('<a href="'+version+'/source'+p2+'">'+p+'</a>')
 
     if links:
-        data['breadcrumb'] += ':' + '/'.join (links)
+        data['breadcrumb'] += '/'.join (links)
 
     data['ident'] = ident
     data['title'] = project+path+' - Elixir - Free Electrons'

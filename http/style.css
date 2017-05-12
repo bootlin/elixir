@@ -249,9 +249,19 @@ main > div {
   font-style: normal;
   padding-left: 0.3em;
 }
+.version a {
+  color: #444;
+  font-weight: 700;
+}
+.version em {
+  margin-left: 0.3em;
+}
+.version em::before {
+  margin-right: 0.3em;
+  opacity: 0.5;
+}
 .go-top,
-.poweredby,
-.mimetype {
+.poweredby {
   float: right;
 }
 .poweredby {

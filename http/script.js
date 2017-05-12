@@ -146,10 +146,10 @@ function expandVersion (version) {
 // Auto expand menu to display current version
 window.setTimeout(expandVersion, 1)
 
-var version = document.querySelector('.version')
+var tag = document.querySelector('.version em')
 var openMenu = document.querySelector('.open-menu')
 var wrapper = document.querySelector('.wrapper')
-openMenu.onclick = version.onclick = function (e) {
+openMenu.onclick = tag.onclick = function (e) {
   e.preventDefault()
   wrapper.classList.toggle('show-menu')
 }
