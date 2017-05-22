@@ -575,9 +575,6 @@ main > div {
 
 /* filter results */
 
-.filter-results {
-  padding: 1em 0;
-}
 .filter-results a {
   color: #fff;
   display: block;
