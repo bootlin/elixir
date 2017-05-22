@@ -12,6 +12,13 @@
 	</head>
 	<body>
 		{% include 'header.html' %}
+		<header class="sub-header">
+			<select class="select-projects" onchange="window.location.href=this.value">
+			{%- for p in projects %}
+			  <option{% if p == project %} selected{% endif %} value="/{{p}}/latest/source">{{p}}</option>
+			{%- endfor %}
+			</select>
+		</header>
 		<div class="wrapper">
 			<main>
 				<header class="topbar">

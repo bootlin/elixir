@@ -134,6 +134,65 @@ main > div {
 }
 
 
+/* sub-header */
+
+.sub-header {
+  position: absolute;
+  top: 156px;
+  left: 0;
+  right: 0;
+  /*height: 200px;*/
+}
+.select-projects {
+  /*position: absolute;
+  bottom: 0;*/
+  padding: 0.5rem 0.6rem;
+  border: 0 none;
+  color: #fff;
+  font-family: 'Ubuntu Mono', monospace;
+  font-weight: 700;
+  font-style: italic;
+  font-size: 1.6em;
+  padding-right: 1.5em;
+
+  /* custom select design */
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  background-color: transparent;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='100' height='100' fill='%23b4bde7'><polygon points='0,0 100,0 50,50'/></svg>");
+  background-repeat: no-repeat;
+  background-position: bottom 0.45em right 0.3em;
+  background-size: 9%;
+
+  overflow: visible;
+  text-overflow: auto;
+
+  opacity: 0.7;
+}
+.select-projects:-moz-focusring {
+  color: #fff;
+  color: rgba(255,255,255,0);
+  text-shadow: 0 0 0 #fff;
+  outline: 1px;
+  outline-style: dotted;
+  outline-offset: -1px;
+}
+.select-projects:focus {
+  outline: 1px;
+  outline-style: dotted;
+  outline-offset: -1px;
+  outline-color: #fff;
+}
+.select-projects:hover,
+.select-projects:focus {
+  opacity: 1;
+}
+.select-projects option {
+  color: #000;
+}
+
+
 /* topbar */
 
 .topbar {
@@ -380,7 +439,6 @@ main > div {
   margin-left: 0.5em;
 }
 .js .sidebar .versions {
-  padding-top: 1em;
   margin-left: -0.4em;
 }
 .js .sidebar li {
@@ -439,6 +497,13 @@ main > div {
 }
 .no-js .versions {
   margin-top: 1em;
+}
+
+.no-js .sub-header {
+  display: none;
+}
+.js .projects {
+  display: none;
 }
 
 
@@ -789,6 +854,7 @@ main > div {
 .highlight .vm { color: #996633 } /* Name.Variable.Magic */
 .highlight .il { color: #0000DD } /* Literal.Number.Integer.Long */
 
+
 /* responsive */
 
 .open-menu {
@@ -799,7 +865,7 @@ main > div {
   font-size: 1.5rem;
   line-height: 0;
   position: absolute;
-  top: 1.35rem;
+  top: 1.45rem;
   left: 0.6rem;
 }
 
@@ -900,4 +966,9 @@ main > div {
   .search input {
     padding: 0.45em;
   }
+
+  .sub-header {
+    text-align: center;
+  }
+
 }
