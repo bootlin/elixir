@@ -9,12 +9,14 @@ button,hr,input{overflow:visible}audio,canvas,progress,video{display:inline-bloc
 /* commons */
 
 html {
-  box-sizing: border-box;
+  -webkit-box-sizing: border-box;
+          box-sizing: border-box;
   font-size: 16px;
   line-height: 1.2;
 }
 *, *:before, *:after {
-  box-sizing: inherit;
+  -webkit-box-sizing: inherit;
+          box-sizing: inherit;
 }
 
 *::-webkit-scrollbar {
@@ -72,9 +74,11 @@ a {
 }
 a::before,
 button::before {
+  -webkit-transition: color 0.2s, background-color 0.2s;
   transition: color 0.2s, background-color 0.2s;
 }
 input {
+  -webkit-transition: background-color 0.2s;
   transition: background-color 0.2s;
 }
 
@@ -107,30 +111,50 @@ h2 {
 
 .wrapper {
   position: relative;
+  display: -webkit-box;
+  display: -ms-flexbox;
   display: flex;
-  align-items: stretch;
-  /*background-color: #111;*/
+  -webkit-box-align: stretch;
+      -ms-flex-align: stretch;
+          align-items: stretch;
 }
 main {
-  flex: 1;
-  order: 1;
+  -webkit-box-flex: 1;
+      -ms-flex: 1;
+          flex: 1;
+  -webkit-box-ordinal-group: 2;
+      -ms-flex-order: 1;
+          order: 1;
   margin-left: 235px;
   min-height: 100vh;
 
+  display: -webkit-box;
+  display: -ms-flexbox;
   display: flex;
-  flex-direction: column;
-  align-items: stretch;
+  -webkit-box-orient: vertical;
+  -webkit-box-direction: normal;
+      -ms-flex-direction: column;
+          flex-direction: column;
+  -webkit-box-align: stretch;
+      -ms-flex-align: stretch;
+          align-items: stretch;
 }
 main > div {
-  flex: 1;
+  -webkit-box-flex: 1;
+      -ms-flex: 1;
+          flex: 1;
 }
 
 .scrollable {
+  display: -webkit-box;
+  display: -ms-flexbox;
   display: flex;
   margin-top: 2.66em;
 }
 .scrollable > div {
-  flex: 1
+  -webkit-box-flex: 1;
+      -ms-flex: 1;
+          flex: 1
 }
 
 
@@ -141,11 +165,8 @@ main > div {
   top: 156px;
   left: 0;
   right: 0;
-  /*height: 200px;*/
 }
 .select-projects {
-  /*position: absolute;
-  bottom: 0;*/
   padding: 0.5rem 0.6rem;
   border: 0 none;
   color: #fff;
@@ -347,13 +368,15 @@ main > div {
   height: 1.4rem;
   top: 0.1rem;
   position: relative;
-  box-shadow: 0 0 0 1px #888;
+  -webkit-box-shadow: 0 0 0 1px #888;
+          box-shadow: 0 0 0 1px #888;
 }
 .go-top:focus::before,
 .go-top:hover::before {
   color: #fff;
   background: #666;
-  box-shadow: 0 0 0 1px #666;
+  -webkit-box-shadow: 0 0 0 1px #666;
+          box-shadow: 0 0 0 1px #666;
 }
 
 
@@ -400,14 +423,21 @@ main > div {
 /* if javascript on/off */
 
 .js .sidebar {
+  display: -webkit-box;
+  display: -ms-flexbox;
   display: flex;
-  flex-direction: column;
+  -webkit-box-orient: vertical;
+  -webkit-box-direction: normal;
+      -ms-flex-direction: column;
+          flex-direction: column;
   max-height: 100vh;
 }
 .js .sidebar nav {
   will-change: transform;
   overflow-y: auto;
-  flex: 1;
+  -webkit-box-flex: 1;
+      -ms-flex: 1;
+          flex: 1;
 }
 
 .js .sidebar li li::before {
@@ -473,14 +503,20 @@ main > div {
 }
 
 .js .sidebar .li-link {
+  display: -webkit-box;
+  display: -ms-flexbox;
   display: flex;
 }
 .js .sidebar .li-link::before {
-  flex: 0;
+  -webkit-box-flex: 0;
+      -ms-flex: 0;
+          flex: 0;
 }
 .js .sidebar .li-link a {
   word-break: break-word;
-  flex: 1;
+  -webkit-box-flex: 1;
+      -ms-flex: 1;
+          flex: 1;
 }
 
 /* tag menu tree closed */
@@ -778,7 +814,6 @@ main > div {
   word-wrap: normal;
 
   -webkit-hyphens: none;
-  -moz-hyphens: none;
   -ms-hyphens: none;
   hyphens: none;
 }
@@ -892,6 +927,7 @@ main > div {
     width: 100%;
     height: auto;
     background: rgba(3, 8, 35, 0);
+    -webkit-transition: left 0.2s ease 0.2s, background 0.2s ease;
     transition: left 0.2s ease 0.2s, background 0.2s ease;
   }
   .sidebar .filter,
@@ -902,6 +938,7 @@ main > div {
   .show-menu .sidebar {
     background: rgba(3, 8, 35, 0.5);
     left: 0;
+    -webkit-transition: left 0.2s ease, background 0.2s ease 0.2s;
     transition: left 0.2s ease, background 0.2s ease 0.2s;
   }
 
@@ -970,5 +1007,4 @@ main > div {
   .sub-header {
     text-align: center;
   }
-
 }
