@@ -107,6 +107,28 @@ h2 {
 }
 
 
+/* IE 9 */
+.browserupgrade {
+  position: absolute;
+  top: 0em;
+  left: 0;
+  right: 0;
+  width: auto;
+  height: auto;
+  padding: 1em;
+  margin: 0;
+  z-index: 10;
+  background-color: #440a0a;
+  color: #fff;
+  font-size: 0.7em;
+  text-align: center;
+}
+.browserupgrade a {
+  color: #fff;
+  text-decoration: underline;
+}
+
+
 /* main */
 
 .wrapper {

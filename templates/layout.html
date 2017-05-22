@@ -11,11 +11,14 @@
 		<script>document.documentElement.className = 'js'</script>
 	</head>
 	<body>
+		<!--[if lte IE 9]>
+				<p class="browserupgrade">You are using an <strong>outdated</strong> browser. Please <a href="http://browsehappy.com/">upgrade your browser</a> to improve your experience and security.</p>
+		<![endif]-->
 		{% include 'header.html' %}
 		<header class="sub-header">
 			<select class="select-projects" onchange="window.location.href=this.value">
 			{%- for p in projects %}
-			  <option{% if p == project %} selected{% endif %} value="/{{p}}/latest/source">{{p}}</option>
+				<option{% if p == project %} selected{% endif %} value="/{{p}}/latest/source">{{p}}</option>
 			{%- endfor %}
 			</select>
 		</header>
