@@ -718,6 +718,7 @@ main > div {
 .linenodiv pre a:target {
   color: #444;
   background: #ccc;
+  pointer-events: none;
 }
 .linenodiv pre a:focus,
 .linenodiv pre a:hover {
