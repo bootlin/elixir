@@ -177,7 +177,7 @@ function getHeight () {
   height = window.innerHeight
     || document.documentElement.clientHeight
     || document.body.clientHeight
-  middle = height / 2
+  middle = height / 5
 }
 window.onresize = getHeight
 getHeight()
