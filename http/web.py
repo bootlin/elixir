@@ -268,7 +268,7 @@ if mode == 'source':
         formatter = pygments.formatters.HtmlFormatter (linenos=True, anchorlinenos=True)
         result = pygments.highlight (code, lexer, formatter)
 
-        result = sub ('href="#-(\d+)', 'name="L\\1" href="'+version+'/source'+path+'#L\\1', result)
+        result = sub ('href="#-(\d+)', 'name="L\\1" id="L\\1" href="'+version+'/source'+path+'#L\\1', result)
         result = sub ('__KEEPLINKS__(\d+)', replace_links, result)
 
         print ('<div class="lxrcode">' + result + '</div>')

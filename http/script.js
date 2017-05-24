@@ -185,7 +185,9 @@ getHeight()
 // This will capture hash changes while on the page
 function offsetAnchor() {
   if (location.hash.length !== 0) {
-    window.scrollTo(window.scrollX, window.scrollY - middle)
+    var rect = document.querySelector(location.hash).getBoundingClientRect()
+    var elTop = rect.top + window.scrollY
+    window.scrollTo(window.scrollX, elTop - middle)
   }
 }
 window.onhashchange = offsetAnchor
@@ -195,3 +197,9 @@ window.onhashchange = offsetAnchor
 // seems necessary to allow the browser to jump to the anchor first.
 window.setTimeout(offsetAnchor, 1)
 
+// recalculate scroll when page is fully loaded
+// in case of slow rendering very long pages.
+window.onload = function () {
+  getHeight()
+  offsetAnchor()
+}
