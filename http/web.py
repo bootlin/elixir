@@ -36,10 +36,10 @@ import os
 from re import search, sub
 from collections import OrderedDict
 
+ident = ''
 status = 200
 
-url = os.environ['SCRIPT_URL']
-m = search ('^/([^/]*)/([^/]*)/([^/]*)(.*)$', url)
+m = search ('^/([^/]*)/([^/]*)/([^/]*)(.*)$', os.environ['SCRIPT_URL'])
 if m:
     project = m.group (1)
     version = m.group (2)
@@ -60,7 +60,7 @@ if m:
             mode = 'source'
             if not search ('^[A-Za-z0-9_/.,+-]*$', path):
                 path = 'INVALID'
-            url2 = 'source'+path
+            url = 'source'+path
     elif cmd == 'ident':
         ident = arg[1:]
         form = cgi.FieldStorage()
@@ -72,10 +72,7 @@ if m:
             mode = 'ident'
             if not (ident and search ('^[A-Za-z0-9_-]*$', ident)):
                 ident = ''
-            url2 = 'ident/'+ident
-    elif cmd == 'search':
-        mode = 'search'
-        url2 = 'search'
+            url = 'ident/'+ident
 else:
     status = 404
 
@@ -94,6 +91,11 @@ elif status == 404:
 basedir = os.environ['LXR_PROJ_DIR']
 os.environ['LXR_DATA_DIR'] = basedir + '/' + project + '/data';
 os.environ['LXR_REPO_DIR'] = basedir + '/' + project + '/repo';
+
+projects = []
+for (dirpath, dirnames, filenames) in os.walk (basedir):
+    projects.extend (dirnames)
+    break
 
 import sys
 sys.path = [ sys.path[0] + '/..' ] + sys.path
@@ -116,14 +118,20 @@ def do_query (*args):
     return a
 
 if version == 'latest':
-    version2 = do_query ('latest')[0]
+    tag = do_query ('latest')[0]
 else:
-    version2 = version
+    tag = version
 
-head = open ('template-head').read()
-head = sub ('\$baseurl', 'http://' + os.environ['HTTP_HOST'] + '/' + project + '/', head)
-head = sub ('\$vvar2', version2, head)
-head = sub ('\$vvar', version, head)
+data = {
+    'baseurl': 'http://' + os.environ['HTTP_HOST'] + '/' + project + '/',
+    'tag': tag,
+    'version': version,
+    'url': url,
+    'project': project,
+    'projects': projects,
+    'ident': ident,
+    'breadcrumb': '<a class="project" href="'+version+'/source">/</a>'
+}
 
 lines = do_query ('versions')
 va = OrderedDict()
@@ -141,54 +149,63 @@ for l in lines:
         va[m1][m2] = []
     va[m1][m2].append (l)
 
-v = '<ul id="menu">\n'
+v = ''
 b = 1
 for v1k in va:
     v1v = va[v1k]
-    v += ' <li class="menuitem" id="mi0'+str(b)+'" onclick="mf1(this);"><span class="mel" onclick="closeSubMenus();">'+v1k+'</span>\n'
+    v += '<li>\n'
+    v += '\t<span>'+v1k+'</span>\n'
+    v += '\t<ul>\n'
     b += 1
-    v += ' <ul class="submenu">\n'
     for v2k in v1v:
         v2v = v1v[v2k]
-        v += '  <li onclick="mf2(this);"><span class="mel2">'+v2k+'</span>\n'
-        v += '  <ul class="subsubmenu">\n'
-        for v3 in v2v:
-            v += '   <li><a href="'+v3+'/'+url2+'">'+v3+'</a></li>\n'
-        v += '  </ul></li>\n'
-    v += ' </ul></li>\n'
-v += '</ul>\n'
+        if v2k == v2v[0]:
+            if v2k == tag: v += '\t\t<li class="li-link active"><a href="'+v2k+'/'+url+'">'+v2k+'</a></li>\n'
+            else: v += '\t\t<li class="li-link"><a href="'+v2k+'/'+url+'">'+v2k+'</a></li>\n'
+        else:
+            v += '\t\t<li>\n'
+            v += '\t\t\t<span>'+v2k+'</span>\n'
+            v += '\t\t\t<ul>\n'
+            for v3 in v2v:
+                if v3 == tag: v += '\t\t\t\t<li class="li-link active"><a href="'+v3+'/'+url+'">'+v3+'</a></li>\n'
+                else: v += '\t\t\t\t<li class="li-link"><a href="'+v3+'/'+url+'">'+v3+'</a></li>\n'
+            v += '\t\t\t</ul></li>\n'
+    v += '\t</ul></li>\n'
 
-head = sub ('\$versions', v, head)
+data['versions'] = v
 
 if mode == 'source':
-    banner = '<a href="'+version+'/source">'+project+'</a>'
     p2 = ''
     p3 = path.split ('/') [1:]
+    links = []
     for p in p3:
         p2 += '/'+p
-        banner += '/<a href="'+version+'/source'+p2+'">'+p+'</a>'
+        links.append ('<a href="'+version+'/source'+p2+'">'+p+'</a>')
 
-    head = sub ('\$banner', banner, head)
-    head = sub ('\$title', project+path+' - Elixir - Free Electrons', head)
-    print (head, end='')
+    if links:
+        data['breadcrumb'] += '/'.join (links)
+
+    data['ident'] = ident
+    data['title'] = project+path+' - Elixir - Free Electrons'
 
     lines = ['null - -']
-    
-    type = do_query ('type', version2, path)
+
+    type = do_query ('type', tag, path)
     if len (type) == 1:
         type = type[0]
         if type == 'tree':
-            lines += do_query ('dir', version2, path)
+            lines += do_query ('dir', tag, path)
         elif type == 'blob':
-            lines += do_query ('file', version2, path)
+            lines += do_query ('file', tag, path)
     else:
-        print ('<br><b>This file does not exist.</b>')
+        print ('<div class="lxrerror"><h2>This file does not exist.</h2></div>')
         status = 404
 
     if type == 'tree':
         if path != '':
             lines[0] = 'back - -'
 
+        print ('<div class="lxrtree">')
         print ('<table>\n')
         for l in lines:
             type, name, size = l.split (' ')
@@ -196,83 +213,87 @@ if mode == 'source':
             if type == 'null':
                 continue
             elif type == 'tree':
-                icon = 'folder.gif'
                 size = ''
                 path2 = path+'/'+name
                 name = name
             elif type == 'blob':
-                icon = 'text.gif'
                 size = size+' bytes'
                 path2 = path+'/'+name
             elif type == 'back':
-                icon = 'back.gif'
                 size = ''
                 path2 = os.path.dirname (path[:-1])
                 if path2 == '/': path2 = ''
                 name = 'Parent directory'
 
-            print ('  <tr>')
-            print ('    <td><a href="'+version+'/source'+path2+'"><img src="/icons/'+icon+'" width="20" height="22" border="0" alt="'+icon+'"/></a></td>')
-            print ('    <td><a href="'+version+'/source'+path2+'">'+name+'</a></td>')
-            print ('    <td>'+size+'</td>')
-
+            print ('  <tr>\n')
+            print ('    <td><a class="tree-icon icon-'+type+'" href="'+version+'/source'+path2+'">'+name+'</a></td>\n')
+            print ('    <td><a tabindex="-1" class="size" href="'+version+'/source'+path2+'">'+size+'</a></td>\n')
             print ('  </tr>\n')
 
         print ('</table>', end='')
+        print ('</div>')
 
     elif type == 'blob':
         del (lines[0])
 
-        print ('<div id="lxrcode">')
-        print ('<table><tr><td><pre>')
+        import pygments
+        import pygments.lexers
+        import pygments.formatters
+        links = []
+        code = StringIO()
 
-        width1 = len (str (len (lines)))
-        num = 1
-        width2 = len (str (num))
-        space = ' ' * (width1 - width2)
+        def keep_links(match):
+            links.append (match.group (1))
+            g = match.group(1)
+            return '__KEEPLINKS__' + str(len(links))
+
+        def replace_links(match):
+            i = links[int (match.group (1)) - 1]
+            return '<a href="'+version+'/ident/'+i+'">'+i+'</a>'
+
         for l in lines:
-            print ('  '+space+'<a name="L'+str(num)+'" href="'+version+'/source'+path+'#L'+str(num)+'">'+str(num)+'</a> ')
-            num += 1
-            width2 = len (str (num))
-            space = ' ' * (width1 - width2)
-
-        print ('</pre></td><td><pre>')
-
-        for l in lines:
-            l = cgi.escape (l)
-            l = sub ('"', '&quot;', l)
-            l = sub ('\033\[31m(.*?)\033\[0m', '<a href="'+version+'/ident/\\1">\\1</a>', l)
+            l = sub ('\033\[31m(.*?)\033\[0m', keep_links, l)
             l = sub ('\033\[32m', '', l)
             l = sub ('\033\[33m', '', l)
             l = sub ('\033\[0m', '', l)
-            print (l)
+            code.write (l + '\n')
 
-        print ('</pre></td></tr></table>')
-        print ('</div>', end='')
+        code = code.getvalue()
+
+        try:
+            lexer = pygments.lexers.guess_lexer_for_filename (path, code)
+        except:
+            lexer = pygments.lexers.get_lexer_by_name ('text')
+
+        formatter = pygments.formatters.HtmlFormatter (linenos=True, anchorlinenos=True)
+        result = pygments.highlight (code, lexer, formatter)
+
+        result = sub ('href="#-(\d+)', 'name="L\\1" id="L\\1" href="'+version+'/source'+path+'#L\\1', result)
+        result = sub ('__KEEPLINKS__(\d+)', replace_links, result)
+
+        print ('<div class="lxrcode">' + result + '</div>')
 
 
 elif mode == 'ident':
-    field = '</h1>\n<form method="get" action="'+version+'/ident">\nIdentifier: <input type="text" name="i" value="'+ident+'"size="60"/>\n<input type="submit" value="Go get it"/>\n</form>\n<h1>' + ident
-    head = sub ('\$banner', field, head)
-    head = sub ('\$title', ident+' - Elixir - Free Electrons', head)
-    print (head, end='')
+    data['title'] = ident+' - Elixir - Free Electrons'
 
-    lines = do_query ('ident', version2, ident)
+    lines = do_query ('ident', tag, ident)
     lines = iter (lines)
 
+    print ('<div class="lxrident">')
     m = search ('Defined in (\d*) file', next (lines))
     if m:
         num = int (m.group(1))
         if num == 0:
             status = 404
 
-        print ('Defined in '+str(num)+' files:')
+        print ('<h2>Defined in '+str(num)+' files:</h2>')
         print ('<ul>')
         for i in range (0, num):
             l = next (lines)
             m = search ('^(.*): (\d*) \((.*)\)$', l)
             f, n, t = m.groups()
-            print ('<li><a href="'+version+'/source/'+f+'#L'+n+'">'+f+', line '+n+' (as a '+t+')</a>', end='')
+            print ('<li><a href="'+version+'/source/'+f+'#L'+n+'"><strong>'+f+'</strong>, line '+n+' <em>(as a '+t+')</em></a>')
         print ('</ul>')
 
         next (lines)
@@ -280,7 +301,7 @@ elif mode == 'ident':
         m = search ('Referenced in (\d*) file', next (lines))
         num = int (m.group(1))
 
-        print ('Referenced in '+str(num)+' files:')
+        print ('<h2>Referenced in '+str(num)+' files:</h2>')
         print ('<ul>')
         for i in range (0, num):
             l = next (lines)
@@ -289,13 +310,13 @@ elif mode == 'ident':
             ln = m.group (2).split (',')
             if len (ln) == 1:
                 n = ln[0]
-                print ('<li><a href="'+version+'/source/'+f+'#L'+str(n)+'">'+f+', line '+str(n)+'</a>', end='')
+                print ('<li><a href="'+version+'/source/'+f+'#L'+str(n)+'"><strong>'+f+'</strong>, line '+str(n)+'</a>')
             else:
                 if num > 100:    # Concise display
                     n = len (ln)
-                    print ('<li><a href="'+version+'/source/'+f+'">'+f+'</a>, '+str(n)+' times')
+                    print ('<li><a href="'+version+'/source/'+f+'"><strong>'+f+'</strong>, <em>'+str(n)+' times</em></a>')
                 else:    # Verbose display
-                    print ('<li>'+f)
+                    print ('<li><a href="'+version+'/source/'+f+'#L'+str(ln[0])+'"><strong>'+f+'</strong></a>')
                     print ('<ul>')
                     for n in ln:
                         print ('<li><a href="'+version+'/source/'+f+'#L'+str(n)+'">line '+str(n)+'</a>')
@@ -303,24 +324,21 @@ elif mode == 'ident':
         print ('</ul>')
     else:
         if ident != '':
-            print ('<br><b>Not used</b>')
+            print ('<h2>Identifier not used</h2>')
             status = 404
-
-elif mode == 'search':
-    head = sub ('\$banner', '', head)
-    head = sub ('\$title', 'Freetext search - Elixir - Free Electrons', head)
-    print (head, end='')
-
-    print ('<form method="get" action="http://www.google.com/search"><input type="text"   name="q" size="31" maxlength="255" value="" /><input type="submit" value="Google Search" /><input type="radio"  name="sitesearch" value="" /> The Web<input type="radio"  name="sitesearch" value="lxr.free-electrons.com" checked="checked"/>LXR<input type="radio"  name="sitesearch" value="elixir.free-electrons.com/'+project+'/'+version+'"/>Elixir</form>')
+    print ('</div>')
 
 else:
-    print (head)
     print ('Invalid request')
-
-print (open ('template-tail').read(), end='')
 
 if status == 404:
     realprint ('Status: 404 Not Found')
 
+import jinja2
+loader = jinja2.FileSystemLoader (os.path.join (os.path.dirname (__file__), '../templates/'))
+environment = jinja2.Environment (loader=loader)
+template = environment.get_template ('layout.html')
+
 realprint ('Content-Type: text/html;charset=utf-8\n')
-realprint (outputBuffer.getvalue(), end='')
+data['main'] = outputBuffer.getvalue()
+realprint (template.render(data), end='')
