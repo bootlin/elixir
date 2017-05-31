@@ -62,8 +62,8 @@ then generate the databases:
 
 and verify that the queries work:
 
-    $ ./query.py file 4.10 kernel/sched/core.c
-    $ ./query.py ident 4.10 raw_spin_unlock_irq
+    $ ./query.py file v4.10 /kernel/sched/clock.c
+    $ ./query.py ident v4.10 raw_spin_unlock_irq
 
 Generating the full database can take a long time: it takes about
 15 hours on a Xeon E3-1245 v5 to index 1800 tags in the Linux kernel.
@@ -89,7 +89,7 @@ directory with a specific structure:
 
 It will then generate the other two variables upon calling the query
 command. For now, three projects are hard-coded into the shell script
-(to handle versions grouping and display): Linux, U-Boot and Busybox.
+(to handle version grouping and display): Linux, U-Boot and Busybox.
 
 Here is an example configuration for Apache:
 
