@@ -16,8 +16,10 @@ Requirements
 ------------
 
 * Python 3
+* The Jinja2 and Pygments Python libraries
 * Berkeley DB (and its Python binding)
 * Exuberant Ctags
+* Perl (for non-greedy regexes)
 
 
 Installation
@@ -70,15 +72,33 @@ limiting the number of tags with a "head") in order to test the
 update and query commands.
 
 The CGI interface ("web.py") is meant to be called from your web
-server. Here is an example configuration for Apache:
+server. Since it includes support for indexing multiple projects,
+it expects a different variable ("LXR_PROJ_DIR") which points to a
+directory with a specific structure:
+
+* <LXR_PROJ_DIR>
+  * <project 1>
+    * data
+    * repo
+  * <project 2>
+    * data
+    * repo
+  * <project 3>
+    * data
+    * repo
+
+It will then generate the other two variables upon calling the query
+command. For now, three projects are hard-coded into the shell script
+(to handle versions grouping and display): Linux, U-Boot and Busybox.
+
+Here is an example configuration for Apache:
 
     <Directory /usr/local/elixir/http/>
         Options +ExecCGI
         AllowOverride None
         Require all granted
         SetEnv PYTHONIOENCODING utf-8
-        SetEnv LXR_DATA_DIR /srv/elixir-data
-        SetEnv LXR_REPO_DIR /srv/git/linux
+        SetEnv LXR_PROJ_DIR /srv/elixir-data
     </Directory>
 
     AddHandler cgi-script .py
@@ -88,8 +108,8 @@ server. Here is an example configuration for Apache:
         DocumentRoot /usr/local/elixir/http
 
         RewriteEngine on
-        RewriteRule "^/$" "/source/" [R]
-        RewriteRule "^/source" "/web.py" [PT]
-        RewriteRule "^/ident" "/web.py" [PT]
-        RewriteRule "^/search" "/web.py" [PT]
+        RewriteRule "^/$" "/linux/latest/source" [R]
+        RewriteRule "^/.*/(source|ident|search)" "/web.py" [PT]
     </VirtualHost>
+
+Note: this documentation applies to version 0.2 of Elixir.
