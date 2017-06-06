@@ -129,6 +129,7 @@ class BsdDB:
         else:
             self.db.open (filename,
                 flags=bsddb3.db.DB_CREATE,
+                mode=0o644,
                 dbtype=bsddb3.db.DB_BTREE)
         self.ctype = contentType
 
