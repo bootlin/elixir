@@ -825,9 +825,9 @@ main > div {
 
 .highlight pre {
   color: #000;
-  -moz-tab-size: 4;
-  -o-tab-size: 4;
-  tab-size: 4;
+  -moz-tab-size: 8;
+  -o-tab-size: 8;
+  tab-size: 8;
 
   white-space: pre;
   word-spacing: normal;
