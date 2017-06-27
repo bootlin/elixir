@@ -1,4 +1,4 @@
-#!/usr/bin/python3
+#!/usr/bin/env python3
 
 #  This file is part of Elixir, a source code cross-referencer.
 #
@@ -38,7 +38,7 @@ def updateBlobIDs (tag):
         idx = db.vars.get ('numBlobs')
     else:
         idx = 0
-    
+
     blobs = scriptLines ('list-blobs', '-f', tag)
 
     newBlobs = []

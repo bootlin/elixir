@@ -136,7 +136,7 @@ case $cmd in
 
         v=`echo $1 | version_rev`
         git ls-tree -r "$v" |
-        sed -r "s/^\S* blob (\S*)\t(([^/]*\/)*(.*))$/$format/"
+        sed -r "s/^\S* blob (\S*)\t(([^/]*\/)*(.*))$/$format/; /^\S* commit .*$/d"
         ;;
 
     tokenize-file)

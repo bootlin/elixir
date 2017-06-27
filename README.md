@@ -15,7 +15,7 @@ duplicating work and data. It has a straightforward data structure
 Requirements
 ------------
 
-* Python 3
+* >= Python 3.5
 * The Jinja2 and Pygments Python libraries
 * Berkeley DB (and its Python binding)
 * Exuberant Ctags
