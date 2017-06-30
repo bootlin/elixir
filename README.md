@@ -112,4 +112,6 @@ Here is an example configuration for Apache:
         RewriteRule "^/.*/(source|ident|search)" "/web.py" [PT]
     </VirtualHost>
 
+Don't forget to enable cgi and rewrite support with `a2enmod cgi rewrite`.
+
 Note: this documentation applies to version 0.2 of Elixir.
