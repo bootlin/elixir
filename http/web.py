@@ -67,6 +67,7 @@ if m:
         ident2 = form.getvalue ('i')
         if ident == '' and ident2:
             status = 302
+            ident2 = ident2.strip()
             location = '/'+project+'/'+version+'/ident/'+ident2
         else:
             mode = 'ident'
