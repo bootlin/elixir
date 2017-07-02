@@ -79,7 +79,7 @@ class PathList:
     def iter (self, dummy=False):
         for p in self.data.split (b'\n'):
             if (p == b''): continue
-            id, path = p.split (b' ')
+            id, path = p.split (b' ',maxsplit=1)
             id = int (id)
             path = path.decode()
             yield (id, path)

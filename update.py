@@ -43,7 +43,7 @@ def updateBlobIDs (tag):
 
     newBlobs = []
     for blob in blobs:
-        hash, filename = blob.split (b' ')
+        hash, filename = blob.split (b' ',maxsplit=1)
         if not db.blob.exists (hash):
             db.blob.put (hash, idx)
             db.hash.put (idx, hash)
@@ -58,7 +58,7 @@ def updateVersions (tag):
     buf = []
 
     for blob in blobs:
-        hash, path = blob.split (b' ')
+        hash, path = blob.split (b' ',maxsplit=1)
         idx = db.blob.get (hash)
         buf.append ((idx, path))
 
