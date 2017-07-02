@@ -162,11 +162,12 @@ case $cmd in
 
     parse-defs)
         tmp=`mktemp -d`
-        git cat-file blob "$1" > $tmp/$2
-        ctags -x --c-kinds=+p-m $tmp/$2 |
+        full_path=$tmp/$2
+        git cat-file blob "$1" > "$full_path"
+        ctags -x --c-kinds=+p-m "$full_path" |
         grep -av "^operator " |
         awk '{print $1" "$2" "$3}'
-        rm $tmp/$2
+        rm "$full_path"
         rmdir $tmp
         ;;
 
