@@ -160,7 +160,7 @@ for v1k in va:
     b += 1
     for v2k in v1v:
         v2v = v1v[v2k]
-        if v2k == v2v[0]:
+        if v2k == v2v[0] and len(v2v) == 1:
             if v2k == tag: v += '\t\t<li class="li-link active"><a href="'+v2k+'/'+url+'">'+v2k+'</a></li>\n'
             else: v += '\t\t<li class="li-link"><a href="'+v2k+'/'+url+'">'+v2k+'</a></li>\n'
         else:
