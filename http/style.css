@@ -20,8 +20,8 @@ html {
 }
 
 *::-webkit-scrollbar {
-  width: 0.6rem;
-  height: 0.6rem;
+  width: 9px;
+  height: 9px;
 }
 
 .sidebar nav::-webkit-scrollbar-corner {
@@ -44,12 +44,19 @@ body::-webkit-scrollbar-thumb {
   background: #ccc;
 }
 
+.wrapper::-webkit-scrollbar-corner {
+  background: #666;
+}
+.wrapper::-webkit-scrollbar-track {
+  background: #666;
+}
+.wrapper::-webkit-scrollbar-thumb {
+  background: #ccc;
+}
+
 body {
   background: #fff;
   font-family: 'Ubuntu', sans-serif;
-  overflow-y: scroll;
-  overflow-x: hidden;
-  overflow-x: auto;
 }
 
 pre {
@@ -108,6 +115,7 @@ h2 {
 
 
 /* IE 9 */
+
 .browserupgrade {
   position: absolute;
   top: 0em;
@@ -129,64 +137,14 @@ h2 {
 }
 
 
-/* main */
-
-.wrapper {
-  position: relative;
-  display: -webkit-box;
-  display: -ms-flexbox;
-  display: flex;
-  -webkit-box-align: stretch;
-      -ms-flex-align: stretch;
-          align-items: stretch;
-}
-main {
-  -webkit-box-flex: 1;
-      -ms-flex: 1;
-          flex: 1;
-  -webkit-box-ordinal-group: 2;
-      -ms-flex-order: 1;
-          order: 1;
-  margin-left: 235px;
-  min-height: 100vh;
-
-  display: -webkit-box;
-  display: -ms-flexbox;
-  display: flex;
-  -webkit-box-orient: vertical;
-  -webkit-box-direction: normal;
-      -ms-flex-direction: column;
-          flex-direction: column;
-  -webkit-box-align: stretch;
-      -ms-flex-align: stretch;
-          align-items: stretch;
-}
-main > div {
-  -webkit-box-flex: 1;
-      -ms-flex: 1;
-          flex: 1;
-}
-
-.scrollable {
-  display: -webkit-box;
-  display: -ms-flexbox;
-  display: flex;
-  margin-top: 2.66em;
-}
-.scrollable > div {
-  -webkit-box-flex: 1;
-      -ms-flex: 1;
-          flex: 1
-}
 
 
 /* sub-header */
 
 .sub-header {
-  position: absolute;
-  top: 156px;
-  left: 0;
-  right: 0;
+  height: 2.7em;
+  margin-top: -2.7em;
+  text-align: center;
 }
 .select-projects {
   padding: 0.5rem 0.6rem;
@@ -207,9 +165,6 @@ main > div {
   background-repeat: no-repeat;
   background-position: bottom 0.45em right 0.3em;
   background-size: 9%;
-
-  overflow: visible;
-  text-overflow: auto;
 
   opacity: 0.7;
 }
@@ -240,12 +195,6 @@ main > div {
 
 .topbar {
   background: #c0c0c0;
-  position: absolute;
-  top: 0;
-  left: 235px;
-  right: 0;
-  width: auto;
-  height: auto;
   z-index: 20;
 }
 
@@ -279,7 +228,7 @@ main > div {
   font-size: 0.9em;
   width: 100%;
   border: 0 none;
-  padding: 0.9rem 1rem;
+  padding: 0.45em;
   margin: 0;
 }
 .filter input:focus,
@@ -301,8 +250,8 @@ main > div {
 
 .search {
   position: relative;
-  float: right;
-  width: 40%;
+  padding: 0.5em;
+  padding-top: 0;
 }
 .search button:focus,
 .search button:hover {
@@ -318,6 +267,10 @@ main > div {
   background: #eee;
 }
 
+.filter {
+  padding: 0.5em;
+  background: #222;
+}
 .filter input {
   color: #fff;
   background: #333;
@@ -337,10 +290,7 @@ main > div {
 /* footer */
 
 .footer {
-  position: fixed;
-  bottom: 0;
-  left: 235px;
-  right: 0;
+  height: 25px;
   padding: 0.3rem 2.5rem;
   padding-left: 1.5rem;
   font-size: 0.8em;
@@ -405,11 +355,6 @@ main > div {
 /* sidebar */
 
 .sidebar {
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  width: 235px;
-  min-height: 100vh;
   height: auto;
   z-index: 10;
 }
@@ -452,7 +397,6 @@ main > div {
   -webkit-box-direction: normal;
       -ms-flex-direction: column;
           flex-direction: column;
-  max-height: 100vh;
 }
 .js .sidebar nav {
   will-change: transform;
@@ -550,6 +494,11 @@ main > div {
   display: block;
 }
 
+.no-js .sidebar:target {
+  left: 0;
+  height: 100vh;
+  overflow: auto;
+}
 .no-js .sidebar nav ul span {
   display: none;
 }
@@ -562,14 +511,6 @@ main > div {
 }
 .js .projects {
   display: none;
-}
-
-
-/* fixed topbar and sidebar when header isn't in viewport */
-
-.hidden-header .topbar,
-.hidden-header .sidebar {
-  position: fixed;
 }
 
 
@@ -690,9 +631,6 @@ main > div {
 .lxrcode {
   position: relative;
 }
-.lxrcode table {
-  height: 100%;
-}
 .lxrcode pre {
   margin: 0;
   padding-top: 1em;
@@ -700,9 +638,11 @@ main > div {
   min-height: 100%;
 }
 
+.lxrcode,
+.highlighttable,
 .linenodiv,
 .highlight {
-  min-height: 100%;
+  height: 100%;
 }
 
 .linenodiv {
@@ -740,7 +680,8 @@ main > div {
   color: inherit;
   font-weight: 700;
   background-color: #f4f6ff;
-  box-shadow: 0 0 0 1px #f4f6ff;
+  -webkit-box-shadow: 0 0 0 1px #f4f6ff;
+          box-shadow: 0 0 0 1px #f4f6ff;
   border-radius: 0.2em;
 }
 .highlight a:hover {
@@ -911,18 +852,45 @@ main > div {
 .highlight .il { color: #0000DD } /* Literal.Number.Integer.Long */
 
 
+/* layout */
+
+main {
+  min-height: calc(100vh - 45px - 25px);
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+  position: relative;
+}
+.js .wrapper {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  width: auto;
+  height: auto;
+  overflow-x: auto;
+  overflow-y: scroll;
+}
+.footer {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 2;
+}
+
+
 /* responsive */
 
 .open-menu {
-  display: none;
-  margin-right: 1.5rem;
+  margin-right: 1.2rem;
+  margin-left: -0.5rem;
 }
 .open-menu::before {
   font-size: 1.5rem;
   line-height: 0;
-  position: absolute;
-  top: 1.45rem;
-  left: 0.6rem;
+  vertical-align: -0.31rem;
 }
 
 .close-menu {
@@ -934,98 +902,172 @@ main > div {
   font-size: 1.7rem;
   width: 2.8rem;
   height: 2.8rem;
-  margin-left: 0em;
+}
+.close-menu {
+  margin-left: 0.3em;
+  margin-top: -0.3em;
 }
 
-@media screen and (max-width: 768px) {
-  /* responsive menu */
-  .wrapper .sidebar {
-    position: fixed;
-    z-index: 30;
-    top: 0;
-    bottom: 0;
-    left: -100%;
-    width: 100%;
-    height: auto;
-    background: rgba(3, 8, 35, 0);
-    -webkit-transition: left 0.2s ease 0.2s, background 0.2s ease;
-    transition: left 0.2s ease 0.2s, background 0.2s ease;
-  }
-  .sidebar .filter,
-  .sidebar nav {
-    width: 60%;
-    max-width: 330px;
-  }
-  .show-menu .sidebar {
-    background: rgba(3, 8, 35, 0.5);
-    left: 0;
-    -webkit-transition: left 0.2s ease, background 0.2s ease 0.2s;
-    transition: left 0.2s ease, background 0.2s ease 0.2s;
-  }
-
-  main {
-    margin-left: 0;
-  }
-  .topbar {
-    left: 0;
-  }
-  .hidden-header .topbar {
-    left: 0;
-  }
-  .footer {
-    left: 0;
-  }
-  .open-menu {
-    display: inline;
-  }
+.sidebar {
+  position: fixed;
+  z-index: 30;
+  top: 0;
+  bottom: 0;
+  left: -100%;
+  width: 100%;
+  height: auto;
+  background: rgba(3, 8, 35, 0);
+  -webkit-transition: left 0.2s ease 0.2s, background 0.2s ease;
+  transition: left 0.2s ease 0.2s, background 0.2s ease;
+}
+.sidebar .filter,
+.sidebar nav {
+  width: 60%;
+  max-width: 330px;
+}
+.show-menu .sidebar {
+  background: rgba(3, 8, 35, 0.5);
+  left: 0;
+  -webkit-transition: left 0.2s ease, background 0.2s ease 0.2s;
+  transition: left 0.2s ease, background 0.2s ease 0.2s;
 }
 
-@media screen and (max-width: 600px) {
-  .sidebar .filter,
-  .sidebar nav {
-    width: 85%;
-    width: calc(100% - 2.8rem);
+/* tablet */
+@media screen and (min-width: 600px) {
+  .filter input,
+  .search input {
+    padding: 0.9rem 1rem;
   }
-
-  .lxrtree td a {
-    padding: 0.15em 0.5em;
-  }
-
-  .search {
-    float: none;
-    width: 100%;
-    padding: 0.5em;
-    padding-top: 0;
-  }
-  .breadcrumb {
-    padding: 1em 1.2em;
-  }
-
-  .scrollable {
-    margin-top: 4.5em;
-    margin-top: 4.9em;
-  }
-
-  .close-menu {
-    margin-left: 0.3em;
-    margin-top: -0.3em;
+  .search,
+  .filter {
+    padding: 0;
   }
   .filter {
-    padding: 0.5em;
     background: #222;
   }
-  .filter button {
-    height: 2.2em;
-    right: 0.4em;
+  .close-menu {
+    margin-left: 0;
+    margin-top: 0;
   }
-  .filter input {
-    padding: 0.45em;
+  .topbar {
+    display: -webkit-box;
+    display: -ms-flexbox;
+    display: flex;
   }
-  .search input {
-    padding: 0.45em;
+  .breadcrumb {
+    -webkit-box-flex: 1;
+        -ms-flex: 1;
+            flex: 1;
+  }
+  .search {
+    width: 40%;
+  }
+  .sub-header {
+    text-align: left;
+  }
+}
+
+/* desktop */
+@media screen and (min-width: 769px) {
+  .open-menu,
+  .close-menu {
+    display: none;
+  }
+  .sidebar {
+    position: absolute;
+    top: -45px;
+    bottom: -25px;
+    left: 0;
+    -webkit-box-ordinal-group: 1;
+        -ms-flex-order: 0;
+            order: 0;
+    width: 235px;
+    -webkit-box-flex: 0;
+        -ms-flex: 0 0 235px;
+            flex: 0 0 235px;
+  }
+  .sidebar .filter, .sidebar nav {
+    width: 100%;
+  }
+  .workspace {
+    -webkit-box-ordinal-group: 2;
+        -ms-flex-order: 1;
+            order: 1;
+    padding-left: 235px;
+  }
+  .topbar {
+    padding-left: 235px;
+  }
+  .footer {
+    padding-left: calc(2.5rem + 235px);
+  }
+  .linenos {
+    left: 235px;
+  }
+  .no-js .sidebar {
+    left: auto;
+    height: auto;
+    overflow: visible;
+  }
+}
+
+
+/* if browser support position: sticky */
+@supports ((position: -webkit-sticky) or (position: sticky)) {
+  .js .header {
+    position: -webkit-sticky;
+    position: sticky;
+    left: 0;
+  }
+  .js .footer {
+    position: -webkit-sticky;
+    position: sticky;
+    right: unset;
+  }
+  .js .topbar {
+    position: -webkit-sticky;
+    position: sticky;
+    top: 0;
+    left: 0;
+    z-index: 2;
+  }
+  .js .sub-header {
+    position: -webkit-sticky;
+    position: sticky;
+    left: 0;
+  }
+  .js .linenos {
+    position: -webkit-sticky;
+    position: sticky;
+    left: 0;
+    z-index: 1;
+  }
+  .js main {
+    position: unset;
   }
 
-  .sub-header {
-    text-align: center;
+  /* desktop */
+  @media screen and (min-width: 769px) {
+    .js .linenos {
+      left: 235px;
+    }
+    .js .workspace {
+      padding-left: unset;
+    }
+    .js .sidebar {
+      position: -webkit-sticky;
+      position: sticky;
+      top: 0;
+      left: 0;
+      height: 100vh;
+      margin-top: -45px;
+      margin-bottom: -25px;
+
+      /* screen height minus potential horizontal scrollbar height */
+      height: calc(100vh - 18px);
+      /* little hack to hide potential scrollbar gap */
+      -webkit-box-shadow: 0 18px 0 0 #111;
+              box-shadow: 0 18px 0 0 #111;
+    }
   }
 }

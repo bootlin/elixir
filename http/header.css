@@ -1,17 +1,6 @@
-.wrapper {
-  margin-top: 200px;
-  min-height: calc(100vh - 200px);
-}
-
 .header {
-  position: absolute;
-  top: 0;
-  right: 0;
-  left: 0;
   height: 200px;
-  width: auto;
   background: #6D7DD2;
-
   background-image: url('/img/2penguins.svg');
   background-repeat: no-repeat;
   background-size: 300px;
