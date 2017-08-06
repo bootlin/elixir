@@ -1,50 +1,3 @@
-function throttle(fn, threshhold) {
-  threshhold || (threshhold = 150)
-  var last, deferTimer
-  return function () {
-    var now = +new Date
-    if (last && now < last + threshhold) {
-      clearTimeout(deferTimer)
-      deferTimer = setTimeout(function () {
-        last = now
-        fn()
-      }, threshhold)
-    } else {
-      last = now
-      fn()
-    }
-  };
-}
-
-/* Fixed topbar and tag menu when header is hidden by scroll */
-
-// Cross browser scrollTop position
-var getScrollTop
-if (typeof window.pageYOffset != 'undefined') {
-  getScrollTop = function () { return window.pageYOffset }
-} else {
-  if (document.documentElement.clientHeight)
-    getScrollTop = function () { return document.documentElement.scrollTop }
-  else getScrollTop = function () { return document.body.scrollTop }
-}
-
-var bodyClassName = ''
-function checkScroll () {
-  var isHiddenHeader = getScrollTop() >= 200 ? 'hidden-header' : ''
-  if (isHiddenHeader !== bodyClassName) {
-    document.body.className = bodyClassName = isHiddenHeader
-  }
-}
-
-// If header is present
-if (document.querySelector('.header')) {
-  window.onscroll = throttle(checkScroll, 10)
-  checkScroll()
-} else {
-  document.body.className = 'hidden-header'
-}
-
-
 /* Tags menu filter */
 
 var versions = document.querySelector('.versions')
@@ -121,6 +74,18 @@ input.oninput = function () {
   }
 }
 
+// prevent chrome auto-scrolling to element
+document.querySelectorAll('input').forEach(function(el) {
+  el.onkeydown = function (e) {
+    var before = wrapper.scrollTop
+    function reset() {
+      wrapper.scrollTop = before
+    }
+    window.requestAnimationFrame(reset)
+    setTimeout(reset, 0)
+  }
+})
+
 
 /* Tags menu tree */
 
@@ -154,7 +119,6 @@ openMenu.onclick = tag.onclick = function (e) {
   wrapper.classList.toggle('show-menu')
 }
 sidebar.onclick = function (e) {
-  console.log(e.target.className)
   if (e.target === this || e.target.classList.contains('close-menu')) {
     wrapper.classList.remove('show-menu')
   }
@@ -162,44 +126,35 @@ sidebar.onclick = function (e) {
 
 
 /* Linenumbers navigation */
+document.querySelector('.go-top').onclick = function() {
+  wrapper.scrollTop = 0
+  wrapper.scrollLeft = 0
+}
 
 // When using linenumbers's anchor
 // it jump the line a the top of the page
 // and it's hidden under the fixed topbar element.
-// To prevent this let's make the jump at half the height
-// of the screen
-
-var height
-var middle
-
-// cross browser height calculation
-function getHeight () {
-  height = window.innerHeight
-    || document.documentElement.clientHeight
-    || document.body.clientHeight
-  middle = height / 5
-}
-window.onresize = getHeight
-getHeight()
+// To prevent this let's jump to a few lines behind the top
 
 // This will capture hash changes while on the page
-function offsetAnchor() {
+function offsetAnchor(e) {
+  if (e && e.preventDefault) e.preventDefault()
   if (location.hash.length !== 0) {
-    var rect = document.querySelector(location.hash).getBoundingClientRect()
-    var elTop = rect.top + window.scrollY
-    window.scrollTo(window.scrollX, elTop - middle)
+    var el = document.querySelector(location.hash)
+    if (el) {
+      var offsetTop = el.offsetTop
+      wrapper.scrollTop = offsetTop < 100 ? 200 : offsetTop + 100
+    }
   }
 }
 window.onhashchange = offsetAnchor
 
 // This is here so that when you enter the page with a hash,
-// it can provide the offset in that case too. Having a timeout
-// seems necessary to allow the browser to jump to the anchor first.
-window.setTimeout(offsetAnchor, 1)
+// it can provide the offset in that case too.
+window.requestAnimationFrame(offsetAnchor)
 
 // recalculate scroll when page is fully loaded
 // in case of slow rendering very long pages.
 window.onload = function () {
-  getHeight()
-  offsetAnchor()
+  window.requestAnimationFrame(offsetAnchor)
 }
