@@ -124,7 +124,7 @@ else:
     tag = version
 
 data = {
-    'baseurl': 'http://' + os.environ['HTTP_HOST'] + '/' + project + '/',
+    'baseurl': '/' + project + '/',
     'tag': tag,
     'version': version,
     'url': url,
