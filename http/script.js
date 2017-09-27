@@ -75,7 +75,8 @@ input.oninput = function () {
 }
 
 // prevent chrome auto-scrolling to element
-document.querySelectorAll('input').forEach(function(el) {
+var arr = []
+arr.forEach.call(document.querySelectorAll('input'), function(el) {
   el.onkeydown = function (e) {
     var before = wrapper.scrollTop
     function reset() {
