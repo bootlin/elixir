@@ -19,8 +19,6 @@
 #  along with Elixir.  If not, see <http://www.gnu.org/licenses/>.
 
 import subprocess
-import re
-import sys
 
 def script (*args):
     args = ('./script.sh',) + args
