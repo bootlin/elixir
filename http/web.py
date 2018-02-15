@@ -3,7 +3,7 @@
 #  This file is part of Elixir, a source code cross-referencer.
 #
 #  Copyright (C) 2017  Mikaël Bouillot
-#  <mikael.bouillot@free-electrons.com>
+#  <mikael.bouillot@bootlin.com>
 #
 #  Elixir is free software: you can redistribute it and/or modify
 #  it under the terms of the GNU Affero General Public License as published by
@@ -187,7 +187,7 @@ if mode == 'source':
         data['breadcrumb'] += '/'.join (links)
 
     data['ident'] = ident
-    data['title'] = project+path+' - Elixir - Free Electrons'
+    data['title'] = project+path+' - Elixir - Bootlin'
 
     lines = ['null - -']
 
@@ -276,7 +276,7 @@ if mode == 'source':
 
 
 elif mode == 'ident':
-    data['title'] = ident+' - Elixir - Free Electrons'
+    data['title'] = ident+' - Elixir - Bootlin'
 
     lines = do_query ('ident', tag, ident)
     lines = iter (lines)

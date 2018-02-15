@@ -3,7 +3,7 @@
 #  This file is part of Elixir, a source code cross-referencer.
 #
 #  Copyright (C) 2017  Mikaël Bouillot
-#  <mikael.bouillot@free-electrons.com>
+#  <mikael.bouillot@bootlin.com>
 #
 #  Elixir is free software: you can redistribute it and/or modify
 #  it under the terms of the GNU Affero General Public License as published by
