@@ -86,6 +86,12 @@ case $cmd in
                 tac |
                 sed -r 's/^([0-9])\.([0-9]*)(.*)$/v\1 \1.\2 \1.\2\3/'
               ;;
+              zephyr)
+                echo "$tags" |
+                grep -v '^zephyr-v' |
+                tac |
+                sed -r 's/^(v[0-9])\.([0-9]*)(.*)$/\1 \1.\2 \1.\2\3/'
+              ;;
               *)
                 echo "$tags" |
                 tac |
@@ -93,12 +99,27 @@ case $cmd in
               ;;
             esac
         else
-            echo "$tags"
+            case $project in
+              zephyr)
+                echo "$tags" |
+                grep -v '^zephyr-v'
+              ;;
+              *)
+                echo "$tags"
+              ;;
+            esac
         fi
         ;;
 
     get-latest)
-        git tag | version_dir | grep -v '\-rc' | sort -V | tail -n 1
+        case $project in
+          zephyr)
+            git tag | grep -v '^zephyr-v' | version_dir | grep -v '\-rc' | sort -V | tail -n 1
+          ;;
+          *)
+            git tag | version_dir | grep -v '\-rc' | sort -V | tail -n 1
+          ;;
+        esac
         ;;
 
     get-type)
