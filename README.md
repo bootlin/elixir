@@ -89,8 +89,8 @@ directory with a specific structure:
 
 It will then generate the other two variables upon calling the query
 command. For now, three projects are hard-coded into the shell script
-(to handle version grouping and display): Linux, U-Boot, Busybox and
-Zephyr.
+(to handle version grouping and display): Linux, U-Boot, Busybox,
+Musl and Zephyr.
 
 Here is an example configuration for Apache:
 
