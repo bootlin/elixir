@@ -97,6 +97,7 @@ projects = []
 for (dirpath, dirnames, filenames) in os.walk (basedir):
     projects.extend (dirnames)
     break
+projects.sort ()
 
 import sys
 sys.path = [ sys.path[0] + '/..' ] + sys.path
