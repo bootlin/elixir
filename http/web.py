@@ -188,7 +188,7 @@ if mode == 'source':
         data['breadcrumb'] += '/'.join (links)
 
     data['ident'] = ident
-    data['title'] = project+path+' - Elixir - Bootlin'
+    data['title'] = project+' source code: '+path[1:]+' ('+tag+') - Bootlin'
 
     lines = ['null - -']
 
@@ -277,7 +277,7 @@ if mode == 'source':
 
 
 elif mode == 'ident':
-    data['title'] = ident+' - Elixir - Bootlin'
+    data['title'] = project+' source code: '+ident+' identifier ('+tag+') - Bootlin'
 
     lines = do_query ('ident', tag, ident)
     lines = iter (lines)
