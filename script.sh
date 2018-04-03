@@ -23,11 +23,133 @@ if [ ! -d "$LXR_REPO_DIR" ]; then
     exit 1
 fi
 
+version_dir()
+{
+    cat;
+}
+
+version_rev()
+{
+    cat;
+}
+
+get_tags()
+{
+    git tag |
+    version_dir |
+    sed 's/$/.0/' |
+    sort -V |
+    sed 's/\.0$//'
+}
+
+list_tags()
+{
+    echo "$tags"
+}
+
+list_tags_h()
+{
+    tac |
+    sed -r 's/^/XXX XXX /';
+}
+
+get_latest()
+{
+    git tag | version_dir | grep -v '\-rc' | sort -V | tail -n 1
+}
+
+get_type()
+{
+    v=`echo $opt1 | version_rev`
+    git cat-file -t "$v:`denormalize $opt2`" 2>/dev/null
+}
+
+get_blob()
+{
+    git cat-file blob $opt1
+}
+
+get_file()
+{
+    v=`echo $opt1 | version_rev`
+    git cat-file blob "$v:`denormalize $opt2`" 2>/dev/null
+}
+
+get_dir()
+{
+        v=`echo $opt1 | version_rev`
+        git ls-tree -l "$v:`denormalize $opt2`" 2>/dev/null |
+        awk '{print $2" "$5" "$4}' |
+        grep -v ' \.' |
+        sort -t ' ' -k 1,1r -k 2,2
+}
+
+tokenize_file()
+{
+    if [ "$opt1" = -b ]; then
+        ref=$opt2
+    else
+        v=`echo $opt1 | version_rev`
+        ref="$v:`denormalize $opt2`"
+    fi
+ 
+    git cat-file blob $ref 2>/dev/null |
+    tr '\n' '\1' |
+    perl -pe 's%((/\*.*?\*/|//.*?\001|"(\\.|.)*?"|# *include *<.*?>|\W)+)(\w+)?%\1\n\4\n%g' |
+    head -n -1
+}
+
+list_blobs()
+{
+    v=`echo $opt2 | version_rev`
+
+    if [ "$opt1" = '-p' ]; then
+        format='\1 \2'
+    elif [ "$opt1" = '-f' ]; then
+        format='\1 \4'
+    else
+        format='\1'
+        v=`echo $opt1 | version_rev`
+    fi
+
+    git ls-tree -r "$v" |
+    sed -r "s/^\S* blob (\S*)\t(([^/]*\/)*(.*))$/$format/; /^\S* commit .*$/d"
+}
+
+untokenize()
+{
+    tr -d '\n' |
+    sed 's/>/\*\//g' |
+    sed 's/</\/\*/g' |
+    tr '\1\2\3' '\n<>'
+}
+
+parse_defs()
+{
+    tmp=`mktemp -d`
+    full_path=$tmp/$opt2
+    git cat-file blob "$opt1" > "$full_path"
+    ctags -x --c-kinds=+p-m "$full_path" |
+    grep -av "^operator " |
+    awk '{print $1" "$2" "$3}'
+    rm "$full_path"
+    rmdir $tmp
+}
+
+project=$(basename `dirname $LXR_REPO_DIR`)
+
+plugin=projects/$project.sh
+if [ -f "$plugin" ] ; then
+    . $plugin
+fi
+
 cd "$LXR_REPO_DIR"
 
 test $# -gt 0 || set help
 
 cmd=$1
+opt1=$2
+opt2=$3
 shift
 
 denormalize()
@@ -35,181 +157,51 @@ denormalize()
     echo $1 | cut -c 2-
 }
 
-project=$(basename `dirname $LXR_REPO_DIR`)
-
-case $project in
-    busybox)
-        version_dir() { tr '_.' '._'; }
-        version_rev() { tr '._' '_.'; }
-    ;;
-    *)
-        version_dir() { cat; }
-        version_rev() { cat; }
-    ;;
-esac
-
 case $cmd in
     list-tags)
-        tags=$(
-            git tag |
-            version_dir |
-            sed 's/$/.0/' |
-            sort -V |
-            sed 's/\.0$//'
-        )
-        if [ "$1" = '-h' ]; then
-            case $project in
-              linux)
-                echo "$tags" |
-                tac |
-                sed -r 's/^(((v2.6)\.([0-9]*)(.*))|(v[0-9])\.([0-9]*)(.*))$/\3\6 \3\6.\4\7 \3\6.\4\7\5\8/'
-              ;;
-              u-boot)
-                echo "$tags" |
-                grep '^v20' |
-                tac |
-                sed -r 's/^(v20..)(.*)$/new \1 \1\2/'
+        tags=`get_tags`
 
-                echo "$tags" |
-                grep -E '^(v1|U)' |
-                tac |
-                sed -r 's/^/old by-version /'
-
-                echo "$tags" |
-                grep -E '^(LABEL|DENX)' |
-                tac |
-                sed -r 's/^/old by-date /'
-              ;;
-              barebox)
-                echo "$tags" |
-                grep '^v20' |
-                tac |
-                sed -r 's/^(v20..)(.*)$/new \1 \1\2/'
-
-                echo "$tags" |
-                grep '^v2\.0' |
-                tac |
-                sed -r 's/^(v2\.0)(.*)$/old \1 \1\2/'
-
-                echo "$tags" |
-                grep '^freescale' |
-                tac |
-                sed -r 's/^(freescale)(.*)$/old \1 \1\2/'
-              ;;
-              busybox)
-                echo "$tags" |
-                tac |
-                sed -r 's/^([0-9])\.([0-9]*)(.*)$/v\1 \1.\2 \1.\2\3/'
-              ;;
-              zephyr)
-                echo "$tags" |
-                grep -v '^zephyr-v' |
-                tac |
-                sed -r 's/^(v[0-9])\.([0-9]*)(.*)$/\1 \1.\2 \1.\2\3/'
-              ;;
-              musl)
-                echo "$tags" |
-                tac |
-                sed -r 's/^(v[0-9])\.([0-9]*)(.*)$/\1 \1.\2 \1.\2\3/'
-              ;;
-              *)
-                echo "$tags" |
-                tac |
-                sed -r 's/^/XXX XXX /'
-              ;;
-            esac
+        if [ "$opt1" = '-h' ]; then
+            list_tags_h
         else
-            case $project in
-              zephyr)
-                echo "$tags" |
-                grep -v '^zephyr-v'
-              ;;
-              *)
-                echo "$tags"
-              ;;
-            esac
+            list_tags
         fi
         ;;
 
     get-latest)
-        case $project in
-          zephyr)
-            git tag | grep -v '^zephyr-v' | version_dir | grep -v '\-rc' | sort -V | tail -n 1
-          ;;
-          *)
-            git tag | version_dir | grep -v '\-rc' | sort -V | tail -n 1
-          ;;
-        esac
+        get_latest
         ;;
 
     get-type)
-        v=`echo $1 | version_rev`
-        git cat-file -t "$v:`denormalize $2`" 2>/dev/null
+        get_type
         ;;
 
     get-blob)
-        git cat-file blob $1
+        get_blob
         ;;
 
     get-file)
-        v=`echo $1 | version_rev`
-        git cat-file blob "$v:`denormalize $2`" 2>/dev/null
+        get_file
         ;;
 
     get-dir)
-        v=`echo $1 | version_rev`
-        git ls-tree -l "$v:`denormalize $2`" 2>/dev/null |
-        awk '{print $2" "$5" "$4}' |
-        grep -v ' \.' |
-        sort -t ' ' -k 1,1r -k 2,2
+        get_dir
         ;;
 
     list-blobs)
-        if [ "$1" = '-p' ]; then
-            format='\1 \2'
-            shift
-        elif [ "$1" = '-f' ]; then
-            format='\1 \4'
-            shift
-        else
-            format='\1'
-        fi
-
-        v=`echo $1 | version_rev`
-        git ls-tree -r "$v" |
-        sed -r "s/^\S* blob (\S*)\t(([^/]*\/)*(.*))$/$format/; /^\S* commit .*$/d"
+        list_blobs
         ;;
 
     tokenize-file)
-        if [ "$1" = -b ]; then
-            ref=$2
-        else
-            v=`echo $1 | version_rev`
-            ref="$v:`denormalize $2`"
-        fi
-
-        git cat-file blob $ref 2>/dev/null |
-        tr '\n' '\1' |
-        perl -pe 's%((/\*.*?\*/|//.*?\001|"(\\.|.)*?"|# *include *<.*?>|\W)+)(\w+)?%\1\n\4\n%g' |
-        head -n -1
+        tokenize_file
         ;;
 
     untokenize)
-        tr -d '\n' |
-        sed 's/>/\*\//g' |
-        sed 's/</\/\*/g' |
-        tr '\1\2\3' '\n<>'
+        untokenize
         ;;
 
     parse-defs)
-        tmp=`mktemp -d`
-        full_path=$tmp/$2
-        git cat-file blob "$1" > "$full_path"
-        ctags -x --c-kinds=+p-m "$full_path" |
-        grep -av "^operator " |
-        awk '{print $1" "$2" "$3}'
-        rm "$full_path"
-        rmdir $tmp
+        parse_defs
         ;;
 
     help)
