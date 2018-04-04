@@ -49,8 +49,9 @@ list_tags()
 
 list_tags_h()
 {
+    echo "$tags" |
     tac |
-    sed -r 's/^/XXX XXX /';
+    sed -r 's/^(v[0-9])\.([0-9]*)(.*)$/\1 \1.\2 \1.\2\3/'
 }
 
 get_latest()
