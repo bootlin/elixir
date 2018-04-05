@@ -93,8 +93,6 @@ class PathList:
     def pack (self):
         return self.data
 
-from io import BytesIO
-
 class RefList:
     def __init__ (self, data=b''):
         self.data = data
