@@ -75,7 +75,7 @@ def updateDefinitions (blobs):
         filename = db.file.get (blob)
 
         ext = os.path.splitext(filename)[1]
-        if not (ext == '.c' or ext == '.h'): continue
+        if ext not in ['.c', '.cc', '.cpp', '.h']: continue
 
         lines = scriptLines ('parse-defs', hash, filename)
         for l in lines:
@@ -98,7 +98,7 @@ def updateReferences (blobs):
         filename = db.file.get (blob)
 
         ext = os.path.splitext(filename)[1]
-        if not (ext == '.c' or ext == '.h'): continue
+        if ext not in ['.c', '.cc', '.cpp', '.h']: continue
 
         tokens = scriptLines ('tokenize-file', '-b', hash)
         even = True
