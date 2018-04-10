@@ -74,7 +74,7 @@ def updateDefinitions (blobs):
         hash = db.hash.get (blob)
         filename = db.file.get (blob)
 
-        ext = filename[-2:]
+        ext = os.path.splitext(filename)[1]
         if not (ext == '.c' or ext == '.h'): continue
 
         lines = scriptLines ('parse-defs', hash, filename)
@@ -97,7 +97,7 @@ def updateReferences (blobs):
         hash = db.hash.get (blob)
         filename = db.file.get (blob)
 
-        ext = filename[-2:]
+        ext = os.path.splitext(filename)[1]
         if not (ext == '.c' or ext == '.h'): continue
 
         tokens = scriptLines ('tokenize-file', '-b', hash)
