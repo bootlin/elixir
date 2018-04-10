@@ -22,8 +22,13 @@ import subprocess
 
 def script (*args):
     args = ('./script.sh',) + args
-    p = subprocess.run (args, stdout=subprocess.PIPE)
-    p = p.stdout
+    # subprocess.run was introduced in Python 3.5
+    # fall back to subprocess.check_output if it's not available
+    if hasattr(subprocess, 'run'):
+        p = subprocess.run (args, stdout=subprocess.PIPE)
+        p = p.stdout
+    else:
+        p = subprocess.check_output(args)
     return p
 
 def scriptLines (*args):
