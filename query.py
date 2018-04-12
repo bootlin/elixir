@@ -63,9 +63,9 @@ def query (cmd, *args):
     elif cmd == 'file':
         version = args[0]
         path = args[1]
-        ext = path[-2:]
+        ext = os.path.splitext(path)[1]
 
-        if ext == '.c' or ext == '.h':
+        if ext in ['.c', '.cc', '.cpp', '.h']:
             tokens = scriptLines ('tokenize-file', version, path)
             even = True
             for tok in tokens:
