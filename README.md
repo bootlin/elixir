@@ -113,6 +113,19 @@ Here is an example configuration for Apache:
 
 Don't forget to enable cgi and rewrite support with `a2enmod cgi rewrite`.
 
+Hardware requirements
+---------------------
+
+Performance requirements depend mostly on the amount of traffic that you get
+on your Elixir service. However, a fast server also helps for the initial
+indexing of the projects.
+
+At Bootlin, here are a few details about the server we're using:
+
+* As of April 2018, our Elixir service consumes 165 GB of data (supporting all projects, with some data duplication).
+  Therefore, a 256 GB (SSD!) disk should be fine for most needs.
+* The server has 64GB of DDR4 ECC RAM, and a E3-1245 v5 CPU running at 3.50GHz (4 cores / 8 threads).
+
 Supporting a new project
 ------------------------
 
