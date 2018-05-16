@@ -144,8 +144,8 @@ See the `projects` subdirectory for projects that are already supported.
 Once Elixir works for at least one project, it's time to clone the git
 repository for the project you want to support:
 
-> cd /srv/git
-> git clone --bare https://github.com/zephyrproject-rtos/zephyr
+    cd /srv/git
+    git clone --bare https://github.com/zephyrproject-rtos/zephyr
 
 Now, in your `LXR_PROJ_DIR` directory, create a new directory for the
 new project:
@@ -159,7 +159,7 @@ new project:
 Now, go back to the Elixir sources and test that tags are correctly
 extracted:
 
-> ./script.sh list-tags
+    ./script.sh list-tags
 
 Depending on how you want to show the available versions on the Elixir pages,
 you may have to apply substitutions to each tag string, for example to add
@@ -203,14 +203,14 @@ to customize the `list_tags_h` function.
 You should also make sure that Elixir properly identifies
 the most recent versions:
 
-> ./script.sh get-latest
+    ./script.sh get-latest
 
 If needed, customize the `get_latest()` function.
 
 You are now ready to generate Elixir's database for your
 new project:
 
-> ./update.py
+    ./update.py
 
 You can then check that Elixir works through your http server.
 
