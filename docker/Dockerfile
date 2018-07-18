@@ -20,7 +20,7 @@ RUN \
     apache2
 
 RUN \
-  git clone https://github.com/free-electrons/elixir.git /usr/local/elixir/
+  git clone https://github.com/bootlin/elixir.git /usr/local/elixir/
 
 RUN \
   mkdir -p /srv/elixir-data/
