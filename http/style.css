@@ -693,11 +693,8 @@ h2 {
 
 @font-face {
   font-family: "lxr";
-  src: url("/fonts/lxr.eot");
-  src: url("/fonts/lxr.eot?#iefix") format("embedded-opentype"),
-       url("/fonts/lxr.woff") format("woff"),
-       url("/fonts/lxr.ttf") format("truetype"),
-       url("/fonts/lxr.svg#lxr") format("svg");
+  src: url("/fonts/lxr.svg") format("svg"),
+       url("/fonts/lxr.ttf") format("truetype");
   font-weight: normal;
   font-style: normal;
 }
@@ -736,7 +733,7 @@ h2 {
 .icon-facebook:before {
   content: "\65";
 }
-.icon-googleplus:before {
+.icon-mastodon:before {
   content: "\66";
 }
 .icon-twitter:before {
