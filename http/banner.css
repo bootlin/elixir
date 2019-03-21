@@ -81,6 +81,9 @@
 	top: 0;
 	left: 0;
 }
+header.header {
+    position: relative !important;
+}
 header.header h2 {
 	margin-bottom: 3rem;
 }
