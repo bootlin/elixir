@@ -7,6 +7,7 @@
 		<meta name="description" content="Elixir Cross Referencer">
 		<meta name="viewport" content="user-scalable=no, initial-scale=1, maximum-scale=1, minimum-scale=1" />
 		<link rel="stylesheet" href="/style.css?v=3">
+        <link rel="stylesheet" href="/banner.css">
 		<base href="{{baseurl}}"/>
 		<script>document.documentElement.className = 'js'</script>
 	</head>
@@ -16,13 +17,6 @@
 		<![endif]-->
 		<div class="wrapper">
 			{% include 'header.html' %}
-			<header class="sub-header">
-				<select class="select-projects" onchange="window.location.href=this.value">
-				{%- for p in projects %}
-					<option{% if p == project %} selected{% endif %} value="/{{p}}/latest/source">{{p}}</option>
-				{%- endfor %}
-				</select>
-			</header>
 			<header class="topbar">
 				<div class="breadcrumb">
 					<a href="{{version}}/{{url}}#menu" class="open-menu icon-menu screenreader" title="Open Menu">Open Menu</a>
@@ -40,6 +34,11 @@
 					{{main}}
 				</div>
 				<aside class="sidebar" id="menu">
+				        <select class="select-projects" onchange="window.location.href=this.value">
+				        {%- for p in projects %}
+					        <option{% if p == project %} selected{% endif %} value="/{{p}}/latest/source">{{p}}</option>
+				        {%- endfor %}
+				        </select>
 					<nav>
 						<h3 class="screenreader">Projects</h3>
 						<ul class="projects">

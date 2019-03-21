@@ -208,7 +208,7 @@ if mode == 'source':
             lines[0] = 'back - -'
 
         print ('<div class="lxrtree">')
-        print ('<table>\n')
+        print ('<table><tbody>\n')
         for l in lines:
             type, name, size = l.split (' ')
 
@@ -232,7 +232,7 @@ if mode == 'source':
             print ('    <td><a tabindex="-1" class="size" href="'+version+'/source'+path2+'">'+size+'</a></td>\n')
             print ('  </tr>\n')
 
-        print ('</table>', end='')
+        print ('</tbody></table>', end='')
         print ('</div>')
 
     elif type == 'blob':

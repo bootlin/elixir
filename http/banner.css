@@ -1,0 +1,115 @@
+.message-banner-desktop {
+    position: absolute;
+    padding: 10px;
+    -webkit-box-shadow: -2px 0px 15px 1px rgba(0,0,0,0.69);
+    -moz-box-shadow: -2px 0px 15px 1px rgba(0,0,0,0.69);
+    box-shadow: -2px 0px 15px 1px rgba(0,0,0,0.69);
+    font-size: 30px;
+    font-family: Arial;
+    font-weight: bold;
+    left: 10px;
+    bottom: 30px;
+    width: 150px;
+    height: 120px;
+    text-align: center;
+    border-radius: 20px;
+    background: rgba(255,255,255,1);
+    background: -moz-linear-gradient(top, rgba(255,255,255,1) 0%, rgba(246,246,246,1) 47%, rgba(237,237,237,1) 100%);
+    background: -webkit-gradient(left top, left bottom, color-stop(0%, rgba(255,255,255,1)), color-stop(47%, rgba(246,246,246,1)), color-stop(100%, rgba(237,237,237,1)));
+    background: -webkit-linear-gradient(top, rgba(255,255,255,1) 0%, rgba(246,246,246,1) 47%, rgba(237,237,237,1) 100%);
+    background: -o-linear-gradient(top, rgba(255,255,255,1) 0%, rgba(246,246,246,1) 47%, rgba(237,237,237,1) 100%);
+    background: -ms-linear-gradient(top, rgba(255,255,255,1) 0%, rgba(246,246,246,1) 47%, rgba(237,237,237,1) 100%);
+    background: linear-gradient(to bottom, rgba(255,255,255,1) 0%, rgba(246,246,246,1) 47%, rgba(237,237,237,1) 100%);
+    filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#ffffff', endColorstr='#ededed', GradientType=0 );
+}
+.message-banner-desktop p.title {
+	font-size: 30px;
+	margin: 0;
+	margin-top: 5px;
+}
+.message-banner-desktop .subtitle {
+    width: 150px;
+    padding: 0 10px;
+    background: #fe003e;
+    -webkit-box-shadow: -2px 0px 15px 1px rgba(0,0,0,0.69);
+    -moz-box-shadow: -2px 0px 15px 1px rgba(0,0,0,0.69);
+    box-shadow: -2px 0px 15px 1px rgba(0,0,0,0.69);
+    -webkit-transform: rotate(-15deg);
+    -moz-transform: rotate(-15deg);
+    -o-transform: rotate(-15deg);
+    -ms-transform: rotate(-15deg);
+    transform: rotate(-15deg);
+    font-size: 15px;
+    position: relative;
+    top: -10px;
+    z-index: 999;
+    color: #fff;
+}
+
+.message-banner-mobile {
+	display: none;
+	text-align: center;
+	position: absolute;
+	background: #fe003e;
+	color: #fff;
+	font-family: Arial;
+	-webkit-transform:rotate(-90deg);
+	-moz-transform:rotate(-90deg);
+	-o-transform: rotate(-90deg);
+	-ms-transform:rotate(-90deg);
+	transform: rotate(-90deg);
+	left: -58px;
+	bottom: 58px;
+	padding: 5px;
+}
+.message-banner-mobile .title {
+	margin: 0;
+	font-size: 25px;
+}
+.message-banner-mobile .subtitle {
+	margin: 0;
+	font-size: 11px;
+}
+.message-banner-mobile:hover {
+	background: #f37b30;
+}
+.message-banner-mobile .message-link,
+.message-banner-desktop .message-link {
+	position: absolute;
+	width: 100%;
+	height: 100%;
+	top: 0;
+	left: 0;
+}
+header.header h2 {
+	margin-bottom: 3rem;
+}
+.icon-googleplus:before,
+.icon-mastodon:before {
+    position: relative;
+    left: 3px;
+}
+.select-projects {
+	background-position: bottom 0.15em right 0.3em;
+	width: 100%;
+}
+
+@media screen and (max-width: 600px) {
+	.message-banner-desktop {
+		display: none;
+	}
+	.message-banner-mobile {
+		display: block;
+	}
+}
+@media screen and (max-width: 400px) {
+	.message-banner-mobile {
+	    bottom: 50px;
+	}
+	.message-banner-mobile .title {
+	    font-size: 20px;
+	}
+	.message-banner-mobile .subtitle {
+	    font-size: 9.5px;
+	}
+}

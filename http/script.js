@@ -1,6 +1,7 @@
 /* Tags menu filter */
 
 var versions = document.querySelector('.versions')
+var dropdown = document.querySelector('.select-projects')
 
 var div = document.createElement('div')
 var button = document.createElement('button')
@@ -25,7 +26,10 @@ div.appendChild(input)
 div.appendChild(button)
 div.appendChild(a)
 var sidebar = document.querySelector('.sidebar')
+var detachDropdown = dropdown.parentElement.removeChild(dropdown)
+div.insertBefore(detachDropdown, div.firstChild)
 sidebar.insertBefore(div, sidebar.firstChild)
+
 
 var nav = document.querySelector('.sidebar nav')
 var results = document.createElement('div')
