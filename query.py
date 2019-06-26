@@ -40,12 +40,12 @@ def query (cmd, *args):
         buffer.write (arg)
 
     if cmd == 'versions':
-        for p in scriptLines ('list-tags', '-h'):
-            if db.vers.exists (p.split(b' ')[2]):
+        for p in scriptLines ("list-tags", "-h"):
+            if db.vers.exists (p.replace(b'.', b' ').replace(b'_', b' ').split(b' ')[2]):
                 echo (p + b'\n')
 
     elif cmd == 'latest':
-        p = script ('get-latest')
+        p = script ("get-latest")
         echo (p)
 
     elif cmd == 'type':
@@ -64,7 +64,9 @@ def query (cmd, *args):
         version = args[0]
         path = args[1]
         ext = os.path.splitext(path)[1]
-
+	
+        if version == 'latest':
+            version = script ("get-latest")
         if ext in ['.c', '.cc', '.cpp', '.h']:
             tokens = scriptLines ('tokenize-file', version, path)
             even = True
