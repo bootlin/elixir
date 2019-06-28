@@ -10,8 +10,6 @@ FROM centos/httpd-24-centos7
 USER root
 MAINTAINER David Southwick <david.southwick@cern.ch>
 
-ENV GIT_REPO_URL
-
 RUN \
     : "${GIT_REPO_URL:?set GIT_REPO_URL to the repo git url}"
 
