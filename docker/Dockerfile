@@ -9,6 +9,7 @@ FROM centos/httpd-24-centos7
 # temporarily switch to root user
 USER root
 MAINTAINER David Southwick <david.southwick@cern.ch>
+ARG GIT_REPO_URL
 
 RUN \
     : "${GIT_REPO_URL:?set GIT_REPO_URL to the repo git url}"
@@ -17,7 +18,6 @@ RUN \
     echo "repo url to index: ${GIT_REPO_URL}"
 
 RUN \
-  yum update && \
   yum install -y \
     python36-jinja2 \
     python36-pygments \
@@ -46,7 +46,7 @@ RUN \
 # apache elixir config, see elixir README
 # make apache less strict about cgitb spam headers
 RUN \
-  echo '<Directory /usr/local/elixir/http/>\n\
+  echo $'<Directory /usr/local/elixir/http/>\n\
     Options +ExecCGI\n\
     AllowOverride None\n\
     Require all granted\n\
@@ -54,14 +54,13 @@ RUN \
     SetEnv LXR_PROJ_DIR /srv/elixir-data\n\
 </Directory>\n\
 AddHandler cgi-script .py\n\
-<VirtualHost *:80>\n\
+<VirtualHost *:8080>\n\
     ServerName MY_LOCAL_IP\n\
     DocumentRoot /usr/local/elixir/http\n\
     RewriteEngine on\n\
     RewriteRule "^/$" "/linux/latest/source" [R]\n\
     RewriteRule "^/.*/(source|ident|search)" "/web.py" [PT]\n\
-</VirtualHost>\n'\
->> /etc/httpd/conf.d/000-elixir.conf \
+</VirtualHost>' > /etc/httpd/conf.d/000-elixir.conf \
 && echo -e "\nHttpProtocolOptions Unsafe" >> /etc/httpd/conf/httpd.conf
   #a2enmod cgi rewrite - enabled by default in RHEL/centos
 
@@ -69,4 +68,4 @@ AddHandler cgi-script .py\n\
 # Make sure the final image runs as unprivileged user
 # USER 1001
 
-ENTRYPOINT ["/usr/bin/run-httpd"]
+# ENTRYPOINT ["/usr/bin/run-httpd"]

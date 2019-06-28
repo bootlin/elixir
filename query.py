@@ -42,7 +42,7 @@ def query (cmd, *args):
     if cmd == 'versions':
         for tag in scriptLines ("list-tags", "-h"):
             if db.vers.exists (tag):
-                echo (p + b'\n')
+                echo (tag + b'\n')
 
     elif cmd == 'latest':
         p = script ("get-latest")

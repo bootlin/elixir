@@ -138,39 +138,43 @@ data = {
 lines = do_query ('versions')
 va = OrderedDict()
 for l in lines:
-    m = search ('^([^ ]*) ([^ ]*) ([^ ]*)$', l)
+    # regex here matches any set of [0-9]./ /-[0-9]./ /-[0-9]
+    m = search ('^^([^.| |-]*).([^.| |-]*).([^.| |-]*)$', l)
     if not m:
         continue
-    m1 = m.group(1)
-    m2 = m.group(2)
-    l = m.group(3)
-
-    if m1 not in va:
-        va[m1] = OrderedDict()
-    if m2 not in va[m1]:
-        va[m1][m2] = []
-    va[m1][m2].append (l)
+    major_ver = m.group(1)
+    minor_ver = m.group(2)
+    patch_ver = m.group(3)
+   #TODO fix link logic here
+    if major_ver not in va:
+        va[major_ver] = OrderedDict()
+    if minor_ver not in va[major_ver]:
+        va[major_ver][minor_ver] = []
+    va[major_ver][minor_ver].append (patch_ver)
 
 v = ''
 b = 1
-for v1k in va:
-    v1v = va[v1k]
+for major in va:
     v += '<li>\n'
-    v += '\t<span>'+v1k+'</span>\n'
+    v += '\t<span>'+major+'</span>\n'
     v += '\t<ul>\n'
     b += 1
-    for v2k in v1v:
-        v2v = v1v[v2k]
-        if v2k == v2v[0] and len(v2v) == 1:
-            if v2k == tag: v += '\t\t<li class="li-link active"><a href="'+v2k+'/'+url+'">'+v2k+'</a></li>\n'
-            else: v += '\t\t<li class="li-link"><a href="'+v2k+'/'+url+'">'+v2k+'</a></li>\n'
+    minor_family = va[major]
+    for minor in minor_family:
+        patch_family = minor_family[minor]
+        # case1: first & only family member
+        if minor == patch_family[0] and len(patch_family) == 1:
+            #TODO: fix tag matching logic - tag may be more complex than one digit
+            if minor == tag: v += '\t\t<li class="li-link active"><a href="'+minor+'/'+url+'">'+minor+'</a></li>\n'
+            else: v += '\t\t<li class="li-link"><a href="'+minor+'/'+url+'">'+minor+'</a></li>\n'
+        # case2: everything else
         else:
             v += '\t\t<li>\n'
-            v += '\t\t\t<span>'+v2k+'</span>\n'
+            v += '\t\t\t<span>'+minor+'</span>\n'
             v += '\t\t\t<ul>\n'
-            for v3 in v2v:
-                if v3 == tag: v += '\t\t\t\t<li class="li-link active"><a href="'+v3+'/'+url+'">'+v3+'</a></li>\n'
-                else: v += '\t\t\t\t<li class="li-link"><a href="'+v3+'/'+url+'">'+v3+'</a></li>\n'
+            for patch in patch_family:
+                if patch == tag: v += '\t\t\t\t<li class="li-link active"><a href="'+patch+'/'+url+'">'+patch+'</a></li>\n'
+                else: v += '\t\t\t\t<li class="li-link"><a href="'+patch+'/'+url+'">'+patch+'</a></li>\n'
             v += '\t\t\t</ul></li>\n'
     v += '\t</ul></li>\n'
 
