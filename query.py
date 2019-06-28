@@ -40,8 +40,8 @@ def query (cmd, *args):
         buffer.write (arg)
 
     if cmd == 'versions':
-        for p in scriptLines ("list-tags", "-h"):
-            if db.vers.exists (p.replace(b'.', b' ').replace(b'_', b' ').split(b' ')[2]):
+        for tag in scriptLines ("list-tags", "-h"):
+            if db.vers.exists (tag):
                 echo (p + b'\n')
 
     elif cmd == 'latest':
@@ -64,7 +64,7 @@ def query (cmd, *args):
         version = args[0]
         path = args[1]
         ext = os.path.splitext(path)[1]
-	
+
         if version == 'latest':
             version = script ("get-latest")
         if ext in ['.c', '.cc', '.cpp', '.h']:
