@@ -138,7 +138,8 @@ data = {
 lines = do_query ('versions')
 va = OrderedDict()
 for l in lines:
-    # regex here matches any set of [0-9]./ /-[0-9]./ /-[0-9]
+    # Tag matching for navigation
+    # regex here matches any set of [0-9].[0-9].[0-9]
     m = search ('^^([^.| |-]*).([^.| |-]*).([^.| |-]*)$', l)
     if not m:
         continue
@@ -165,16 +166,16 @@ for major in va:
         # case1: first & only family member
         if minor == patch_family[0] and len(patch_family) == 1:
             #TODO: fix tag matching logic - tag may be more complex than one digit
-            if minor == tag: v += '\t\t<li class="li-link active"><a href="'+minor+'/'+url+'">'+minor+'</a></li>\n'
-            else: v += '\t\t<li class="li-link"><a href="'+minor+'/'+url+'">'+minor+'</a></li>\n'
+            if minor == tag: v += '\t\t<li class="li-link active"><a href="'+tag+'/'+url+'">'+tag+'</a></li>\n'
+            else: v += '\t\t<li class="li-link"><a href="'+str(major)+'.'+str(minor)+'.'+str(patch)+'/'+url+'">'+str(major)+'.'+str(minor)+'.'+str(patch)s+'</a></li>\n'
         # case2: everything else
         else:
             v += '\t\t<li>\n'
             v += '\t\t\t<span>'+minor+'</span>\n'
             v += '\t\t\t<ul>\n'
             for patch in patch_family:
-                if patch == tag: v += '\t\t\t\t<li class="li-link active"><a href="'+patch+'/'+url+'">'+patch+'</a></li>\n'
-                else: v += '\t\t\t\t<li class="li-link"><a href="'+patch+'/'+url+'">'+patch+'</a></li>\n'
+                if str(major)+'.'+str(minor)+'.'+str(patch) == tag: v += '\t\t\t\t<li class="li-link active"><a href="'+tag+'/'+url+'">'+tag+'</a></li>\n'
+                else: v += '\t\t\t\t<li class="li-link"><a href="'+str(major)+'.'+str(minor)+'.'+str(patch)+'/'+url+'">'+str(major)+'.'+str(minor)+'.'+str(patch)+'</a></li>\n'
             v += '\t\t\t</ul></li>\n'
     v += '\t</ul></li>\n'
 
