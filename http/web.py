@@ -167,7 +167,7 @@ for major in va:
         if minor == patch_family[0] and len(patch_family) == 1:
             #TODO: fix tag matching logic - tag may be more complex than one digit
             if minor == tag: v += '\t\t<li class="li-link active"><a href="'+tag+'/'+url+'">'+tag+'</a></li>\n'
-            else: v += '\t\t<li class="li-link"><a href="'+str(major)+'.'+str(minor)+'.'+str(patch)+'/'+url+'">'+str(major)+'.'+str(minor)+'.'+str(patch)s+'</a></li>\n'
+            else: v += '\t\t<li class="li-link"><a href="'+str(major)+'.'+str(minor)+'.'+str(patch)+'/'+url+'">'+str(major)+'.'+str(minor)+'.'+str(patch)+'</a></li>\n'
         # case2: everything else
         else:
             v += '\t\t<li>\n'
