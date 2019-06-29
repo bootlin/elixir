@@ -139,14 +139,14 @@ lines = do_query ('versions')
 va = OrderedDict()
 for l in lines:
     # Tag matching for navigation
-    # regex here matches any set of [0-9].[0-9].[0-9]
+    # regex here matches any triplet separated by '.' ' ' or '-'
+    # Edit this regex if your tag system is a different pattern!
     m = search ('^^([^.| |-]*).([^.| |-]*).([^.| |-]*)$', l)
     if not m:
         continue
     major_ver = m.group(1)
     minor_ver = m.group(2)
     patch_ver = m.group(3)
-   #TODO fix link logic here
     if major_ver not in va:
         va[major_ver] = OrderedDict()
     if minor_ver not in va[major_ver]:
@@ -165,8 +165,8 @@ for major in va:
         patch_family = minor_family[minor]
         # case1: first & only family member
         if minor == patch_family[0] and len(patch_family) == 1:
-            #TODO: fix tag matching logic - tag may be more complex than one digit
             if minor == tag: v += '\t\t<li class="li-link active"><a href="'+tag+'/'+url+'">'+tag+'</a></li>\n'
+            # NB - here the tag is presented in NAV menu with '.' separation. You can change this to suit your tags
             else: v += '\t\t<li class="li-link"><a href="'+str(major)+'.'+str(minor)+'.'+str(patch)+'/'+url+'">'+str(major)+'.'+str(minor)+'.'+str(patch)+'</a></li>\n'
         # case2: everything else
         else:
@@ -175,6 +175,7 @@ for major in va:
             v += '\t\t\t<ul>\n'
             for patch in patch_family:
                 if str(major)+'.'+str(minor)+'.'+str(patch) == tag: v += '\t\t\t\t<li class="li-link active"><a href="'+tag+'/'+url+'">'+tag+'</a></li>\n'
+                # NB - again change '.' field separators if desired
                 else: v += '\t\t\t\t<li class="li-link"><a href="'+str(major)+'.'+str(minor)+'.'+str(patch)+'/'+url+'">'+str(major)+'.'+str(minor)+'.'+str(patch)+'</a></li>\n'
             v += '\t\t\t</ul></li>\n'
     v += '\t</ul></li>\n'
