@@ -51,13 +51,13 @@ def query (cmd, *args):
     elif cmd == 'type':
         version = args[0]
         path = args[1]
-        p = script ('get-type', version, path)
+        p = script ("get-type", version, path)
         echo (p)
 
     elif cmd == 'dir':
         version = args[0]
         path = args[1]
-        p = script ('get-dir', version, path)
+        p = script ("get-dir", version, path)
         echo (p)
 
     elif cmd == 'file':
@@ -68,7 +68,7 @@ def query (cmd, *args):
         if version == 'latest':
             version = script ("get-latest")
         if ext in ['.c', '.cc', '.cpp', '.h']:
-            tokens = scriptLines ('tokenize-file', version, path)
+            tokens = scriptLines ("tokenize-file"', version, path)
             even = True
             for tok in tokens:
                 even = not even
@@ -78,7 +78,7 @@ def query (cmd, *args):
                     tok = lib.unescape (tok)
                 echo (tok)
         else:
-            p = script ('get-file', version, path)
+            p = script ("get-file", version, path)
             echo (p)
 
     elif cmd == 'ident':
