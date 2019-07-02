@@ -68,7 +68,7 @@ def query (cmd, *args):
         if version == 'latest':
             version = script ("get-latest")
         if ext in ['.c', '.cc', '.cpp', '.h']:
-            tokens = scriptLines ("tokenize-file"', version, path)
+            tokens = scriptLines ("tokenize-file", version, path)
             even = True
             for tok in tokens:
                 even = not even
@@ -119,6 +119,7 @@ def query (cmd, *args):
                 rBuf.append ((path, rlines))
 
         echo (('Defined in ' + str(len(dBuf)) + ' files:\n').encode())
+
         for path, type, dline in sorted (dBuf):
             echo ((path + ': ' + str (dline) + ' (' + type + ')\n').encode())
 
