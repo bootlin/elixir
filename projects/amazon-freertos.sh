@@ -1,4 +1,4 @@
-# Elixir definitions for Freertos
+# Elixir definitions for Amazon FreeRTOS
 
 list_tags_h()
 {
@@ -11,5 +11,10 @@ list_tags_h()
     echo "$tags" |
     grep '_Major' |
     tac |
-    sed -r 's/^(.*)(_Major)$/other \1 \1\2/'
+    sed -r 's/^(.*)(_Major)$/new \1 \1\2/'
+}
+
+get_latest()
+{
+    git tag | grep '^20' | sort -V | tail -n 1
 }
