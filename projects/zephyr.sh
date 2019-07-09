@@ -11,7 +11,7 @@ list_tags_h()
     echo "$tags" |
     grep -v '^zephyr-v' |
     tac |
-    sed -r 's/^(v[0-9])\.([0-9]*)(.*)$/\1 \1.\2 \1.\2\3/'
+    sed -r 's/^(v[0-9]*)\.([0-9]*)(.*)$/\1 \1.\2 \1.\2\3/'
 }
 
 get_latest()
