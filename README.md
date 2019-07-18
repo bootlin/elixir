@@ -22,9 +22,10 @@ Requirements
 * Exuberant Ctags
 * Perl (for non-greedy regexes)
 
-
 Installation
 ------------
+
+See the next paragraph for building ready-made Docker images.
 
 Elixir has the following architecture:
 
@@ -113,6 +114,15 @@ Here is an example configuration for Apache:
     </VirtualHost>
 
 Don't forget to enable cgi and rewrite support with `a2enmod cgi rewrite`.
+
+Building Docker images
+----------------------
+
+Docker files are provided in the "docker/" directory. To generate your own
+Docker image for indexing the Linux kernel sources (for example),
+download the "Dockerfile" file for your target distribution and run:
+
+    $ docker build -t elixir --build-arg GIT_REPO_URL=git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git .
 
 Hardware requirements
 ---------------------
