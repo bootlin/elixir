@@ -210,8 +210,9 @@ command. Here's what you get for the Linux project:
 
 The first column is the top level menu entry for versions.
 The second one is the next level menu entry, and
-the third one is the actual version that can be selected by
-the menu.
+the third one is the actual version that can be selected by the menu.
+Note that this third entry must correspond to the exact
+name of the tag in git.
 
 If the default behavior is not what you want, you will have
 to customize the `list_tags_h` function.
