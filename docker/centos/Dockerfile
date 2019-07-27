@@ -1,4 +1,17 @@
-FROM debian:latest
+# Openshift Dockerfile for Centos7 Elixir Cross Referencer
+# This will build a httpd 2.4.34+ service container running Elixir
+# You may run this image on its own or as a component of a pod.
+# Usage:
+# Building: Docker Build dockerfile_path/ --build-arg GIT_REPO_URL=https://your-git-source-repo.git -t elixir
+# Running: Docker run -p 8080:8080 elixir
+
+FROM centos/httpd-24-centos7
+
+LABEL author="David.Southwick@cern.ch"
+
+# temporarily switch to root user
+USER root
+
 ARG GIT_REPO_URL
 
 RUN \
@@ -8,22 +21,17 @@ RUN \
     echo "repo url to index: ${GIT_REPO_URL}"
 
 RUN \
-  apt-get update && \
-  apt-get -y install \
-    python3 \
-    python3-jinja2 \
-    python3-pygments \
-    python3-bsddb3 \
-    exuberant-ctags \
-    perl \
-    git \
-    apache2
+  yum install -y \
+    python36-jinja2 \
+    python36-pygments \
+    python36-bsddb3 \
+    global-ctags \
+    git
+    # httpd & perl is inherited from upstream openshift image
+
 
 RUN \
   git clone https://github.com/bootlin/elixir.git /usr/local/elixir/
-
-RUN \
-  mkdir -p /srv/elixir-data/
 
 RUN \
   mkdir -p /srv/elixir-data/linux/repo && \
@@ -39,12 +47,29 @@ RUN \
   ./update.py
 
 # apache elixir config, see elixir README
-# make apache less stricter about cgitb spam headers
+# NB: Change /linux/ to the name of the project you want as default shown
+# apache HttpProtolOptions workaround
 RUN \
-  echo PERpcmVjdG9yeSAvdXNyL2xvY2FsL2VsaXhpci9odHRwLz4KICAgIE9wdGlvbnMgK0V4ZWNDR0kKICAgIEFsbG93T3ZlcnJpZGUgTm9uZQogICAgUmVxdWlyZSBhbGwgZ3JhbnRlZAogICAgU2V0RW52IFBZVEhPTklPRU5DT0RJTkcgdXRmLTgKICAgIFNldEVudiBMWFJfUFJPSl9ESVIgL3Nydi9lbGl4aXItZGF0YQo8L0RpcmVjdG9yeT4KQWRkSGFuZGxlciBjZ2ktc2NyaXB0IC5weQo8VmlydHVhbEhvc3QgKjo4MD4KICAgIFNlcnZlck5hbWUgTVlfTE9DQUxfSVAKICAgIERvY3VtZW50Um9vdCAvdXNyL2xvY2FsL2VsaXhpci9odHRwCiAgICBSZXdyaXRlRW5naW5lIG9uCiAgICBSZXdyaXRlUnVsZSAiXi8kIiAiL2xpbnV4L2xhdGVzdC9zb3VyY2UiIFtSXQogICAgUmV3cml0ZVJ1bGUgIl4vLiovKHNvdXJjZXxpZGVudHxzZWFyY2gpIiAiL3dlYi5weSIgW1BUXQo8L1ZpcnR1YWxIb3N0Pgo= | base64 -d > /etc/apache2/sites-available/000-default.conf && \
-  echo -e "\nHttpProtocolOptions Unsafe" >> /etc/apache2/apache.conf && \
-  a2enmod cgi rewrite
+  echo $'<Directory /usr/local/elixir/http/>\n\
+    Options +ExecCGI\n\
+    AllowOverride None\n\
+    Require all granted\n\
+    SetEnv PYTHONIOENCODING utf-8\n\
+    SetEnv LXR_PROJ_DIR /srv/elixir-data\n\
+</Directory>\n\
+AddHandler cgi-script .py\n\
+<VirtualHost *:8080>\n\
+    ServerName MY_LOCAL_IP\n\
+    DocumentRoot /usr/local/elixir/http\n\
+    RewriteEngine on\n\
+    RewriteRule "^/$" "/linux/latest/source" [R]\n\
+    RewriteRule "^/.*/(source|ident|search)" "/web.py" [PT]\n\
+</VirtualHost>' > /etc/httpd/conf.d/000-elixir.conf \
+&& echo -e "\nHttpProtocolOptions Unsafe" >> /etc/httpd/conf/httpd.conf
+  # a2enmod cgi rewrite - enabled by default in RHEL/centos
 
-EXPOSE 80
 
-ENTRYPOINT ["/usr/sbin/apache2ctl", "-D", "FOREGROUND"]
+# Make sure the final image runs as unprivileged user
+USER 1001
+
+ENTRYPOINT ["/usr/bin/run-httpd"]
