@@ -5,7 +5,7 @@ list_tags_h()
     echo "$tags" |
     grep '^v20' |
     tac |
-    sed -r 's/^(v20..)(.*)$/new \1 \1\2/'
+    sed -r 's/^(v20..)\.([0-9][0-9])\.(.*)$/\1 \1.\2 \1.\2.\3/'
 
     echo "$tags" |
     grep '^v2\.0' |
