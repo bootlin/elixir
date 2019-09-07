@@ -1,5 +1,5 @@
-The Elixir Cross Referencer
-===========================
+# The Elixir Cross Referencer
+
 
 Elixir is a source code cross-referencer inspired by
 [LXR](https://en.wikipedia.org/wiki/LXR_Cross_Referencer). It's written
@@ -13,8 +13,7 @@ duplicating work and data. It has a straightforward data structure
 
 You can see it in action on https://elixir.bootlin.com/
 
-Requirements
-------------
+# Requirements
 
 * Python >= 3.5
 * The Jinja2 and Pygments Python libraries
@@ -22,10 +21,9 @@ Requirements
 * Exuberant Ctags
 * Perl (for non-greedy regexes)
 
-Installation
-------------
+# Installation
 
-See the next paragraph for building ready-made Docker images.
+## Architecture
 
 Elixir has the following architecture:
 
@@ -47,31 +45,78 @@ query interface to generate HTML pages.
 When installing the system, you should test each layer manually and make
 sure it works correctly before moving on to the next one.
 
+## Install Manually
+
+### Install Dependences
+
+> For RedHat/CentOS
+
+```
+yum install python36-jinja2 python36-pygments python36-bsddb3 global-ctags git httpd
+```
+
+### Download Elixir Project
+
+```
+git clone https://github.com/bootlin/elixir.git /usr/local/elixir/
+```
+
+### Create Directory
+
+```
+mkdir -p /path/elixir-data/linux/repo
+mkdir -p /path/elixir-data/linux/data
+```
+
+### Set environment variables
+
 Two environment variables are used to tell Elixir where to find its
 local Git repository and its database directory:
 
 * LXR_REPO_DIR (the directory that contains your Git project)
 * LXR_DATA_DIR (the directory that will contain your databases)
 
-When both are set up, you should be able to test that the script
-works:
+Now open `/etc/profile` and append the following content.
 
-    $ ./script.sh list-tags
+```
+export LXR_REPO_DIR=/path/elixir-data/linux/repo
+export LXR_DATA_DIR=/path/elixir-data/linux/data
+```
+And then run `source /etc/profile`.
 
-then generate the databases:
+### Clone Kernel source code
 
-    $ ./update.py
+```
+git clone https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git /path/elixir-data/linux/repo/
+```
 
-and verify that the queries work:
+### First Test
 
-    $ ./query.py file v4.10 /kernel/sched/clock.c
-    $ ./query.py ident v4.10 raw_spin_unlock_irq
+```
+cd /usr/local/elixir/
+./script.sh list-tags
+```
 
-Generating the full database can take a long time: it takes about
-15 hours on a Xeon E3-1245 v5 to index 1800 tags in the Linux kernel.
-For that reason, you may want to tweak the script (for example, by
-limiting the number of tags with a "head") in order to test the
-update and query commands.
+### Create Database
+
+```
+./update.py
+```
+
+> Generating the full database can take a long time: it takes about 15 hours on a Xeon E3-1245 v5 to index 1800 tags in the Linux kernel. For that reason, you may want to tweak the script (for example, by limiting the number of tags with a "head") in order to test the update and query commands. You can even create a new Git repository and just create one tag instead of using the official kernel repository which is very large.
+
+### Second Test
+
+Verify that the queries work:
+
+```
+$ ./query.py file v4.10 /kernel/sched/clock.c
+$ ./query.py ident v4.10 raw_spin_unlock_irq
+```
+
+Note: `v4.10` can be replaced with any other tag.
+
+### Configure httpd
 
 The CGI interface ("web.py") is meant to be called from your web
 server. Since it includes support for indexing multiple projects,
@@ -92,40 +137,51 @@ directory with a specific structure:
 It will then generate the other two variables upon calling the query
 command.
 
-Here is an example configuration for Apache:
+Now open `/etc/httpd/conf.d/elixir.conf` and write the following content.
 
-    <Directory /usr/local/elixir/http/>
-        Options +ExecCGI
-        AllowOverride None
-        Require all granted
-        SetEnv PYTHONIOENCODING utf-8
-        SetEnv LXR_PROJ_DIR /srv/elixir-data
-    </Directory>
+```
+HttpProtocolOptions Unsafe
+<Directory /usr/local/elixir/http/>
+    Options +ExecCGI
+    AllowOverride None
+    Require all granted
+    SetEnv PYTHONIOENCODING utf-8
+    SetEnv LXR_PROJ_DIR /path/elixir-data
+</Directory>
 
-    AddHandler cgi-script .py
+AddHandler cgi-script .py
+#Listen 80
+<VirtualHost *:80>
+    ServerName xxx
+    DocumentRoot /usr/local/elixir/http
+    RewriteEngine on
+    RewriteRule "^/$" "/linux/latest/source" [R]
+    RewriteRule "^/.*/(source|ident|search)" "/web.py" [PT]
+</VirtualHost>
+```
 
-    <VirtualHost *:80>
-        ServerName elixir.example.com
-        DocumentRoot /usr/local/elixir/http
+cgi and rewrite support has been enabled by default in RHEL/CentOS, but you should enable it manually if your distribution is Debian/Ubuntu.
 
-        RewriteEngine on
-        RewriteRule "^/$" "/linux/latest/source" [R]
-        RewriteRule "^/.*/(source|ident|search)" "/web.py" [PT]
-    </VirtualHost>
+```
+a2enmod cgi rewrite
+```
 
-Don't forget to enable cgi and rewrite support with `a2enmod cgi rewrite`.
+Finally, start the httpd server.
 
-Building Docker images
-----------------------
+```
+systemctl start httpd
+```
 
+## Building Docker images
+
+If you don't want to install Elixir manually, you can also build a Docker image.
 Docker files are provided in the "docker/" directory. To generate your own
 Docker image for indexing the Linux kernel sources (for example),
 download the "Dockerfile" file for your target distribution and run:
 
     $ docker build -t elixir --build-arg GIT_REPO_URL=git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git .
 
-Hardware requirements
----------------------
+# Hardware requirements
 
 Performance requirements depend mostly on the amount of traffic that you get
 on your Elixir service. However, a fast server also helps for the initial
@@ -142,8 +198,7 @@ At Bootlin, here are a few details about the server we're using:
 * We're using an LXD instance with 8 GB of RAM on a cloud server with 8 CPU cores
   running at 3.1 GHz.
 
-Supporting a new project
-------------------------
+# Supporting a new project
 
 Elixir has a very simple modular architecture that allows to support
 new source code projects by just adding a new file to the Elixir sources.
