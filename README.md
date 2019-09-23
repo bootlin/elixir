@@ -115,6 +115,15 @@ Here is an example configuration for Apache:
 
 Don't forget to enable cgi and rewrite support with `a2enmod cgi rewrite`.
 
+Database design
+---------------
+
+"./update.py" stores a bidirectionnal mapping between git object hashes ("blobs") and a sequential key.
+The goal of indexing such hashes is to reduce their storage footprint (20 bytes for a SHA-1 hash
+versus 4 bytes for a 32 bit integer).
+
+A detailed diagram of the databases will be provided. Until then, just use the Source, Luke.
+
 Building Docker images
 ----------------------
 
