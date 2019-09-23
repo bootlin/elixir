@@ -13,9 +13,13 @@ LABEL author="David.Southwick@cern.ch"
 USER root
 
 ARG GIT_REPO_URL
+ARG PROJECT
 
 RUN \
     : "${GIT_REPO_URL:?set GIT_REPO_URL to the repo git url}"
+
+RUN \
+    : "${PROJECT:?set PROJECT to set the project name}"
 
 RUN \
     echo "repo url to index: ${GIT_REPO_URL}"
@@ -34,12 +38,12 @@ RUN \
   git clone https://github.com/bootlin/elixir.git /usr/local/elixir/
 
 RUN \
-  mkdir -p /srv/elixir-data/linux/repo && \
-  mkdir -p /srv/elixir-data/linux/data && \
-  git clone "${GIT_REPO_URL}" /srv/elixir-data/linux/repo/
+  mkdir -p /srv/elixir-data/$PROJECT/repo && \
+  mkdir -p /srv/elixir-data/$PROJECT/data && \
+  git clone "${GIT_REPO_URL}" /srv/elixir-data/$PROJECT/repo/
 
-ENV LXR_REPO_DIR /srv/elixir-data/linux/repo
-ENV LXR_DATA_DIR /srv/elixir-data/linux/data
+ENV LXR_REPO_DIR /srv/elixir-data/$PROJECT/repo
+ENV LXR_DATA_DIR /srv/elixir-data/$PROJECT/data
 
 RUN \
   cd /usr/local/elixir/ && \
@@ -47,7 +51,6 @@ RUN \
   ./update.py
 
 # apache elixir config, see elixir README
-# NB: Change /linux/ to the name of the project you want as default shown
 # apache HttpProtolOptions workaround
 RUN \
   echo $'<Directory /usr/local/elixir/http/>\n\
@@ -62,7 +65,7 @@ AddHandler cgi-script .py\n\
     ServerName MY_LOCAL_IP\n\
     DocumentRoot /usr/local/elixir/http\n\
     RewriteEngine on\n\
-    RewriteRule "^/$" "/linux/latest/source" [R]\n\
+    RewriteRule "^/$" "/$PROJECT/latest/source" [R]\n\
     RewriteRule "^/.*/(source|ident|search)" "/web.py" [PT]\n\
 </VirtualHost>' > /etc/httpd/conf.d/000-elixir.conf \
 && echo -e "\nHttpProtocolOptions Unsafe" >> /etc/httpd/conf/httpd.conf

@@ -131,10 +131,18 @@ Building Docker images
 ----------------------
 
 Docker files are provided in the "docker/" directory. To generate your own
-Docker image for indexing the Linux kernel sources (for example),
-download the "Dockerfile" file for your target distribution and run:
+Docker image for indexing the sources of a project (for example for the Musl
+project which is much faster to index that Linux), download the "Dockerfile"
+file for your target distribution and run:
 
-    $ docker build -t elixir --build-arg GIT_REPO_URL=git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git .
+    $ docker build -t elixir --build-arg GIT_REPO_URL=git://git.musl-libc.org/musl --build-arg PROJECT=musl .
+
+Then you can use your new container as follows (you get the container id from the output of "docker build"):
+
+    $ docker run <container-id>
+
+You can the open the below URL in a browser on your host: http://172.17.0.2/musl/latest/source
+(change the container IP address if you don't get the default one)
 
 Hardware requirements
 ---------------------
