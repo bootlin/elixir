@@ -25,7 +25,10 @@ Requirements
 Installation
 ------------
 
-See the next paragraph for building ready-made Docker images.
+See the "Building Docker images" paragraph for building ready-made Docker
+images. For a manual installation, you can read the Docker files in
+the "docker/" directory to know what packages Elixir needs in your
+favorite distribution.
 
 Elixir has the following architecture:
 
