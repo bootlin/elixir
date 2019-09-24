@@ -35,11 +35,11 @@ Elixir has the following architecture:
     |          Shell script          |
     '--------------------------------'
 
-The shell script ("script.sh") is the lower layer and provides commands
+The shell script (`script.sh`) is the lower layer and provides commands
 to interact with Git and other Unix utilities. The Python commands use
 the shell script's services to provide access to the annotated source
-code and identifier lists ("query.py") or to create and update the
-databases ("update.py"). Finally, the CGI interface ("web.py") uses the
+code and identifier lists (`query.py`) or to create and update the
+databases (`update.py`). Finally, the CGI interface (`web.py`) uses the
 query interface to generate HTML pages.
 
 When installing the system, you should test each layer manually and make
@@ -54,6 +54,14 @@ sure it works correctly before moving on to the next one.
 ```
 yum install python36-jinja2 python36-pygments python36-bsddb3 global-ctags git httpd
 ```
+> For Debian
+
+```
+sudo apt install python3 python3-jinja2 python3-pygments python3-bsddb3 exuberant-ctags perl git apache2
+```
+
+To know which packages to install, you can also read the Docker files in the `docker/` directory
+to know what packages Elixir needs in your favorite distribution.
 
 ### Download Elixir Project
 
@@ -118,9 +126,9 @@ Note: `v4.10` can be replaced with any other tag.
 
 ### Configure httpd
 
-The CGI interface ("web.py") is meant to be called from your web
+The CGI interface (`web.py`) is meant to be called from your web
 server. Since it includes support for indexing multiple projects,
-it expects a different variable ("LXR_PROJ_DIR") which points to a
+it expects a different variable (`LXR_PROJ_DIR`) which points to a
 directory with a specific structure:
 
 * <LXR_PROJ_DIR>
@@ -174,12 +182,27 @@ systemctl start httpd
 
 ## Building Docker images
 
-If you don't want to install Elixir manually, you can also build a Docker image.
-Docker files are provided in the "docker/" directory. To generate your own
-Docker image for indexing the Linux kernel sources (for example),
-download the "Dockerfile" file for your target distribution and run:
+Docker files are provided in the `docker/` directory. To generate your own
+Docker image for indexing the sources of a project (for example for the Musl
+project which is much faster to index that Linux), download the `Dockerfile`
+file for your target distribution and run:
 
-    $ docker build -t elixir --build-arg GIT_REPO_URL=git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git .
+    $ docker build -t elixir --build-arg GIT_REPO_URL=git://git.musl-libc.org/musl --build-arg PROJECT=musl .
+
+Then you can use your new container as follows (you get the container id from the output of `docker build`):
+
+    $ docker run <container-id>
+
+You can the open the below URL in a browser on your host: http://172.17.0.2/musl/latest/source
+(change the container IP address if you don't get the default one)
+
+# Database design
+
+`./update.py` stores a bidirectionnal mapping between git object hashes ("blobs") and a sequential key.
+The goal of indexing such hashes is to reduce their storage footprint (20 bytes for a SHA-1 hash
+versus 4 bytes for a 32 bit integer).
+
+A detailed diagram of the databases will be provided. Until then, just use the Source, Luke.
 
 # Hardware requirements
 

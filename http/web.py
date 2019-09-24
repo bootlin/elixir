@@ -27,7 +27,7 @@ def print (arg, end='\n'):
     global outputBuffer
     outputBuffer.write (arg + end)
 
-# enable debugging
+# Enable CGI Trackback Manager for debugging (https://docs.python.org/fr/3/library/cgitb.html)
 import cgitb
 cgitb.enable()
 
@@ -39,7 +39,9 @@ from collections import OrderedDict
 ident = ''
 status = 200
 
+# Split the URL into its components (project, version, cmd, arg)
 m = search ('^/([^/]*)/([^/]*)/([^/]*)(.*)$', os.environ['SCRIPT_URL'])
+
 if m:
     project = m.group (1)
     version = m.group (2)

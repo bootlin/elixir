@@ -1,1 +1,5 @@
 __pycache__
+http/images
+http/*.html
+http/favicon.ico
+http/robots.txt

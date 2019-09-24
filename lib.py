@@ -31,6 +31,9 @@ def script (*args):
         p = subprocess.check_output(args)
     return p
 
+# Invoke ./script.sh with the given arguments
+# Returns the list of output lines
+
 def scriptLines (*args):
     p = script (*args)
     p = p.split (b'\n')
@@ -46,6 +49,10 @@ def unescape (bstr):
         b = b.encode()
         bstr = bstr.replace (a, b)
     return bstr
+
+# List of tokens which we don't want to consider as identifiers
+# Typically for very frequent variable names and things redefined by #define
+# TODO: allow to have per project blacklists
 
 blacklist = (
     b'if',

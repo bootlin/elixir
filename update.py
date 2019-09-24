@@ -33,12 +33,16 @@ except KeyError:
 
 db = data.DB (dbDir, readonly=False)
 
+# Store new blobs hashed and file names (without path) for new tag
+
 def updateBlobIDs (tag):
+
     if db.vars.exists ('numBlobs'):
         idx = db.vars.get ('numBlobs')
     else:
         idx = 0
 
+    # Get blob hashes and associated file names (without path)
     blobs = scriptLines ('list-blobs', '-f', tag)
 
     newBlobs = []

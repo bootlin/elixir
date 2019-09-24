@@ -1,8 +1,12 @@
 FROM debian:latest
 ARG GIT_REPO_URL
+ARG PROJECT
 
 RUN \
     : "${GIT_REPO_URL:?set GIT_REPO_URL to the repo git url}"
+
+RUN \
+    : "${PROJECT:?set PROJECT to set the project name}"
 
 RUN \
     echo "repo url to index: ${GIT_REPO_URL}"
@@ -26,12 +30,12 @@ RUN \
   mkdir -p /srv/elixir-data/
 
 RUN \
-  mkdir -p /srv/elixir-data/linux/repo && \
-  mkdir -p /srv/elixir-data/linux/data && \
-  git clone "${GIT_REPO_URL}" /srv/elixir-data/linux/repo/
+  mkdir -p /srv/elixir-data/$PROJECT/repo && \
+  mkdir -p /srv/elixir-data/$PROJECT/data && \
+  git clone "${GIT_REPO_URL}" /srv/elixir-data/$PROJECT/repo/
 
-ENV LXR_REPO_DIR /srv/elixir-data/linux/repo
-ENV LXR_DATA_DIR /srv/elixir-data/linux/data
+ENV LXR_REPO_DIR /srv/elixir-data/$PROJECT/repo
+ENV LXR_DATA_DIR /srv/elixir-data/$PROJECT/data
 
 RUN \
   cd /usr/local/elixir/ && \
