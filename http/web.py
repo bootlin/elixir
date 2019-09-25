@@ -269,6 +269,7 @@ if mode == 'source':
         except:
             lexer = pygments.lexers.get_lexer_by_name ('text')
 
+        lexer.stripnl = False
         formatter = pygments.formatters.HtmlFormatter (linenos=True, anchorlinenos=True)
         result = pygments.highlight (code, lexer, formatter)
 
