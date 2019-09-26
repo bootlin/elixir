@@ -11,7 +11,7 @@ data. Internally, it indexes Git *blobs* rather than trees of files to avoid
 duplicating work and data. It has a straightforward data structure
 (reminiscent of older LXR releases) to keep queries simple and fast.
 
-You can see it in action on [https://elixir.bootlin.com/]
+You can see it in action on https://elixir.bootlin.com/
 
 # Requirements
 
