@@ -180,6 +180,15 @@ Finally, start the httpd server.
 systemctl start httpd
 ```
 
+### Using a cache to improve performance
+
+At Bootlin, we're using the Varnish http cache (https://varnish-cache.org/)
+as a front-end to reduce the load on the server running the Elixir code.
+
++-------------+               +---------------+               +-----------------------+
+| Http client | ------------> | Varnish cache | ------------> | Apache running Elixir |
++-------------+               +---------------+               +-----------------------+
+
 ## Building Docker images
 
 Docker files are provided in the `docker/` directory. To generate your own
