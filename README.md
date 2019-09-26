@@ -11,7 +11,7 @@ data. Internally, it indexes Git *blobs* rather than trees of files to avoid
 duplicating work and data. It has a straightforward data structure
 (reminiscent of older LXR releases) to keep queries simple and fast.
 
-You can see it in action on https://elixir.bootlin.com/
+You can see it in action on [https://elixir.bootlin.com/]
 
 # Requirements
 
@@ -182,7 +182,7 @@ systemctl start httpd
 
 ### Using a cache to improve performance
 
-At Bootlin, we're using the Varnish http cache (https://varnish-cache.org/)
+At Bootlin, we're using the [Varnish http cache](https://varnish-cache.org/)
 as a front-end to reduce the load on the server running the Elixir code.
 
     .-------------.           .---------------.           .-----------------------.
