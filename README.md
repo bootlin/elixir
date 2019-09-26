@@ -185,9 +185,9 @@ systemctl start httpd
 At Bootlin, we're using the Varnish http cache (https://varnish-cache.org/)
 as a front-end to reduce the load on the server running the Elixir code.
 
-+-------------+               +---------------+               +-----------------------+
-| Http client | ------------> | Varnish cache | ------------> | Apache running Elixir |
-+-------------+               +---------------+               +-----------------------+
+   +-------------+           +---------------+           +-----------------------+
+   | Http client | --------> | Varnish cache | --------> | Apache running Elixir |
+   +-------------+           +---------------+           +-----------------------+
 
 ## Building Docker images
 
