@@ -16,7 +16,7 @@ You can see it in action on https://elixir.bootlin.com/
 # Requirements
 
 * Python >= 3.5
-* The Jinja2 and Pygments Python libraries
+* The Jinja2 and Pygments (>= 2.2) Python libraries
 * Berkeley DB (and its Python binding)
 * Exuberant Ctags
 * Perl (for non-greedy regexes)
