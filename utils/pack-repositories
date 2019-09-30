@@ -1,0 +1,31 @@
+#!/bin/sh
+#
+# Goes through all git repositories in the current directory
+# and runs "git prune" and "git gcc --aggressive" to pack
+# objects very efficiently and reduce size sometimes dramatically
+#
+# Works by finding the repositories which have a gc.log
+# file, indicating that git garbage collection failed at some
+# point, causing the repository to grow very fast
+# each time new objects are fetched.
+# 
+# Example: llvm-project: divided disk usage by 60!
+
+for f in `find . -name gc.log`
+do
+    d=`dirname $f`
+    echo "Processing: $d"
+    cd $d
+    echo -n "Initial size: "
+    echo `du -sh .`
+    rm -f gc.log
+    git prune
+    git gc --aggressive
+    echo -n "Size after first pass: "
+    echo `du -sh .`
+    git prune
+    git gc --aggressive
+    echo -n "Size after second pass: "
+    echo `du -sh .`
+    cd ..
+done
