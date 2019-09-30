@@ -1,0 +1,13 @@
+#!/bin/sh
+
+for p in linux u-boot busybox zephyr musl barebox uclibc-ng arm-trusted-firmware amazon-freertos qemu glibc coreboot llvm mesa ofono dpdk; do
+    echo "Processing project $p ..."
+    export LXR_DATA_DIR=/srv/elixir-data/$p/data
+    export LXR_REPO_DIR=/srv/elixir-data/$p/repo
+
+    cd $LXR_REPO_DIR
+    git fetch --all
+
+    cd /usr/local/elixir
+    ./update.py
+done

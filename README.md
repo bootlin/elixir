@@ -189,6 +189,12 @@ as a front-end to reduce the load on the server running the Elixir code.
     | Http client | --------> | Varnish cache | --------> | Apache running Elixir |
     '-------------'           '---------------'           '-----------------------'
 
+### Keeping Elixir databases up to date
+
+To keep your Elixir databases up to date and index new versions that are released,
+we're proposing to use a script like `utils/update-elixir-data` which is called
+through a daily cron job.
+
 ## Building Docker images
 
 Docker files are provided in the `docker/` directory. To generate your own
