@@ -195,6 +195,28 @@ To keep your Elixir databases up to date and index new versions that are release
 we're proposing to use a script like `utils/update-elixir-data` which is called
 through a daily cron job.
 
+### Keeping git repository disk usage under control
+
+As you keep updating your git repositories, you may notice that some can become
+considerably bigger than they originally were. This seems to happen when a `gc.log`
+file appears in a big repository, apparently causing git's garbage collector (`git gc`)
+to fail, and therefore causing the repository to consume disk space at a fast
+pace every time new objects are fetched.
+
+When this happens, you can save disk space by packing git directories as follows:
+```
+cd <bare-repo>
+git prune
+rm gc.log
+git gc --aggressive
+```
+
+Actually, a second pass with the above commands will save even more space.
+
+To process multiple git repositories in a loop, you may use the
+`utils/pack-repositories` that we are providing, run from the directory
+where all repositories are found.
+
 ## Building Docker images
 
 Docker files are provided in the `docker/` directory. To generate your own
