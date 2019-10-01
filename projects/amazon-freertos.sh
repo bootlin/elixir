@@ -4,12 +4,12 @@ list_tags_h()
 {
 
     echo "$tags" |
-    grep '_Major' |
+    grep -v '^v' |
     tac |
-    sed -r 's/^(.*)(_Major)$/new \1 \1\2/'
+    sed -r 's/^([0-9][0-9][0-9][0-9])([0-9][0-9])(.*)$/\1 \1\2 \1\2\3/'
 
     echo "$tags" |
-    grep -v '_Major' |
+    grep '^v' |
     tac |
     sed -r 's/^(v[0-9]*)\.([0-9]*)(.*)$/\1 \1.\2 \1.\2\3/'
 }
