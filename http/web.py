@@ -105,11 +105,16 @@ import sys
 sys.path = [ sys.path[0] + '/..' ] + sys.path
 import query
 
-def do_query (*args):
+def call_query(*args):
     cwd = os.getcwd()
     os.chdir ('..')
-    a = query.query (*args)
+    ret = query.query (*args)
     os.chdir (cwd)
+
+    return ret
+
+def call_and_decode_query (*args):
+    a = call_query (*args)
 
     # decode('ascii') fails on special chars
     # FIXME: major hack until we handle everything as bytestrings
@@ -122,7 +127,7 @@ def do_query (*args):
     return a
 
 if version == 'latest':
-    tag = do_query ('latest')[0]
+    tag = call_and_decode_query ('latest')[0]
 else:
     tag = version
 
@@ -137,7 +142,7 @@ data = {
     'breadcrumb': '<a class="project" href="'+version+'/source">/</a>'
 }
 
-lines = do_query ('versions')
+lines = call_and_decode_query ('versions')
 va = OrderedDict()
 for l in lines:
     m = search ('^([^ ]*) ([^ ]*) ([^ ]*)$', l)
@@ -194,13 +199,13 @@ if mode == 'source':
 
     lines = ['null - -']
 
-    type = do_query ('type', tag, path)
+    type = call_and_decode_query ('type', tag, path)
     if len (type) == 1:
         type = type[0]
         if type == 'tree':
-            lines += do_query ('dir', tag, path)
+            lines += call_and_decode_query ('dir', tag, path)
         elif type == 'blob':
-            lines += do_query ('file', tag, path)
+            lines += call_and_decode_query ('file', tag, path)
     else:
         print ('<div class="lxrerror"><h2>This file does not exist.</h2></div>')
         status = 404
@@ -282,49 +287,42 @@ if mode == 'source':
 elif mode == 'ident':
     data['title'] = project.capitalize ()+' source code: '+ident+' identifier ('+tag+') - Bootlin'
 
-    lines = do_query ('ident', tag, ident)
-    lines = iter (lines)
+    symbol_definitions, symbol_references = call_query ('ident', tag, ident)
 
     print ('<div class="lxrident">')
-    m = search ('Defined in (\d*) file', next (lines))
-    if m:
-        num = int (m.group(1))
-        if num == 0:
-            status = 404
-
-        print ('<h2>Defined in '+str(num)+' files:</h2>')
+    if len(symbol_definitions):
+        print ('<h2>Defined in '+str(len(symbol_definitions))+' files:</h2>')
         print ('<ul>')
-        for i in range (0, num):
-            l = next (lines)
-            m = search ('^(.*): (\d*) \((.*)\)$', l)
-            f, n, t = m.groups()
-            print ('<li><a href="'+version+'/source/'+f+'#L'+n+'"><strong>'+f+'</strong>, line '+n+' <em>(as a '+t+')</em></a>')
+        for symbol_definition in symbol_definitions:
+            print ('<li><a href="{v}/source/{f}#L{n}"><strong>{f}</strong>, line {n} <em>(as a {t})</em></a>'.format(
+                v=version, f=symbol_definition.path, n=symbol_definition.line, t=symbol_definition.type
+            ))
         print ('</ul>')
 
-        next (lines)
-
-        m = search ('Referenced in (\d*) file', next (lines))
-        num = int (m.group(1))
-
-        print ('<h2>Referenced in '+str(num)+' files:</h2>')
+        print ('<h2>Referenced in '+str(len(symbol_references))+' files:</h2>')
         print ('<ul>')
-        for i in range (0, num):
-            l = next (lines)
-            m = search ('^(.*): (.*)$', l)
-            f = m.group (1)
-            ln = m.group (2).split (',')
+        for symbol_reference in symbol_references:
+            ln = symbol_reference.line.split (',')
             if len (ln) == 1:
                 n = ln[0]
-                print ('<li><a href="'+version+'/source/'+f+'#L'+str(n)+'"><strong>'+f+'</strong>, line '+str(n)+'</a>')
+                print ('<li><a href="{v}/source/{f}#L{n}"><strong>{f}</strong>, line {n}</a>'.format(
+                    v=version, f=symbol_reference.path, n=n
+                ))
             else:
-                if num > 100:    # Concise display
+                if len(symbol_references) > 100:    # Concise display
                     n = len (ln)
-                    print ('<li><a href="'+version+'/source/'+f+'"><strong>'+f+'</strong>, <em>'+str(n)+' times</em></a>')
+                    print ('<li><a href="{v}/source/{f}"><strong>{f}</strong>, <em>{n} times</em></a>'.format(
+                        v=version, f=symbol_reference.path, n=n
+                    ))
                 else:    # Verbose display
-                    print ('<li><a href="'+version+'/source/'+f+'#L'+str(ln[0])+'"><strong>'+f+'</strong></a>')
+                    print ('<li><a href="{v}/source/{f}#L{n}"><strong>{f}</strong></a>'.format(
+                        v=version, f=symbol_reference.path, n=ln[0]
+                    ))
                     print ('<ul>')
                     for n in ln:
-                        print ('<li><a href="'+version+'/source/'+f+'#L'+str(n)+'">line '+str(n)+'</a>')
+                        print ('<li><a href="{v}/source/{f}#L{n}">line {n}</a>'.format(
+                            v=version, f=symbol_reference.path, n=n
+                        ))
                     print ('</ul>')
         print ('</ul>')
     else:
