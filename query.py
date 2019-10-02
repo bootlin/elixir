@@ -33,6 +33,13 @@ db = data.DB (dbDir, readonly=True)
 
 from io import BytesIO
 
+class SymbolInstance(object):
+    def __init__(self, path, line, type=None):
+        self.path = path
+        self.line = line
+        self.type = type
+
+
 def query (cmd, *args):
     buffer = BytesIO()
 
@@ -83,13 +90,14 @@ def query (cmd, *args):
         version = args[0]
         ident = args[1]
 
+        symbol_definitions = []
+        symbol_references = []
+
         if not db.defs.exists (ident):
-            echo (('Unknown identifier: ' + ident + '\n').encode())
-            return buffer.getvalue()
+            return symbol_definitions, symbol_references
 
         if not db.vers.exists (version):
-            echo (('Unknown version: ' + version + '\n').encode())
-            return buffer.getvalue()
+            return symbol_definitions, symbol_references
 
         vers = db.vers.get (version).iter()
         defs = db.defs.get (ident).iter (dummy=True)
@@ -116,13 +124,13 @@ def query (cmd, *args):
             if id1 == id3:
                 rBuf.append ((path, rlines))
 
-        echo (('Defined in ' + str(len(dBuf)) + ' files:\n').encode())
         for path, type, dline in sorted (dBuf):
-            echo ((path + ': ' + str (dline) + ' (' + type + ')\n').encode())
+            symbol_definitions.append(SymbolInstance(path, dline, type))
 
-        echo (('\nReferenced in ' + str(len(rBuf)) + ' files:\n').encode())
         for path, rlines in sorted (rBuf):
-            echo ((path + ': ' + rlines + '\n').encode())
+            symbol_references.append(SymbolInstance(path, rlines))
+
+        return symbol_definitions, symbol_references
 
     else:
         echo (('Unknown subcommand: ' + cmd + '\n').encode())
