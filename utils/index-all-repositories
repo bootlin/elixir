@@ -1,0 +1,59 @@
+#!/bin/bash
+# Runs indexing from scratch on all supported projects
+# Needed when full re-indexing is needed:
+# - to fix an indexing bug
+# - after database changes
+
+index() {
+    project=$1
+    master=$2
+    remote=$3
+    echo "Processing project $project..."
+
+    export LXR_DATA_DIR=$ELIXIR_ROOT/$project/data
+    export LXR_REPO_DIR=$ELIXIR_ROOT/$project/repo
+
+    mkdir -p $LXR_DATA_DIR
+    cd `dirname $LXR_REPO_DIR`
+    git clone --bare $master `filename $LXR_REPO_DIR`
+
+    if [ "$remote" != "" ]
+    then
+	cd $LXR_REPO_DIR
+	git remote add other $remote
+    fi
+
+    cd $ELIXIR_INSTALL
+    ./update.py
+}
+
+if [ "$ELIXIR_ROOT" = "" ]
+then
+	echo "Error: ELIXIR_ROOT environment variable not set"
+	echo "It's where Elixir data are stored"
+	exit 1
+fi
+
+if [ "$ELIXIR_INSTALL" = "" ]
+then
+	echo "Error: ELIXIR_INSTALL environment variable not set"
+	echo "It's where Elixir code is stored"
+	exit 1
+fi
+
+index amazon-freertos https://github.com/aws/amazon-freertos.git
+index arm-trusted-firmware https://github.com/ARM-software/arm-trusted-firmware
+index barebox https://git.pengutronix.de/git/barebox
+index busybox git://git.busybox.net/busybox
+index coreboot https://review.coreboot.org/coreboot.git
+index dpdk git://dpdk.org/dpdk
+index glibc git://sourceware.org/git/glibc.git
+index linux git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git git://git.kernel.org/pub/scm/linux/kernel/git/stable/linux-stable.git
+index llvm-project https://github.com/llvm/llvm-project.git
+index mesa https://gitlab.freedesktop.org/mesa/mesa.git
+index musl git://git.musl-libc.org/musl
+index ofono https://git.kernel.org/pub/scm/network/ofono/ofono.git
+index qemu https://git.qemu.org/git/qemu.git
+index u-boot https://gitlab.denx.de/u-boot/u-boot.git
+index uclibc-ng git://uclibc-ng.org/git/uclibc-ng
+index zephyr https://github.com/zephyrproject-rtos/zephyr
