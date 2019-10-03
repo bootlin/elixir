@@ -23,13 +23,7 @@ import lib
 import data
 import os
 
-try:
-    dbDir = os.environ['LXR_DATA_DIR']
-except KeyError:
-    print ('LXR_DATA_DIR needs to be set')
-    exit (1)
-
-db = data.DB (dbDir, readonly=True)
+db = data.DB (lib.getDataDir(), readonly=True)
 
 from io import BytesIO
 

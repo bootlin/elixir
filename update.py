@@ -25,13 +25,7 @@ import data
 import os
 from data import PathList
 
-try:
-    dbDir = os.environ['LXR_DATA_DIR']
-except KeyError:
-    print (argv[0] + ': LXR_DATA_DIR needs to be set')
-    exit (1)
-
-db = data.DB (dbDir, readonly=False)
+db = data.DB (lib.getDataDir (), readonly=False)
 
 # Store new blobs hashed and file names (without path) for new tag
 
@@ -74,7 +68,7 @@ def updateVersions (tag):
 
 def updateDefinitions (blobs):
     for blob in blobs:
-        if (blob % 100 == 0): print ('D:', blob)
+        if (blob % 1000 == 0): progress ('defs: ' + str(blob))
         hash = db.hash.get (blob)
         filename = db.file.get (blob)
 
@@ -97,7 +91,7 @@ def updateDefinitions (blobs):
 
 def updateReferences (blobs):
     for blob in blobs:
-        if (blob % 100 == 0): print ('R:', blob)
+        if (blob % 1000 == 0): progress ('refs: ' + str(blob))
         hash = db.hash.get (blob)
         filename = db.file.get (blob)
 
@@ -128,6 +122,9 @@ def updateReferences (blobs):
             obj.append (blob, lines)
             db.refs.put (ident, obj)
 
+def progress (msg):
+    print ('{} - {} ({:.0%})'.format(project, msg, tagCount/numTags))
+
 # Main
 
 tagBuf = []
@@ -135,12 +132,16 @@ for tag in scriptLines ('list-tags'):
     if not db.vers.exists (tag):
         tagBuf.append (tag)
 
-print ('Found ' + str(len(tagBuf)) + ' new tags')
+numTags = len(tagBuf)
+tagCount = 0
+project = lib.currentProject ()
+
+progress ('found ' + str(len(tagBuf)) + ' new tags')
 
 for tag in tagBuf:
-    print (tag.decode(), end=': ')
+    tagCount +=1
     newBlobs = updateBlobIDs (tag)
-    print (str(len(newBlobs)) + ' new blobs')
+    progress (tag.decode() + ': ' + str(len(newBlobs)) + ' new blobs')
     updateVersions (tag)
     updateDefinitions (newBlobs)
     updateReferences (newBlobs)

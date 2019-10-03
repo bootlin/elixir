@@ -18,7 +18,7 @@
 #  You should have received a copy of the GNU Affero General Public License
 #  along with Elixir.  If not, see <http://www.gnu.org/licenses/>.
 
-import subprocess
+import subprocess, os
 
 def script (*args):
     args = ('./script.sh',) + args
@@ -169,3 +169,14 @@ def autoBytes (arg):
     elif type (arg) is int:
         arg = str(arg).encode()
     return arg
+
+def getDataDir ():
+    try:
+        dir=os.environ['LXR_DATA_DIR']
+    except KeyError:
+        print (argv[0] + ': LXR_DATA_DIR needs to be set')
+        exit (1)
+    return dir
+
+def currentProject ():
+    return os.path.basename (os.path.dirname (getDataDir ()))
