@@ -78,11 +78,11 @@ mkdir -p /path/elixir-data/linux/data
 
 ### Set environment variables
 
-Two environment variables are used to tell Elixir where to find its
-local Git repository and its database directory:
+Two environment variables are used to tell Elixir where to find the project's
+local git repository and its databases:
 
-* LXR_REPO_DIR (the directory that contains your Git project)
-* LXR_DATA_DIR (the directory that will contain your databases)
+* LXR_REPO_DIR (the git repository directory for your project)
+* LXR_DATA_DIR (the database directory for your project)
 
 Now open `/etc/profile` and append the following content.
 
