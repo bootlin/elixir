@@ -52,11 +52,13 @@ def updateBlobIDs (tag):
     return newBlobs
 
 def updateVersions (tag):
+
+    # Get blob hashes and associated file paths
     blobs = scriptLines ('list-blobs', '-p', tag)
     buf = []
 
     for blob in blobs:
-        hash, path = blob.split (b' ',maxsplit=1)
+        hash, path = blob.split (b' ', maxsplit=1)
         idx = db.blob.get (hash)
         buf.append ((idx, path))
 

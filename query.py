@@ -41,27 +41,55 @@ def query (cmd, *args):
         buffer.write (arg)
 
     if cmd == 'versions':
+
+        # Returns the list of indexed versions in the following format:
+        # topmenu submenu tag
+        # Example: v3 v3.1 v3.1-rc10
+
         for p in scriptLines ('list-tags', '-h'):
             if db.vers.exists (p.split(b' ')[2]):
                 echo (p + b'\n')
 
     elif cmd == 'latest':
+
+        # Returns the tag considered as the latest one
+        # TODO: this latest tag may have just been retrieved
+        # in the git repository and may not have been index yet
+        # This could results in failed queries
+
         p = script ('get-latest')
         echo (p)
 
     elif cmd == 'type':
+
+        # Returns the type (blob or tree) associated to
+        # the given path. Example:
+        # > ./query.py type v3.1-rc10 /Makefile
+        # blob
+        # > ./query.py type v3.1-rc10 /arch
+        # tree
+
         version = args[0]
         path = args[1]
         p = script ('get-type', version, path)
         echo (p)
 
     elif cmd == 'dir':
+
+	# Returns the contents (trees or blobs) of the specified directory
+	# Example: ./query.py dir v3.1-rc10 /arch
+
         version = args[0]
         path = args[1]
         p = script ('get-dir', version, path)
         echo (p)
 
     elif cmd == 'file':
+
+	# Returns the contents of the specified file
+        # Tokens are marked for further processing
+        # Example: ./query.py file v3.1-rc10 /Makefile
+
         version = args[0]
         path = args[1]
         ext = os.path.splitext(path)[1]
@@ -81,6 +109,9 @@ def query (cmd, *args):
             echo (p)
 
     elif cmd == 'ident':
+
+	# Returns identifier search results
+
         version = args[0]
         ident = args[1]
 
