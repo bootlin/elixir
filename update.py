@@ -138,7 +138,7 @@ numTags = len(tagBuf)
 tagCount = 0
 project = lib.currentProject ()
 
-progress ('found ' + str(len(tagBuf)) + ' new tags')
+print (project + ' - found ' + str(len(tagBuf)) + ' new tags')
 
 for tag in tagBuf:
     tagCount +=1
