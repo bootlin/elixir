@@ -66,10 +66,10 @@ def query (cmd, *args):
 
         # Returns the tag considered as the latest one
         # TODO: this latest tag may have just been retrieved
-        # in the git repository and may not have been index yet
+        # in the git repository and may not have been indexed yet
         # This could results in failed queries
 
-        return decode(script ('get-latest'))
+        return decode(script ('get-latest')).rstrip('\n')
 
     elif cmd == 'type':
 
