@@ -22,6 +22,7 @@ from lib import script, scriptLines
 import lib
 import data
 import os
+from collections import OrderedDict
 
 db = data.DB (lib.getDataDir(), readonly=True)
 
@@ -33,22 +34,33 @@ class SymbolInstance(object):
         self.line = line
         self.type = type
 
+def decode(byte_object):
+    # decode('ascii') fails on special chars
+    # FIXME: major hack until we handle everything as bytestrings
+    try:
+        return byte_object.decode ('utf-8')
+    except UnicodeDecodeError:
+        return byte_object.decode ('iso-8859-1')
 
 def query (cmd, *args):
-    buffer = BytesIO()
-
-    def echo (arg):
-        buffer.write (arg)
-
     if cmd == 'versions':
 
         # Returns the list of indexed versions in the following format:
         # topmenu submenu tag
         # Example: v3 v3.1 v3.1-rc10
+        versions = OrderedDict()
 
-        for p in scriptLines ('list-tags', '-h'):
-            if db.vers.exists (p.split(b' ')[2]):
-                echo (p + b'\n')
+        for line in scriptLines ('list-tags', '-h'):
+            decoded_line = decode(line)
+            topmenu, submenu, tag = decoded_line.split(' ')
+            if db.vers.exists (tag):
+                if topmenu not in versions:
+                    versions[topmenu] = OrderedDict()
+                if submenu not in versions[topmenu]:
+                    versions[topmenu][submenu] = []
+                versions[topmenu][submenu].append (tag)
+
+        return versions
 
     elif cmd == 'latest':
 
@@ -57,8 +69,7 @@ def query (cmd, *args):
         # in the git repository and may not have been index yet
         # This could results in failed queries
 
-        p = script ('get-latest')
-        echo (p)
+        return decode(script ('get-latest'))
 
     elif cmd == 'type':
 
@@ -71,8 +82,7 @@ def query (cmd, *args):
 
         version = args[0]
         path = args[1]
-        p = script ('get-type', version, path)
-        echo (p)
+        return decode(script ('get-type', version, path)).strip()
 
     elif cmd == 'dir':
 
@@ -81,8 +91,8 @@ def query (cmd, *args):
 
         version = args[0]
         path = args[1]
-        p = script ('get-dir', version, path)
-        echo (p)
+        entries_str =  decode(script ('get-dir', version, path))
+        return entries_str.split("\n")[:-1]
 
     elif cmd == 'file':
 
@@ -95,6 +105,7 @@ def query (cmd, *args):
         ext = os.path.splitext(path)[1]
 
         if ext in ['.c', '.cc', '.cpp', '.h']:
+            buffer = BytesIO()
             tokens = scriptLines ('tokenize-file', version, path)
             even = True
             for tok in tokens:
@@ -103,10 +114,10 @@ def query (cmd, *args):
                     tok = b'\033[31m' + tok + b'\033[0m'
                 else:
                     tok = lib.unescape (tok)
-                echo (tok)
+                buffer.write (tok)
+            return decode(buffer.getvalue())
         else:
-            p = script ('get-file', version, path)
-            echo (p)
+            return decode(script ('get-file', version, path))
 
     elif cmd == 'ident':
 
@@ -158,9 +169,7 @@ def query (cmd, *args):
         return symbol_definitions, symbol_references
 
     else:
-        echo (('Unknown subcommand: ' + cmd + '\n').encode())
-
-    return buffer.getvalue()
+        return ('Unknown subcommand: ' + cmd + '\n')
 
 if __name__ == "__main__":
     import sys

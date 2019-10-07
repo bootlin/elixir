@@ -34,7 +34,6 @@ cgitb.enable()
 import cgi
 import os
 from re import search, sub
-from collections import OrderedDict
 
 ident = ''
 status = 200
@@ -113,21 +112,8 @@ def call_query(*args):
 
     return ret
 
-def call_and_decode_query (*args):
-    a = call_query (*args)
-
-    # decode('ascii') fails on special chars
-    # FIXME: major hack until we handle everything as bytestrings
-    try:
-        a = a.decode ('utf-8')
-    except UnicodeDecodeError:
-        a = a.decode ('iso-8859-1')
-    a = a.split ('\n')
-    del a[-1]
-    return a
-
 if version == 'latest':
-    tag = call_and_decode_query ('latest')[0]
+    tag = call_query ('latest')
 else:
     tag = version
 
@@ -142,42 +128,28 @@ data = {
     'breadcrumb': '<a class="project" href="'+version+'/source">/</a>'
 }
 
-lines = call_and_decode_query ('versions')
-va = OrderedDict()
-for l in lines:
-    m = search ('^([^ ]*) ([^ ]*) ([^ ]*)$', l)
-    if not m:
-        continue
-    m1 = m.group(1)
-    m2 = m.group(2)
-    l = m.group(3)
-
-    if m1 not in va:
-        va[m1] = OrderedDict()
-    if m2 not in va[m1]:
-        va[m1][m2] = []
-    va[m1][m2].append (l)
+versions = call_query ('versions')
 
 v = ''
 b = 1
-for v1k in va:
-    v1v = va[v1k]
+for topmenu in versions:
+    submenus = versions[topmenu]
     v += '<li>\n'
-    v += '\t<span>'+v1k+'</span>\n'
+    v += '\t<span>'+topmenu+'</span>\n'
     v += '\t<ul>\n'
     b += 1
-    for v2k in v1v:
-        v2v = v1v[v2k]
-        if v2k == v2v[0] and len(v2v) == 1:
-            if v2k == tag: v += '\t\t<li class="li-link active"><a href="'+v2k+'/'+url+'">'+v2k+'</a></li>\n'
-            else: v += '\t\t<li class="li-link"><a href="'+v2k+'/'+url+'">'+v2k+'</a></li>\n'
+    for submenu in submenus:
+        tags = submenus[submenu]
+        if submenu == tags[0] and len(tags) == 1:
+            if submenu == tag: v += '\t\t<li class="li-link active"><a href="'+submenu+'/'+url+'">'+submenu+'</a></li>\n'
+            else: v += '\t\t<li class="li-link"><a href="'+submenu+'/'+url+'">'+submenu+'</a></li>\n'
         else:
             v += '\t\t<li>\n'
-            v += '\t\t\t<span>'+v2k+'</span>\n'
+            v += '\t\t\t<span>'+submenu+'</span>\n'
             v += '\t\t\t<ul>\n'
-            for v3 in v2v:
-                if v3 == tag: v += '\t\t\t\t<li class="li-link active"><a href="'+v3+'/'+url+'">'+v3+'</a></li>\n'
-                else: v += '\t\t\t\t<li class="li-link"><a href="'+v3+'/'+url+'">'+v3+'</a></li>\n'
+            for _tag in tags:
+                if _tag == tag: v += '\t\t\t\t<li class="li-link active"><a href="'+_tag+'/'+url+'">'+_tag+'</a></li>\n'
+                else: v += '\t\t\t\t<li class="li-link"><a href="'+_tag+'/'+url+'">'+_tag+'</a></li>\n'
             v += '\t\t\t</ul></li>\n'
     v += '\t</ul></li>\n'
 
@@ -199,13 +171,13 @@ if mode == 'source':
 
     lines = ['null - -']
 
-    type = call_and_decode_query ('type', tag, path)
-    if len (type) == 1:
-        type = type[0]
+    type = call_query ('type', tag, path)
+    if len (type) > 0:
         if type == 'tree':
-            lines += call_and_decode_query ('dir', tag, path)
+            lines += call_query ('dir', tag, path)
         elif type == 'blob':
-            lines += call_and_decode_query ('file', tag, path)
+            blob_content = call_query ('file', tag, path)
+            lines += blob_content.split("\n")[:-1]
     else:
         print ('<div class="lxrerror"><h2>This file does not exist.</h2></div>')
         status = 404
