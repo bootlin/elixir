@@ -52,7 +52,15 @@ def query (cmd, *args):
 
         for line in scriptLines ('list-tags', '-h'):
             decoded_line = decode(line)
-            topmenu, submenu, tag = decoded_line.split(' ')
+            len_split = len(decoded_line.split(' '))
+            topmenu, submenu = 'UNKNOWN', 'UNKNOWN'
+            if (len_split == 1):
+                tag = decoded_line
+            if (len_split == 2):
+                submenu, tag = decoded_line.split(' ')
+            if (len_split == 3):
+                topmenu, submenu, tag = decoded_line.split(' ')
+
             if db.vers.exists (tag):
                 if topmenu not in versions:
                     versions[topmenu] = OrderedDict()
