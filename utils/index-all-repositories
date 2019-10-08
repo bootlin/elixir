@@ -41,19 +41,19 @@ then
 	exit 1
 fi
 
-index amazon-freertos https://github.com/aws/amazon-freertos.git
-index arm-trusted-firmware https://github.com/ARM-software/arm-trusted-firmware
-index barebox https://git.pengutronix.de/git/barebox
-index busybox git://git.busybox.net/busybox
-index coreboot https://review.coreboot.org/coreboot.git
-index dpdk git://dpdk.org/dpdk
-index glibc git://sourceware.org/git/glibc.git
-index linux git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git git://git.kernel.org/pub/scm/linux/kernel/git/stable/linux-stable.git
-index llvm-project https://github.com/llvm/llvm-project.git
-index mesa https://gitlab.freedesktop.org/mesa/mesa.git
-index musl git://git.musl-libc.org/musl
-index ofono https://git.kernel.org/pub/scm/network/ofono/ofono.git
-index qemu https://git.qemu.org/git/qemu.git
-index u-boot https://gitlab.denx.de/u-boot/u-boot.git
-index uclibc-ng git://uclibc-ng.org/git/uclibc-ng
-index zephyr https://github.com/zephyrproject-rtos/zephyr
+index amazon-freertos https://github.com/aws/amazon-freertos.git &
+index arm-trusted-firmware https://github.com/ARM-software/arm-trusted-firmware &
+index barebox https://git.pengutronix.de/git/barebox &
+index busybox git://git.busybox.net/busybox &
+index coreboot https://review.coreboot.org/coreboot.git &
+index dpdk git://dpdk.org/dpdk &
+index glibc git://sourceware.org/git/glibc.git &
+index linux git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git git://git.kernel.org/pub/scm/linux/kernel/git/stable/linux-stable.git &
+index llvm-project https://github.com/llvm/llvm-project.git &
+index mesa https://gitlab.freedesktop.org/mesa/mesa.git &
+index musl git://git.musl-libc.org/musl &
+index ofono https://git.kernel.org/pub/scm/network/ofono/ofono.git &
+index qemu https://git.qemu.org/git/qemu.git &
+index u-boot https://gitlab.denx.de/u-boot/u-boot.git &
+index uclibc-ng git://uclibc-ng.org/git/uclibc-ng &
+index zephyr https://github.com/zephyrproject-rtos/zephyr &
