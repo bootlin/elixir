@@ -102,7 +102,6 @@ def query (cmd, *args):
 
         version = args[0]
         path = args[1]
-        ext = os.path.splitext(path)[1]
 
         if lib.hasSupportedExt (path):
             buffer = BytesIO()
