@@ -346,4 +346,4 @@ new project:
 
 You can then check that Elixir works through your http server.
 
-Note: this documentation applies to version 0.3 of Elixir.
+Note: this documentation applies to version 1.0 of Elixir.
