@@ -183,4 +183,4 @@ def currentProject ():
 
 def hasSupportedExt (filename): 
     ext = os.path.splitext(filename)[1]
-    return ext in ['.c', '.cc', '.cpp', '.h']
+    return ext.lower() in ['.c', '.cc', '.cpp', '.c++', '.cxx', '.h', '.s']
