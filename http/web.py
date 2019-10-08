@@ -19,6 +19,7 @@
 #  along with Elixir.  If not, see <http://www.gnu.org/licenses/>.
 
 from io import StringIO
+from urllib import parse
 
 realprint = print
 outputBuffer = StringIO()
@@ -68,7 +69,7 @@ if m:
         ident2 = form.getvalue ('i')
         if ident == '' and ident2:
             status = 302
-            ident2 = ident2.strip()
+            ident2 = parse.quote(ident2.strip())
             location = '/'+project+'/'+version+'/ident/'+ident2
         else:
             mode = 'ident'
