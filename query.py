@@ -104,7 +104,7 @@ def query (cmd, *args):
         path = args[1]
         ext = os.path.splitext(path)[1]
 
-        if ext in ['.c', '.cc', '.cpp', '.h']:
+        if lib.hasSupportedExt (path):
             buffer = BytesIO()
             tokens = scriptLines ('tokenize-file', version, path)
             even = True

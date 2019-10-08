@@ -180,3 +180,7 @@ def getDataDir ():
 
 def currentProject ():
     return os.path.basename (os.path.dirname (getDataDir ()))
+
+def hasSupportedExt (filename): 
+    ext = os.path.splitext(filename)[1]
+    return ext in ['.c', '.cc', '.cpp', '.h']
