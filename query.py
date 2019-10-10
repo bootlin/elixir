@@ -51,15 +51,16 @@ def query (cmd, *args):
         versions = OrderedDict()
 
         for line in scriptLines ('list-tags', '-h'):
-            decoded_line = decode(line)
-            len_split = len(decoded_line.split(' '))
+            taginfo = decode(line).split(' ')
+            num = len(taginfo)
             topmenu, submenu = 'UNKNOWN', 'UNKNOWN'
-            if (len_split == 1):
-                tag = decoded_line
-            if (len_split == 2):
-                submenu, tag = decoded_line.split(' ')
-            if (len_split == 3):
-                topmenu, submenu, tag = decoded_line.split(' ')
+
+            if (num == 1):
+                tag, = taginfo
+            elif (num == 2):
+                submenu,tag = taginfo
+            elif (num ==3):
+                topmenu,submenu,tag = taginfo
 
             if db.vers.exists (tag):
                 if topmenu not in versions:
