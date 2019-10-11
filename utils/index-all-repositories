@@ -21,6 +21,7 @@ index() {
     then
 	cd $LXR_REPO_DIR
 	git remote add other $remote
+	git fetch other
     fi
 
     cd $ELIXIR_INSTALL
