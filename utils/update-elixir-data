@@ -1,13 +1,26 @@
 #!/bin/sh
 
+root=$1
+
+if [ ! -d "$root" ]
+then
+    echo "ERROR: directory not found: $root"
+    exit 1
+fi
+
+if [ -z "$ELIXIR_INSTALL" ]; then
+    echo "ERROR: ELIXIR_INSTALL environment variable not set"
+    exit 1
+fi
+
 for p in linux u-boot busybox zephyr musl barebox uclibc-ng arm-trusted-firmware amazon-freertos qemu glibc coreboot llvm mesa ofono dpdk; do
-    echo "Processing project $p ..."
-    export LXR_DATA_DIR=/srv/elixir-data/$p/data
-    export LXR_REPO_DIR=/srv/elixir-data/$p/repo
+    echo "Processing project $root/$p ..."
+    export LXR_DATA_DIR=$root/$p/data
+    export LXR_REPO_DIR=$root/$p/repo
 
     cd $LXR_REPO_DIR
     git fetch --all
 
-    cd /usr/local/elixir
+    cd $ELIXIR_INSTALL
     ./update.py
 done
