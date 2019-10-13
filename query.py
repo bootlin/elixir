@@ -53,7 +53,7 @@ def query (cmd, *args):
         for line in scriptLines ('list-tags', '-h'):
             taginfo = decode(line).split(' ')
             num = len(taginfo)
-            topmenu, submenu = 'FIXME', 'FIXME'
+            topmenu, submenu, tag = 'FIXME', 'FIXME', 'FIXME'
 
             if (num == 1):
                 tag, = taginfo

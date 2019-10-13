@@ -292,7 +292,7 @@ new project:
 Now, go back to the Elixir sources and test that tags are correctly
 extracted:
 
-    ./script.sh list-tags
+    ./script.sh list-tags -h
 
 Depending on how you want to show the available versions on the Elixir pages,
 you may have to apply substitutions to each tag string, for example to add
@@ -332,7 +332,8 @@ Note that this third entry must correspond to the exact
 name of the tag in git.
 
 If the default behavior is not what you want, you will have
-to customize the `list_tags_h` function.
+to customize the `list_tags_h` function. If the above format
+is not found in the project, a warning is shown.
 
 You should also make sure that Elixir properly identifies
 the most recent versions:

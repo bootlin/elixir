@@ -49,9 +49,16 @@ list_tags()
 
 list_tags_h()
 {
-    echo "$tags" |
-    tac |
-    sed -r 's/^(v[0-9]*)\.([0-9]*)(.*)$/\1 \1.\2 \1.\2\3/'
+    # Check for strict tag format. If not found, warn user.
+    tag_list=`echo "$tags" | tac | sed -nr 's/(^v[0-9]*)\.([0-9]*)(.*)$/\1 \1.\2 \1.\2\3/p'`
+    if [ -z $tag_list ]; then
+	    tag_list=`echo "$tags" | tac`
+	    show_warn=1
+    fi
+    echo "$tag_list"
+    if [ $show_warn = 1 ]; then
+	    echo "\nWarning: v1.2.34-rc5 style tagging not found, using fallback hierarchy"
+    fi
 }
 
 get_latest()
