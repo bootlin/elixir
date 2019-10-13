@@ -26,6 +26,13 @@ index() {
 
     cd $ELIXIR_INSTALL
     ./update.py
+
+    # The above takes so much time on the first run that it's worth running a new update
+
+    cd $LXR_REPO_DIR
+    git fetch --all
+    cd $ELIXIR_INSTALL
+    ./update.py
 }
 
 if [ "$ELIXIR_ROOT" = "" ]
