@@ -40,8 +40,9 @@ from re import search, sub
 ident = ''
 status = 200
 
+url = os.environ.get('REQUEST_URI') or os.environ.get('SCRIPT_URL')
 # Split the URL into its components (project, version, cmd, arg)
-m = search('^/([^/]*)/([^/]*)/([^/]*)(.*)$', os.environ['SCRIPT_URL'])
+m = search('^/([^/]*)/([^/]*)/([^/]*)(.*)$', url)
 
 if m:
     project = m.group(1)
