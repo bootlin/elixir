@@ -20,6 +20,7 @@ You can see it in action on https://elixir.bootlin.com/
 * Berkeley DB (and its Python binding)
 * Exuberant Ctags
 * Perl (for non-greedy regexes)
+* Falcon and mod_wsgi (for the REST api)
 
 # Installation
 
@@ -27,8 +28,8 @@ You can see it in action on https://elixir.bootlin.com/
 
 Elixir has the following architecture:
 
-    .---------------.
-    | CGI interface |
+    .---------------.----------------.
+    | CGI interface | REST interface |
     |---------------|----------------.
     | Query command | Update command |
     |---------------|----------------|
@@ -39,8 +40,10 @@ The shell script (`script.sh`) is the lower layer and provides commands
 to interact with Git and other Unix utilities. The Python commands use
 the shell script's services to provide access to the annotated source
 code and identifier lists (`query.py`) or to create and update the
-databases (`update.py`). Finally, the CGI interface (`web.py`) uses the
-query interface to generate HTML pages.
+databases (`update.py`). Finally, the CGI interface (`web.py`) and
+the REST interface (`api.py`) use the query interface to generate HTML
+pages and to answer REST queries, respectively.
+
 
 When installing the system, you should test each layer manually and make
 sure it works correctly before moving on to the next one.
@@ -52,13 +55,16 @@ sure it works correctly before moving on to the next one.
 > For RedHat/CentOS
 
 ```
-yum install python36-jinja2 python36-pygments python36-bsddb3 global-ctags git httpd
+yum install python36-jinja2 python36-pygments python36-bsddb3 python3-falcon global-ctags git httpd
 ```
 > For Debian
 
 ```
-sudo apt install python3 python3-jinja2 python3-pygments python3-bsddb3 exuberant-ctags perl git apache2
+sudo apt install python3 python3-jinja2 python3-pygments python3-bsddb3 python3-falcon exuberant-ctags perl git apache2
 ```
+
+To enable the REST api, follow the installation instructions on [mod_wsgi](https://github.com/GrahamDumpleton/mod_wsgi)
+and connect it to the apache installation as detailed in https://github.com/GrahamDumpleton/mod_wsgi#connecting-into-apache-installation
 
 To know which packages to install, you can also read the Docker files in the `docker/` directory
 to know what packages Elixir needs in your favorite distribution.
@@ -151,9 +157,18 @@ the default config file to edit is: `/etc/apache2/sites-enabled/000-default.conf
 
 ```
 HttpProtocolOptions Unsafe
+# Required for HTTP
 <Directory /usr/local/elixir/http/>
     Options +ExecCGI
     AllowOverride None
+    Require all granted
+    SetEnv PYTHONIOENCODING utf-8
+    SetEnv LXR_PROJ_DIR /path/elixir-data
+</Directory>
+
+# Required for the REST API
+<Directory /home/osboxes/projects/elixir/api/>
+    SetHandler wsgi-script
     Require all granted
     SetEnv PYTHONIOENCODING utf-8
     SetEnv LXR_PROJ_DIR /path/elixir-data
@@ -165,6 +180,10 @@ AddHandler cgi-script .py
     ServerName xxx
     DocumentRoot /usr/local/elixir/http
     RewriteEngine on
+
+    # To enable REST api after installing mod_wsgi: Fill path and uncomment:
+    #WSGIScriptAlias /api <FULL_PATH_TO_ELIXIR_DIR>/api/api.py
+
     RewriteRule "^/$" "/linux/latest/source" [R]
     RewriteRule "^/.*/(source|ident|search)" "/web.py" [PT]
 </VirtualHost>
@@ -347,5 +366,23 @@ new project:
     ./update.py
 
 You can then check that Elixir works through your http server.
+
+# REST api usage
+After configuring httpd, you can test the api usage:
+
+## ident query
+
+Send a get request to ```/api/ident/<Project>/<Ident>?version=<version>```.
+For example: ```curl http://127.0.0.1/api/ident/barebox/cdev?version=latest```
+
+The response body is of the following structure:
+```
+{
+    "definitions":
+        [{"path": "commands/loadb.c", "line": 71, "type": "variable"}, ...],
+    "references": 
+        [{"path": "arch/arm/boards/cm-fx6/board.c", "line": "64,64,71,72,75", "type": null}, ...]
+}
+```
 
 Note: this documentation applies to version 1.0 of Elixir.
