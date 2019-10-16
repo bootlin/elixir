@@ -60,7 +60,7 @@ yum install python36-jinja2 python36-pygments python36-bsddb3 python3-falcon glo
 > For Debian
 
 ```
-sudo apt install python3 python3-jinja2 python3-pygments python3-bsddb3 python3-falcon exuberant-ctags perl git apache2
+sudo apt install python3 python3-jinja2 python3-pygments python3-bsddb3 python3-falcon exuberant-ctags perl git apache2 libapache2-mod-wsgi-py3
 ```
 
 To enable the REST api, follow the installation instructions on [mod_wsgi](https://github.com/GrahamDumpleton/mod_wsgi)
@@ -167,7 +167,7 @@ HttpProtocolOptions Unsafe
 </Directory>
 
 # Required for the REST API
-<Directory /home/osboxes/projects/elixir/api/>
+<Directory /usr/local/elixir/api/>
     SetHandler wsgi-script
     Require all granted
     SetEnv PYTHONIOENCODING utf-8
@@ -179,11 +179,11 @@ AddHandler cgi-script .py
 <VirtualHost *:80>
     ServerName xxx
     DocumentRoot /usr/local/elixir/http
-    RewriteEngine on
 
     # To enable REST api after installing mod_wsgi: Fill path and uncomment:
-    #WSGIScriptAlias /api <FULL_PATH_TO_ELIXIR_DIR>/api/api.py
+    #WSGIScriptAlias /api /usr/local/elixir/api/api.py
 
+    RewriteEngine on
     RewriteRule "^/$" "/linux/latest/source" [R]
     RewriteRule "^/.*/(source|ident|search)" "/web.py" [PT]
 </VirtualHost>
@@ -373,7 +373,9 @@ After configuring httpd, you can test the api usage:
 ## ident query
 
 Send a get request to ```/api/ident/<Project>/<Ident>?version=<version>```.
-For example: ```curl http://127.0.0.1/api/ident/barebox/cdev?version=latest```
+For example:
+
+    curl http://127.0.0.1/api/ident/barebox/cdev?version=latest
 
 The response body is of the following structure:
 ```

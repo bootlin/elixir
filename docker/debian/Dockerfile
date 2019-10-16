@@ -18,10 +18,12 @@ RUN \
     python3-jinja2 \
     python3-pygments \
     python3-bsddb3 \
+    python3-falcon \
     exuberant-ctags \
     perl \
     git \
-    apache2
+    apache2 \
+    libapache2-mod-wsgi-py3 \
 
 RUN \
   git clone https://github.com/bootlin/elixir.git /usr/local/elixir/
