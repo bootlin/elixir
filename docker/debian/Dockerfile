@@ -23,7 +23,7 @@ RUN \
     perl \
     git \
     apache2 \
-    libapache2-mod-wsgi-py3 \
+    libapache2-mod-wsgi-py3
 
 RUN \
   git clone https://github.com/bootlin/elixir.git /usr/local/elixir/
