@@ -185,7 +185,7 @@ AddHandler cgi-script .py
 
     RewriteEngine on
     RewriteRule "^/$" "/linux/latest/source" [R]
-    RewriteRule "^/.*/(source|ident|search)" "/web.py" [PT]
+    RewriteRule "^/(?!api).*/(source|ident|search)" "/web.py" [PT]
 </VirtualHost>
 ```
 
