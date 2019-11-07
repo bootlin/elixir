@@ -2,7 +2,7 @@
 
 root=$1
 
-if [ ! -d "$root" ]
+if [ ! -e "$root" ]
 then
     echo "ERROR: directory not found: $root"
     exit 1
