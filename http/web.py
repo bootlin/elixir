@@ -226,7 +226,6 @@ if mode == 'source':
 
         def keep_links(match):
             links.append (match.group (1))
-            g = match.group(1)
             return '__KEEPLINKS__' + str(len(links))
 
         def replace_links(match):
