@@ -233,10 +233,8 @@ if mode == 'source':
             return '<a href="'+version+'/ident/'+i+'">'+i+'</a>'
 
         for l in lines:
+	    # Protect identifiers, to be able to replace them in the pygments output (replace_links function)
             l = sub ('\033\[31m(.*?)\033\[0m', keep_links, l)
-            l = sub ('\033\[32m', '', l)
-            l = sub ('\033\[33m', '', l)
-            l = sub ('\033\[0m', '', l)
             code.write (l + '\n')
 
         code = code.getvalue()
@@ -250,7 +248,9 @@ if mode == 'source':
         formatter = pygments.formatters.HtmlFormatter (linenos=True, anchorlinenos=True)
         result = pygments.highlight (code, lexer, formatter)
 
+	# Replace line numbers by links to the corresponding line in the current file
         result = sub ('href="#-(\d+)', 'name="L\\1" id="L\\1" href="'+version+'/source'+path+'#L\\1', result)
+	# Add the links to identifiers, using the KEEPLINKS markers
         result = sub ('__KEEPLINKS__(\d+)', replace_links, result)
 
         print ('<div class="lxrcode">' + result + '</div>')
