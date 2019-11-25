@@ -19,7 +19,7 @@ for p in linux u-boot busybox zephyr musl barebox uclibc-ng arm-trusted-firmware
     export LXR_REPO_DIR=$root/$p/repo
 
     cd $LXR_REPO_DIR
-    git fetch --all
+    git fetch --all --tags
 
     cd $ELIXIR_INSTALL
     ./update.py
