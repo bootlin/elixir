@@ -222,7 +222,9 @@ if mode == 'source':
         import pygments.lexers
         import pygments.formatters
         links = []
+        dtsi = []
         code = StringIO()
+        extension=os.path.splitext(path)[1][1:].lower()
 
         def keep_links(match):
             links.append (match.group (1))
@@ -232,12 +234,23 @@ if mode == 'source':
             i = links[int (match.group (1)) - 1]
             return '<a href="'+version+'/ident/'+i+'">'+i+'</a>'
 
+        def keep_dtsi(match):
+            dtsi.append (match.group (2))
+            return match.group (1) + ' "__KEEPDTSI__' + str(len(dtsi)) + '"'
+
+        def replace_dtsi(match):
+            w = dtsi[int (match.group (1)) - 1]
+            return '<a href="'+version+'/source'+os.path.dirname(path)+'/'+w+'">'+w+'</a>'
+
         for l in lines:
 	    # Protect identifiers, to be able to replace them in the pygments output (replace_links function)
             l = sub ('\033\[31m(.*?)\033\[0m', keep_links, l)
             code.write (l + '\n')
 
         code = code.getvalue()
+
+        if extension in {'dts', 'dtsi'}:
+            code = sub ('(#include|/include/) \"(.*?)\"', keep_dtsi, code)
 
         try:
             lexer = pygments.lexers.guess_lexer_for_filename (path, code)
@@ -252,6 +265,9 @@ if mode == 'source':
         result = sub ('href="#-(\d+)', 'name="L\\1" id="L\\1" href="'+version+'/source'+path+'#L\\1', result)
 	# Add the links to identifiers, using the KEEPLINKS markers
         result = sub ('__KEEPLINKS__(\d+)', replace_links, result)
+
+        if extension in {'dts', 'dtsi'}:
+            result = sub ('__KEEPDTSI__(\d+)', replace_dtsi, result)
 
         print ('<div class="lxrcode">' + result + '</div>')
 
