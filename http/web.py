@@ -34,6 +34,7 @@ cgitb.enable()
 
 import cgi
 import os
+import re
 from re import search, sub
 
 ident = ''
@@ -221,10 +222,15 @@ if mode == 'source':
         import pygments
         import pygments.lexers
         import pygments.formatters
+
         links = []
         dtsi = []
         code = StringIO()
-        extension=os.path.splitext(path)[1][1:].lower()
+        kconfig = []
+
+        filename, extension = os.path.splitext(path)
+        extension = extension[1:].lower()
+        filename = os.path.basename(filename)
 
         def keep_links(match):
             links.append (match.group (1))
@@ -235,12 +241,20 @@ if mode == 'source':
             return '<a href="'+version+'/ident/'+i+'">'+i+'</a>'
 
         def keep_dtsi(match):
-            dtsi.append (match.group (2))
-            return match.group (1) + ' "__KEEPDTSI__' + str(len(dtsi)) + '"'
+            dtsi.append (match.group (4))
+            return match.group (1) + match.group (2) + match.group (3) + '"__KEEPDTSI__' + str(len(dtsi)) + '"'
 
         def replace_dtsi(match):
             w = dtsi[int (match.group (1)) - 1]
             return '<a href="'+version+'/source'+os.path.dirname(path)+'/'+w+'">'+w+'</a>'
+
+        def keep_kconfig(match):
+            kconfig.append (match.group (4))
+            return match.group (1) + match.group (2) + match.group (3) + '"__KEEPKCONFIG__' + str(len(kconfig)) + '"'
+
+        def replace_kconfig(match):
+            w = kconfig[int (match.group (1)) - 1]
+            return '<a href="'+version+'/source/'+w+'">'+w+'</a>'
 
         for l in lines:
 	    # Protect identifiers, to be able to replace them in the pygments output (replace_links function)
@@ -250,7 +264,10 @@ if mode == 'source':
         code = code.getvalue()
 
         if extension in {'dts', 'dtsi'}:
-            code = sub ('(#include|/include/) \"(.*?)\"', keep_dtsi, code)
+            code = sub ('^(\s*)(#include|/include/)(\s*)\"(.*?)\"', keep_dtsi, code, flags=re.MULTILINE)
+
+        if filename in {'Kconfig'}:
+            code = sub ('^(\s*)(source)(\s*)\"(.*?)\"', keep_kconfig, code, flags=re.MULTILINE)
 
         try:
             lexer = pygments.lexers.guess_lexer_for_filename (path, code)
@@ -268,6 +285,9 @@ if mode == 'source':
 
         if extension in {'dts', 'dtsi'}:
             result = sub ('__KEEPDTSI__(\d+)', replace_dtsi, result)
+
+        if filename in {'Kconfig'}:
+            result = sub ('__KEEPKCONFIG__(\d+)', replace_kconfig, result)
 
         print ('<div class="lxrcode">' + result + '</div>')
 
