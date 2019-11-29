@@ -223,21 +223,21 @@ if mode == 'source':
         import pygments.lexers
         import pygments.formatters
 
-        links = []
+        idents = []
         dtsi = []
-        code = StringIO()
         kconfig = []
 
+        code = StringIO()
         filename, extension = os.path.splitext(path)
         extension = extension[1:].lower()
         filename = os.path.basename(filename)
 
-        def keep_links(match):
-            links.append (match.group (1))
-            return '__KEEPLINKS__' + str(len(links))
+        def keep_idents(match):
+            idents.append (match.group (1))
+            return '__KEEPIDENTS__' + str(len(idents))
 
-        def replace_links(match):
-            i = links[int (match.group (1)) - 1]
+        def replace_idents(match):
+            i = idents[int (match.group (1)) - 1]
             return '<a href="'+version+'/ident/'+i+'">'+i+'</a>'
 
         def keep_dtsi(match):
@@ -256,18 +256,46 @@ if mode == 'source':
             w = kconfig[int (match.group (1)) - 1]
             return '<a href="'+version+'/source/'+w+'">'+w+'</a>'
 
+        ident_filters = {
+                        'case': 'any',
+                        'prerex': '\033\[31m(.*?)\033\[0m',
+                        'prefunc': keep_idents,
+                        'postrex': '__KEEPIDENTS__(\d+)',
+                        'postfunc': replace_idents
+                        }
+
+        dtsi_filters = {
+                        'case': 'extension',
+                        'match': {'dts', 'dtsi'},
+                        'prerex': '^(\s*)(#include|/include/)(\s*)\"(.*?)\"',
+                        'prefunc': keep_dtsi,
+                        'postrex': '__KEEPDTSI__(\d+)',
+                        'postfunc': replace_dtsi
+                        }
+
+        kconfig_filters = {
+                        'case': 'filename',
+                        'match': {'Kconfig'},
+                        'prerex': '^(\s*)(source)(\s*)\"(.*?)\"',
+                        'prefunc': keep_kconfig,
+                        'postrex': '__KEEPKCONFIG__(\d+)',
+                        'postfunc': replace_kconfig
+                        }
+
+        filters = []
+        filters.append (ident_filters)
+        filters.append (dtsi_filters)
+        filters.append (kconfig_filters)
+
         for l in lines:
-	    # Protect identifiers, to be able to replace them in the pygments output (replace_links function)
-            l = sub ('\033\[31m(.*?)\033\[0m', keep_links, l)
             code.write (l + '\n')
 
         code = code.getvalue()
 
-        if extension in {'dts', 'dtsi'}:
-            code = sub ('^(\s*)(#include|/include/)(\s*)\"(.*?)\"', keep_dtsi, code, flags=re.MULTILINE)
-
-        if filename in {'Kconfig'}:
-            code = sub ('^(\s*)(source)(\s*)\"(.*?)\"', keep_kconfig, code, flags=re.MULTILINE)
+        for f in filters:
+            c = f['case']
+            if (c == 'any' or (c == 'filename' and filename in f['match']) or (c == 'extension' and extension in f['match'])):
+                code = sub (f ['prerex'], f ['prefunc'], code, flags=re.MULTILINE)
 
         try:
             lexer = pygments.lexers.guess_lexer_for_filename (path, code)
@@ -278,16 +306,13 @@ if mode == 'source':
         formatter = pygments.formatters.HtmlFormatter (linenos=True, anchorlinenos=True)
         result = pygments.highlight (code, lexer, formatter)
 
-	# Replace line numbers by links to the corresponding line in the current file
+        # Replace line numbers by links to the corresponding line in the current file
         result = sub ('href="#-(\d+)', 'name="L\\1" id="L\\1" href="'+version+'/source'+path+'#L\\1', result)
-	# Add the links to identifiers, using the KEEPLINKS markers
-        result = sub ('__KEEPLINKS__(\d+)', replace_links, result)
 
-        if extension in {'dts', 'dtsi'}:
-            result = sub ('__KEEPDTSI__(\d+)', replace_dtsi, result)
-
-        if filename in {'Kconfig'}:
-            result = sub ('__KEEPKCONFIG__(\d+)', replace_kconfig, result)
+        for f in filters:
+            c = f['case']
+            if (c == 'any' or (c == 'filename' and filename in f['match']) or (c == 'extension' and extension in f['match'])):
+                result = sub (f ['postrex'], f ['postfunc'], result)
 
         print ('<div class="lxrcode">' + result + '</div>')
 
