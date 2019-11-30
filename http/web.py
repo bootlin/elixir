@@ -178,8 +178,9 @@ if mode == 'source':
         if type == 'tree':
             lines += call_query ('dir', tag, path)
         elif type == 'blob':
-            blob_content = call_query ('file', tag, path)
-            lines += blob_content.split("\n")[:-1]
+            content = call_query ('file', tag, path)
+            # Remove the first line of the contents
+            code = content[content.find ('\n')+1:]
     else:
         print ('<div class="lxrerror"><h2>This file does not exist.</h2></div>')
         status = 404
@@ -217,7 +218,6 @@ if mode == 'source':
         print ('</div>')
 
     elif type == 'blob':
-        del (lines[0])
 
         import pygments
         import pygments.lexers
@@ -227,7 +227,6 @@ if mode == 'source':
         dtsi = []
         kconfig = []
 
-        code = StringIO()
         filename, extension = os.path.splitext(path)
         extension = extension[1:].lower()
         filename = os.path.basename(filename)
@@ -286,11 +285,6 @@ if mode == 'source':
         filters.append (ident_filters)
         filters.append (dtsi_filters)
         filters.append (kconfig_filters)
-
-        for l in lines:
-            code.write (l + '\n')
-
-        code = code.getvalue()
 
         for f in filters:
             c = f['case']
