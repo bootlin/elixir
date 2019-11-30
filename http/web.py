@@ -30,7 +30,7 @@ def print (arg, end='\n'):
 
 # Enable CGI Trackback Manager for debugging (https://docs.python.org/fr/3/library/cgitb.html)
 import cgitb
-cgitb.enable()
+cgitb.enable(display=0, logdir='/tmp/elixir-errors', format='text')
 
 import cgi
 import os
