@@ -225,68 +225,12 @@ if mode == 'source':
         import pygments.lexers
         import pygments.formatters
 
-        idents = []
-        dtsi = []
-        kconfig = []
-
         filename, extension = os.path.splitext(path)
         extension = extension[1:].lower()
         filename = os.path.basename(filename)
 
-        def keep_idents(match):
-            idents.append(match.group(1))
-            return '__KEEPIDENTS__' + str(len(idents))
-
-        def replace_idents(match):
-            i = idents[int(match.group(1)) - 1]
-            return '<a href="'+version+'/ident/'+i+'">'+i+'</a>'
-
-        def keep_dtsi(match):
-            dtsi.append(match.group(4))
-            return match.group(1) + match.group(2) + match.group(3) + '"__KEEPDTSI__' + str(len(dtsi)) + '"'
-
-        def replace_dtsi(match):
-            w = dtsi[int(match.group(1)) - 1]
-            return '<a href="'+version+'/source'+os.path.dirname(path)+'/'+w+'">'+w+'</a>'
-
-        def keep_kconfig(match):
-            kconfig.append(match.group(4))
-            return match.group(1) + match.group(2) + match.group(3) + '"__KEEPKCONFIG__' + str(len(kconfig)) + '"'
-
-        def replace_kconfig(match):
-            w = kconfig[int(match.group(1)) - 1]
-            return '<a href="'+version+'/source/'+w+'">'+w+'</a>'
-
-        ident_filters = {
-                        'case': 'any',
-                        'prerex': '\033\[31m(.*?)\033\[0m',
-                        'prefunc': keep_idents,
-                        'postrex': '__KEEPIDENTS__(\d+)',
-                        'postfunc': replace_idents
-                        }
-
-        dtsi_filters = {
-                        'case': 'extension',
-                        'match': {'dts', 'dtsi'},
-                        'prerex': '^(\s*)(#include|/include/)(\s*)\"(.*?)\"',
-                        'prefunc': keep_dtsi,
-                        'postrex': '__KEEPDTSI__(\d+)',
-                        'postfunc': replace_dtsi
-                        }
-
-        kconfig_filters = {
-                        'case': 'filename',
-                        'match': {'Kconfig'},
-                        'prerex': '^(\s*)(source)(\s*)\"(.*?)\"',
-                        'prefunc': keep_kconfig,
-                        'postrex': '__KEEPKCONFIG__(\d+)',
-                        'postfunc': replace_kconfig
-                        }
-
-        filters = []
-        filters.append(ident_filters)
-        filters.append(dtsi_filters)
-        filters.append(kconfig_filters)
+        # Source generic filter definitions
+        exec(open("./filters.py").read())
 
         for f in filters:
             c = f['case']
