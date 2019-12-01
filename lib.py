@@ -20,12 +20,12 @@
 
 import subprocess, os
 
-def script (*args):
+def script(*args):
     args = ('./script.sh',) + args
     # subprocess.run was introduced in Python 3.5
     # fall back to subprocess.check_output if it's not available
     if hasattr(subprocess, 'run'):
-        p = subprocess.run (args, stdout=subprocess.PIPE)
+        p = subprocess.run(args, stdout=subprocess.PIPE)
         p = p.stdout
     else:
         p = subprocess.check_output(args)
@@ -34,20 +34,20 @@ def script (*args):
 # Invoke ./script.sh with the given arguments
 # Returns the list of output lines
 
-def scriptLines (*args):
-    p = script (*args)
-    p = p.split (b'\n')
+def scriptLines(*args):
+    p = script(*args)
+    p = p.split(b'\n')
     del p[-1]
     return p
 
-def unescape (bstr):
+def unescape(bstr):
     subs = (
         ('\1','\n'),
     )
     for a,b in subs:
         a = a.encode()
         b = b.encode()
-        bstr = bstr.replace (a, b)
+        bstr = bstr.replace(a, b)
     return bstr
 
 # List of tokens which we don't want to consider as identifiers
@@ -155,32 +155,32 @@ blacklist = (
     b'ptr',
     )
 
-def isIdent (bstr):
-    if len (bstr) < 2:
+def isIdent(bstr):
+    if len(bstr) < 2:
         return False
     elif bstr in blacklist:
         return False
     else:
         return True
 
-def autoBytes (arg):
-    if type (arg) is str:
+def autoBytes(arg):
+    if type(arg) is str:
         arg = arg.encode()
-    elif type (arg) is int:
+    elif type(arg) is int:
         arg = str(arg).encode()
     return arg
 
-def getDataDir ():
+def getDataDir():
     try:
         dir=os.environ['LXR_DATA_DIR']
     except KeyError:
-        print (argv[0] + ': LXR_DATA_DIR needs to be set')
-        exit (1)
+        print(argv[0] + ': LXR_DATA_DIR needs to be set')
+        exit(1)
     return dir
 
-def currentProject ():
-    return os.path.basename (os.path.dirname (getDataDir ()))
+def currentProject():
+    return os.path.basename(os.path.dirname(getDataDir()))
 
-def hasSupportedExt (filename): 
+def hasSupportedExt(filename):
     ext = os.path.splitext(filename)[1]
     return ext.lower() in ['.c', '.cc', '.cpp', '.c++', '.cxx', '.h', '.s']

@@ -17,9 +17,9 @@ def build_query(env, project):
 
 def call_query(query, *args):
     cwd = os.getcwd()
-    os.chdir (ELIXIR_DIR)
+    os.chdir(ELIXIR_DIR)
     ret = query(*args)
-    os.chdir (cwd)
+    os.chdir(cwd)
 
     return ret
 
@@ -35,7 +35,7 @@ class IdentResource:
         if version == 'latest':
             version = call_query(query, 'latest')
 
-        symbol_definitions, symbol_references = call_query (query, 'ident', version, ident)
+        symbol_definitions, symbol_references = call_query(query, 'ident', version, ident)
         if len(symbol_definitions) or len(symbol_references):
             resp.body = json.dumps(
                 {
