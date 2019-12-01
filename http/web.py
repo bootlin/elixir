@@ -77,8 +77,10 @@ if m:
             if not(ident and search('^[A-Za-z0-9_-]*$', ident)):
                 ident = ''
             url = 'ident/'+ident
+    else:
+        status = 400
 else:
-    status = 404
+    status = 400
 
 if status == 301:
     realprint('Status: 301 Moved Permanently')
@@ -88,8 +90,8 @@ elif status == 302:
     realprint('Status: 302 Found')
     realprint('Location: '+location+'\n')
     exit()
-elif status == 404:
-    realprint('Status: 404 Not Found\n')
+elif status == 400:
+    realprint('Status: 400 Bad Request\n')
     exit()
 
 basedir = os.environ['LXR_PROJ_DIR']
