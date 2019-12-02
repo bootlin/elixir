@@ -229,9 +229,17 @@ if mode == 'source':
         extension = extension[1:].lower()
         filename = os.path.basename(filename)
 
-        # Source generic filter definitions
-        exec(open("./filters.py").read())
+        # Source common filter definitions
+        os.chdir('filters')
+        exec(open("common.py").read())
 
+        # Source project specific filters
+        f = project + '.py'
+        if os.path.isfile(f):
+            exec(open(f).read())
+        os.chdir('..')
+
+        # Apply filters
         for f in filters:
             c = f['case']
             if (c == 'any' or (c == 'filename' and filename in f['match']) or (c == 'extension' and extension in f['match'])):
