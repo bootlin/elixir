@@ -180,9 +180,7 @@ if mode == 'source':
         if type == 'tree':
             lines += call_query('dir', tag, path)
         elif type == 'blob':
-            content = call_query('file', tag, path)
-            # Remove the first line of the contents
-            code = content[content.find('\n')+1:]
+            code = call_query('file', tag, path)
     else:
         print('<div class="lxrerror"><h2>This file does not exist.</h2></div>')
         status = 404
