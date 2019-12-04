@@ -241,7 +241,17 @@ if mode == 'source':
         for f in filters:
             c = f['case']
             if (c == 'any' or (c == 'filename' and filename in f['match']) or (c == 'extension' and extension in f['match'])):
-                code = sub(f ['prerex'], f ['prefunc'], code, flags=re.MULTILINE)
+
+                apply_filter = True
+
+                if 'path_exceptions' in f:
+                    for p in f['path_exceptions']:
+                        if re.match(p, path):
+                            apply_filter = False
+                            break
+
+                if apply_filter:
+                    code = sub(f ['prerex'], f ['prefunc'], code, flags=re.MULTILINE)
 
         try:
             lexer = pygments.lexers.guess_lexer_for_filename(path, code)

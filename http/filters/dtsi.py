@@ -1,10 +1,11 @@
-# Filters for dts includes
+# Filters for dts includes as follows:
+# /include/ "file"
 
 dtsi = []
 
 def keep_dtsi(match):
-    dtsi.append(match.group(4))
-    return match.group(1) + match.group(2) + match.group(3) + '"__KEEPDTSI__' + str(len(dtsi)) + '"'
+    dtsi.append(match.group(3))
+    return match.group(1) + '/include/' + match.group(2) + '"__KEEPDTSI__' + str(len(dtsi)) + '"'
 
 def replace_dtsi(match):
     w = dtsi[int(match.group(1)) - 1]
@@ -13,7 +14,7 @@ def replace_dtsi(match):
 dtsi_filters = {
                 'case': 'extension',
                 'match': {'dts', 'dtsi'},
-                'prerex': '^(\s*)(#include|/include/)(\s*)\"(.*?)\"',
+                'prerex': '^(\s*)/include/(\s*)\"(.*?)\"',
                 'prefunc': keep_dtsi,
                 'postrex': '__KEEPDTSI__(\d+)',
                 'postfunc': replace_dtsi
