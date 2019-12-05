@@ -7,9 +7,17 @@
 
 cpppathinc = []
 
-def keep_cpppathinc(match):
-    cpppathinc.append(match.group(3))
-    return match.group(1) + '#include' + match.group(2) + '<__KEEPCPPPATHINC__' + str(len(cpppathinc)) + '>'
+def keep_cpppathinc(m):
+    m1 = m.group(1)
+    m2 = m.group(2)
+    inc = m.group(3)
+    if re.match('^asm/.*', inc):
+        # Keep the original string in case the path contains "asm/"
+        # Because there are then multiple include possibilites, one per architecture
+        return m1 + '#include' + m2 + '<' + inc + '>'
+    else:
+        cpppathinc.append(inc)
+        return m1 + '#include' + m2 + '<__KEEPCPPPATHINC__' + str(len(cpppathinc)) + '>'
 
 def replace_cpppathinc(match):
     w = cpppathinc[int(match.group(1)) - 1]
