@@ -1,4 +1,5 @@
-# Filters for Makefile directory includes
+# Filters for Makefile directory includes as follows:
+# obj-$(VALUE) += dir/
 
 makefiledir = []
 
@@ -13,7 +14,7 @@ def replace_makefiledir(match):
 makefiledir_filters = {
                 'case': 'filename',
                 'match': {'Makefile'},
-                'prerex': '(\w+)/(\s*|$)',
+                'prerex': '([-\w]+)/(\s*|$)',
                 'prefunc': keep_makefiledir,
                 'postrex': '__KEEPMAKEFILEDIR__(\d+)/',
                 'postfunc': replace_makefiledir

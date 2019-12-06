@@ -1,5 +1,5 @@
 # Filters for Makefile file includes like these:
-# obj-y += file.o
+# file.o
 
 makefileo = []
 
