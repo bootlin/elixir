@@ -3,12 +3,12 @@
 
 cppinc = []
 
-def keep_cppinc(match):
-    cppinc.append(match.group(3))
-    return match.group(1) + '#include' + match.group(2) + '"__KEEPCPPINC__' + str(len(cppinc)) + '"'
+def keep_cppinc(m):
+    cppinc.append(m.group(3))
+    return m.group(1) + '#include' + m.group(2) + '"__KEEPCPPINC__' + str(len(cppinc)) + '"'
 
-def replace_cppinc(match):
-    w = cppinc[int(match.group(1)) - 1]
+def replace_cppinc(m):
+    w = cppinc[int(m.group(1)) - 1]
     return '<a href="'+version+'/source'+os.path.dirname(path)+'/'+w+'">'+w+'</a>'
 
 cppinc_filters = {

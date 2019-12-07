@@ -3,12 +3,12 @@
 
 makefileo = []
 
-def keep_makefileo(match):
-    makefileo.append(match.group(1))
+def keep_makefileo(m):
+    makefileo.append(m.group(1))
     return '__KEEPMAKEFILEO__' + str(len(makefileo)) + '.o'
 
-def replace_makefileo(match):
-    w = makefileo[int(match.group(1)) - 1]
+def replace_makefileo(m):
+    w = makefileo[int(m.group(1)) - 1]
     return '<a href="'+version+'/source'+os.path.dirname(path)+'/'+w+'.c">'+w+'.o</a>'
 
 makefileo_filters = {

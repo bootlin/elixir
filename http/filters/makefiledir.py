@@ -3,12 +3,12 @@
 
 makefiledir = []
 
-def keep_makefiledir(match):
-    makefiledir.append(match.group(1))
-    return '__KEEPMAKEFILEDIR__' + str(len(makefiledir)) + '/' + match.group(2)
+def keep_makefiledir(m):
+    makefiledir.append(m.group(1))
+    return '__KEEPMAKEFILEDIR__' + str(len(makefiledir)) + '/' + m.group(2)
 
-def replace_makefiledir(match):
-    w = makefiledir[int(match.group(1)) - 1]
+def replace_makefiledir(m):
+    w = makefiledir[int(m.group(1)) - 1]
     return '<a href="'+version+'/source'+os.path.dirname(path)+'/'+w+'/Makefile">'+w+'/</a>'
 
 makefiledir_filters = {

@@ -3,12 +3,12 @@
 
 dtsi = []
 
-def keep_dtsi(match):
-    dtsi.append(match.group(3))
-    return match.group(1) + '/include/' + match.group(2) + '"__KEEPDTSI__' + str(len(dtsi)) + '"'
+def keep_dtsi(m):
+    dtsi.append(m.group(3))
+    return m.group(1) + '/include/' + m.group(2) + '"__KEEPDTSI__' + str(len(dtsi)) + '"'
 
-def replace_dtsi(match):
-    w = dtsi[int(match.group(1)) - 1]
+def replace_dtsi(m):
+    w = dtsi[int(m.group(1)) - 1]
     return '<a href="'+version+'/source'+os.path.dirname(path)+'/'+w+'">'+w+'</a>'
 
 dtsi_filters = {

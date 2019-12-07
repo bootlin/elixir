@@ -3,12 +3,12 @@
 
 makefiledtb = []
 
-def keep_makefiledtb(match):
-    makefiledtb.append(match.group(1))
+def keep_makefiledtb(m):
+    makefiledtb.append(m.group(1))
     return '__KEEPMAKEFILEDTB__' + str(len(makefiledtb)) + '.dtb'
 
-def replace_makefiledtb(match):
-    w = makefiledtb[int(match.group(1)) - 1]
+def replace_makefiledtb(m):
+    w = makefiledtb[int(m.group(1)) - 1]
     return '<a href="'+version+'/source'+os.path.dirname(path)+'/'+w+'.dts">'+w+'.dtb</a>'
 
 makefiledtb_filters = {

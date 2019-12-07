@@ -2,12 +2,12 @@
 
 idents = []
 
-def keep_idents(match):
-    idents.append(match.group(1))
+def keep_idents(m):
+    idents.append(m.group(1))
     return '__KEEPIDENTS__' + str(len(idents))
 
-def replace_idents(match):
-    i = idents[int(match.group(1)) - 1]
+def replace_idents(m):
+    i = idents[int(m.group(1)) - 1]
     return '<a href="'+version+'/ident/'+i+'">'+i+'</a>'
 
 ident_filters = {

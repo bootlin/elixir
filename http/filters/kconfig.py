@@ -2,12 +2,12 @@
 
 kconfig = []
 
-def keep_kconfig(match):
-    kconfig.append(match.group(4))
-    return match.group(1) + match.group(2) + match.group(3) + '"__KEEPKCONFIG__' + str(len(kconfig)) + '"'
+def keep_kconfig(m):
+    kconfig.append(m.group(4))
+    return m.group(1) + m.group(2) + m.group(3) + '"__KEEPKCONFIG__' + str(len(kconfig)) + '"'
 
-def replace_kconfig(match):
-    w = kconfig[int(match.group(1)) - 1]
+def replace_kconfig(m):
+    w = kconfig[int(m.group(1)) - 1]
     return '<a href="'+version+'/source/'+w+'">'+w+'</a>'
 
 kconfig_filters = {

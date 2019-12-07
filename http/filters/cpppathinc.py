@@ -19,8 +19,8 @@ def keep_cpppathinc(m):
         cpppathinc.append(inc)
         return m1 + '#include' + m2 + '<__KEEPCPPPATHINC__' + str(len(cpppathinc)) + '>'
 
-def replace_cpppathinc(match):
-    w = cpppathinc[int(match.group(1)) - 1]
+def replace_cpppathinc(m):
+    w = cpppathinc[int(m.group(1)) - 1]
     return '<a href="'+version+'/source'+'/include/'+w+'">'+w+'</a>'
 
 cpppathinc_filters = {
