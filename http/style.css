@@ -1,5 +1,5 @@
 @charset "UTF-8";
-@import url('https://fonts.googleapis.com/css?family=Ubuntu+Mono:400,400i,700|Ubuntu:400,700');
+@import 'fonts.css';
 @import 'header.css';
 
 /*! normalize.css v7.0.0 | MIT License | github.com/necolas/normalize.css */
