@@ -20,8 +20,10 @@
 
 import subprocess, os
 
+CURRNET_DIR = os.path.dirname(os.path.abspath(__file__))
+
 def script(*args):
-    args = ('./script.sh',) + args
+    args = (os.path.join(CURRNET_DIR, 'script.sh'),) + args
     # subprocess.run was introduced in Python 3.5
     # fall back to subprocess.check_output if it's not available
     if hasattr(subprocess, 'run'):
