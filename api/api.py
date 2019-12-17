@@ -15,15 +15,6 @@ def build_query(env, project):
     import query
     return query.query
 
-def call_query(query, *args):
-    cwd = os.getcwd()
-    os.chdir(ELIXIR_DIR)
-    ret = query(*args)
-    os.chdir(cwd)
-
-    return ret
-
-
 class IdentResource:
     def on_get(self, req, resp, project, ident):
         query = build_query(req.env, project)
@@ -33,9 +24,9 @@ class IdentResource:
             raise falcon.HTTPMissingParam('version')
         
         if version == 'latest':
-            version = call_query(query, 'latest')
+            version = query('latest')
 
-        symbol_definitions, symbol_references = call_query(query, 'ident', version, ident)
+        symbol_definitions, symbol_references = query('ident', version, ident)
         if len(symbol_definitions) or len(symbol_references):
             resp.body = json.dumps(
                 {

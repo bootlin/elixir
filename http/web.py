@@ -106,18 +106,10 @@ projects.sort()
 
 import sys
 sys.path = [ sys.path[0] + '/..' ] + sys.path
-import query
-
-def call_query(*args):
-    cwd = os.getcwd()
-    os.chdir('..')
-    ret = query.query(*args)
-    os.chdir(cwd)
-
-    return ret
+from query import query
 
 if version == 'latest':
-    tag = call_query('latest')
+    tag = query('latest')
 else:
     tag = version
 
@@ -132,7 +124,7 @@ data = {
     'breadcrumb': '<a class="project" href="'+version+'/source">/</a>'
 }
 
-versions = call_query('versions')
+versions = query('versions')
 
 v = ''
 b = 1
@@ -175,12 +167,12 @@ if mode == 'source':
 
     lines = ['null - -']
 
-    type = call_query('type', tag, path)
+    type = query('type', tag, path)
     if len(type) > 0:
         if type == 'tree':
-            lines += call_query('dir', tag, path)
+            lines += query('dir', tag, path)
         elif type == 'blob':
-            code = call_query('file', tag, path)
+            code = query('file', tag, path)
     else:
         print('<div class="lxrerror"><h2>This file does not exist.</h2></div>')
         status = 404
@@ -276,7 +268,7 @@ if mode == 'source':
 elif mode == 'ident':
     data['title'] = project.capitalize()+' source code: '+ident+' identifier ('+tag+') - Bootlin'
 
-    symbol_definitions, symbol_references = call_query('ident', tag, ident)
+    symbol_definitions, symbol_references = query('ident', tag, ident)
 
     print('<div class="lxrident">')
     if len(symbol_definitions):
