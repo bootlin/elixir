@@ -58,6 +58,8 @@ def unescape(bstr):
 
 blacklist = (
     b'if',
+    b'else',
+    b'endif',
     b'dev',
     b'i',
     b'ret',
