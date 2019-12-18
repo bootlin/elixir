@@ -48,12 +48,22 @@ if m:
     version = m.group(2)
     cmd = m.group(3)
     arg = m.group(4)
+
+    # Support old LXR links
     if not(project and search('^[A-Za-z0-9-]+$', project)) \
     or not(version and search('^[A-Za-z0-9._-]+$', version)):
         status = 302
         location = '/linux/latest/'+cmd+arg
         cmd = ''
-    if cmd == 'source':
+
+    basedir = os.environ['LXR_PROJ_DIR']
+    datadir = basedir + '/' + project + '/data'
+    repodir = basedir + '/' + project + '/repo'
+
+    if not(os.path.exists(datadir)) or not(os.path.exists(repodir)):
+        status = 400
+
+    elif cmd == 'source':
         path = arg
         if len(path) > 0 and path[-1] == '/':
             path = path[:-1]
@@ -64,6 +74,7 @@ if m:
             if not search('^[A-Za-z0-9_/.,+-]*$', path):
                 path = 'INVALID'
             url = 'source'+path
+
     elif cmd == 'ident':
         ident = arg[1:]
         form = cgi.FieldStorage()
@@ -80,13 +91,6 @@ if m:
     else:
         status = 400
 else:
-    status = 400
-
-basedir = os.environ['LXR_PROJ_DIR']
-datadir = basedir + '/' + project + '/data';
-repodir = basedir + '/' + project + '/repo';
-
-if not(os.path.exists(datadir)) or not(os.path.exists(repodir)):
     status = 400
 
 if status == 301:
