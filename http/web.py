@@ -82,6 +82,13 @@ if m:
 else:
     status = 400
 
+basedir = os.environ['LXR_PROJ_DIR']
+datadir = basedir + '/' + project + '/data';
+repodir = basedir + '/' + project + '/repo';
+
+if not(os.path.exists(datadir)) or not(os.path.exists(repodir)):
+    status = 400
+
 if status == 301:
     realprint('Status: 301 Moved Permanently')
     realprint('Location: '+location+'\n')
@@ -94,9 +101,8 @@ elif status == 400:
     realprint('Status: 400 Bad Request\n')
     exit()
 
-basedir = os.environ['LXR_PROJ_DIR']
-os.environ['LXR_DATA_DIR'] = basedir + '/' + project + '/data';
-os.environ['LXR_REPO_DIR'] = basedir + '/' + project + '/repo';
+os.environ['LXR_DATA_DIR'] = datadir
+os.environ['LXR_REPO_DIR'] = repodir
 
 projects = []
 for (dirpath, dirnames, filenames) in os.walk(basedir):

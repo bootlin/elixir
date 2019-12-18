@@ -22,7 +22,9 @@ import bsddb3
 from io import BytesIO
 import re
 from lib import autoBytes
+import os
 import os.path
+import errno
 
 ##################################################################################
 
@@ -155,7 +157,7 @@ class DB:
         if os.path.isdir(dir):
             self.dir = dir
         else:
-            raise FileNotFoundError
+            raise FileNotFoundError(errno.ENOENT, os.strerror(errno.ENOENT), dir)
 
         ro = readonly
 
