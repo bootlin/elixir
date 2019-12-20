@@ -121,6 +121,8 @@ cd /usr/local/elixir/
 
 ### Second Test
 
+**Caution: the below test, based on the command line interface, is currently broken. Support for the command line interface should be restored by an upcoming commit.**
+
 Verify that the queries work:
 
 ```
