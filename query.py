@@ -34,6 +34,16 @@ class SymbolInstance(object):
         self.line = line
         self.type = type
 
+    def __repr__(self):
+        type_repr = ""
+        if self.type:
+            type_repr = f" , type: {self.type}"
+
+        return f"Symbol in path: {self.path}, line: {self.line}" + type_repr
+
+    def __str__(self):
+        return self.__repr__()
+
 def decode(byte_object):
     # decode('ascii') fails on special chars
     # FIXME: major hack until we handle everything as bytestrings
@@ -95,8 +105,8 @@ def query(cmd, *args):
 
     elif cmd == 'dir':
 
-	# Returns the contents (trees or blobs) of the specified directory
-	# Example: ./query.py dir v3.1-rc10 /arch
+        # Returns the contents (trees or blobs) of the specified directory
+        # Example: ./query.py dir v3.1-rc10 /arch
 
         version = args[0]
         path = args[1]
@@ -105,7 +115,7 @@ def query(cmd, *args):
 
     elif cmd == 'file':
 
-	# Returns the contents of the specified file
+        # Returns the contents of the specified file
         # Tokens are marked for further processing
         # Example: ./query.py file v3.1-rc10 /Makefile
 
@@ -129,7 +139,7 @@ def query(cmd, *args):
 
     elif cmd == 'ident':
 
-	# Returns identifier search results
+        # Returns identifier search results
 
         version = args[0]
         ident = args[1]
@@ -179,8 +189,34 @@ def query(cmd, *args):
     else:
         return('Unknown subcommand: ' + cmd + '\n')
 
-if __name__ == "__main__":
-    import sys
+def cmd_ident(version, ident, **kwargs):
+    symbol_definitions, symbol_references = query("ident", version, ident)
+    print("Symbol Definitions:")
+    for symbol_definition in symbol_definitions:
+        print(symbol_definition)
 
-    output = query(*(sys.argv[1:]))
-    sys.stdout.buffer.write(output)
+    print("\nSymbol References:")
+    for symbol_reference in symbol_references:
+        print(symbol_reference)
+
+def cmd_file(version, path, **kwargs):
+    code = query("file", version, path)
+    print(code)
+
+if __name__ == "__main__":
+    import argparse
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument("version", help="The version of the project", type=str, default="latest")
+    subparsers = parser.add_subparsers()
+
+    ident_subparser = subparsers.add_parser('ident', help="Get definitions and references of an identifier")
+    ident_subparser.add_argument('ident', type=str, help="The name of the identifier")
+    ident_subparser.set_defaults(func=cmd_ident)
+
+    file_subparser = subparsers.add_parser('file', help="Get a source file")
+    file_subparser.add_argument('path', type=str, help="The path of the source file")
+    file_subparser.set_defaults(func=cmd_file)
+
+    args = parser.parse_args()
+    args.func(**vars(args))
