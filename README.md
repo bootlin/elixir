@@ -121,13 +121,11 @@ cd /usr/local/elixir/
 
 ### Second Test
 
-**Caution: the below test, based on the command line interface, is currently broken. Support for the command line interface should be restored by an upcoming commit.**
-
 Verify that the queries work:
 
 ```
-$ ./query.py file v4.10 /kernel/sched/clock.c
-$ ./query.py ident v4.10 raw_spin_unlock_irq
+$ ./query.py v4.10 ident raw_spin_unlock_irq
+$ ./query.py v4.10 file /kernel/sched/clock.c
 ```
 
 Note: `v4.10` can be replaced with any other tag.
