@@ -100,9 +100,13 @@ And then run `source /etc/profile`.
 
 ### Clone Kernel source code
 
-```
-git clone https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git /path/elixir-data/linux/repo/
-```
+Run one of the following, depending on whether or not you want `SUBLEVEL`
+(X.Y.Z) tags:
+
+* `git clone https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git /path/elixir-data/linux/repo/`
+  * Has only X.Y and X.Y-rcZ tags
+* `git clone git://git.kernel.org/pub/scm/linux/kernel/git/stable/linux-stable.git /path/elixir-data/linux/repo/`
+  * Has X.Y.Z tags
 
 ### First Test
 
@@ -382,7 +386,7 @@ The response body is of the following structure:
 {
     "definitions":
         [{"path": "commands/loadb.c", "line": 71, "type": "variable"}, ...],
-    "references": 
+    "references":
         [{"path": "arch/arm/boards/cm-fx6/board.c", "line": "64,64,71,72,75", "type": null}, ...]
 }
 ```
