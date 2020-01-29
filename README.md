@@ -100,13 +100,22 @@ And then run `source /etc/profile`.
 
 ### Clone Kernel source code
 
-Run one of the following, depending on whether or not you want `SUBLEVEL`
-(X.Y.Z) tags:
+First clone the master tree released by Linus Torvalds:
 
-* `git clone https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git /path/elixir-data/linux/repo/`
-  * Has only X.Y and X.Y-rcZ tags
-* `git clone git://git.kernel.org/pub/scm/linux/kernel/git/stable/linux-stable.git /path/elixir-data/linux/repo/`
-  * Has X.Y.Z tags
+```
+cd /pathy/elixir-data/linux
+git clone https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git repo
+```
+
+Then, you should also declare a `stable` remote branch corresponding to the `stable` tree, to get all release updates:
+
+```
+cd repo
+git remote add stable git://git.kernel.org/pub/scm/linux/kernel/git/stable/linux-stable.git
+git fetch stable
+```
+
+Feel free to add more remote branches in this way, as Elixir will consider tags from all remote branches.
 
 ### First Test
 
@@ -302,6 +311,10 @@ repository for the project you want to support:
 
     cd /srv/git
     git clone --bare https://github.com/zephyrproject-rtos/zephyr
+
+After doing this, you may also reference and fetch remote branches for this project,
+for example corresponding to the `stable` tree for the Linux kernel (see the
+instructions for Linux earlier in this document).
 
 Now, in your `LXR_PROJ_DIR` directory, create a new directory for the
 new project:
