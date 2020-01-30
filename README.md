@@ -214,6 +214,17 @@ Finally, start the httpd server.
 systemctl start httpd
 ```
 
+### Configure lighthttpd
+
+Here's a sample configuration for lighthttpd:
+```
+server.document-root = server_root + "/elixir/http"
+url.redirect = ( "^/$" => "/linux/latest/source" )
+url.rewrite  = ( "^/.*/(source|ident|search)" =>  "/web.py/$1")
+setenv.add-environment = ( "PYTHONIOENCODING" => "utf-8",
+	"LXR_PROJ_DIR" => "/path/to/elixir-data" )
+```
+
 ### Using a cache to improve performance
 
 At Bootlin, we're using the [Varnish http cache](https://varnish-cache.org/)
