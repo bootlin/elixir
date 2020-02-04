@@ -1,16 +1,16 @@
 .message-banner-desktop {
     position: absolute;
-    padding: 10px;
+    padding: 5px;
     -webkit-box-shadow: -2px 0px 15px 1px rgba(0,0,0,0.69);
     -moz-box-shadow: -2px 0px 15px 1px rgba(0,0,0,0.69);
     box-shadow: -2px 0px 15px 1px rgba(0,0,0,0.69);
-    font-size: 30px;
+    font-size: 14;
     font-family: Arial;
     font-weight: bold;
     left: 10px;
     bottom: 30px;
-    width: 150px;
-    height: 120px;
+    width: 215px;
+    height: 100px;
     text-align: center;
     border-radius: 20px;
     background: rgba(255,255,255,1);
@@ -23,27 +23,17 @@
     filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#ffffff', endColorstr='#ededed', GradientType=0 );
 }
 .message-banner-desktop p.title {
-	font-size: 30px;
+	font-size: 14px;
 	margin: 0;
 	margin-top: 5px;
+	margin-bottom: 8px;
 }
 .message-banner-desktop .subtitle {
-    width: 150px;
+    width: 210px;
     padding: 0 10px;
-    background: #fe003e;
-    -webkit-box-shadow: -2px 0px 15px 1px rgba(0,0,0,0.69);
-    -moz-box-shadow: -2px 0px 15px 1px rgba(0,0,0,0.69);
-    box-shadow: -2px 0px 15px 1px rgba(0,0,0,0.69);
-    -webkit-transform: rotate(-15deg);
-    -moz-transform: rotate(-15deg);
-    -o-transform: rotate(-15deg);
-    -ms-transform: rotate(-15deg);
-    transform: rotate(-15deg);
-    font-size: 15px;
+    font-size: 11px;
     position: relative;
-    top: -10px;
     z-index: 29;
-    color: #fff;
 }
 
 .message-banner-mobile {
