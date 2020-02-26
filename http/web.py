@@ -162,19 +162,28 @@ for topmenu in versions:
 
 data['versions'] = v
 
+title_suffix = project.capitalize()+' source code ('+tag+') - Bootlin'
+
 if mode == 'source':
-    p2 = ''
-    p3 = path.split('/') [1:]
+    path_split = path.split('/')[1:]
+    path_temp = ''
     links = []
-    for p in p3:
-        p2 += '/'+p
-        links.append('<a href="'+version+'/source'+p2+'">'+p+'</a>')
+    for p in path_split:
+        path_temp += '/'+p
+        links.append('<a href="'+version+'/source'+path_temp+'">'+p+'</a>')
 
     if links:
         data['breadcrumb'] += '/'.join(links)
 
     data['ident'] = ident
-    data['title'] = project.capitalize()+' source code: '+path[1:]+' ('+tag+') - Bootlin'
+    # Create titles like this:
+    # root path: "Linux source code (v5.5.6) - Bootlin"
+    # first level path: "arch - Linux source code (v5.5.6) - Bootlin"
+    # deeper paths: "Makefile - arch/um/Makefile - Linux source code (v5.5.6) - Bootlin"
+    data['title'] = ('' if path == ''
+                     else path_split[0]+' - ' if len(path_split) == 1
+                     else path_split[-1]+' - '+'/'.join(path_split)+' - ') \
+            +title_suffix
 
     lines = ['null - -']
 
@@ -277,7 +286,7 @@ if mode == 'source':
 
 
 elif mode == 'ident':
-    data['title'] = project.capitalize()+' source code: '+ident+' identifier ('+tag+') - Bootlin'
+    data['title'] = ident+' identifier - '+title_suffix
 
     symbol_definitions, symbol_references = query('ident', tag, ident)
 
