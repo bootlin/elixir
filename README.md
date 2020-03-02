@@ -1,6 +1,5 @@
 # The Elixir Cross Referencer
 
-
 Elixir is a source code cross-referencer inspired by
 [LXR](https://en.wikipedia.org/wiki/LXR_Cross_Referencer). It's written
 in Python and its main purpose is to index every release of a C or C++
@@ -13,14 +12,16 @@ duplicating work and data. It has a straightforward data structure
 
 You can see it in action on https://elixir.bootlin.com/
 
+Note: this documentation applies to version 1.0 of Elixir.
+
 # Requirements
 
 * Python >= 3.5
 * The Jinja2 and Pygments (>= 2.2) Python libraries
 * Berkeley DB (and its Python binding)
 * Exuberant Ctags
-* Perl (for non-greedy regexes)
-* Falcon and mod_wsgi (for the REST api)
+* Perl (for non-greedy regexes and automated testing)
+* Falcon and `mod_wsgi` (for the REST api)
 
 # Installation
 
@@ -63,8 +64,8 @@ yum install python36-jinja2 python36-pygments python36-bsddb3 python3-falcon glo
 sudo apt install python3 python3-jinja2 python3-pygments python3-bsddb3 python3-falcon exuberant-ctags perl git apache2 libapache2-mod-wsgi-py3
 ```
 
-To enable the REST api, follow the installation instructions on [mod_wsgi](https://github.com/GrahamDumpleton/mod_wsgi)
-and connect it to the apache installation as detailed in https://github.com/GrahamDumpleton/mod_wsgi#connecting-into-apache-installation
+To enable the REST api, follow the installation instructions on [`mod_wsgi`](https://github.com/GrahamDumpleton/mod_wsgi)
+and connect it to the apache installation as detailed in <https://github.com/GrahamDumpleton/mod_wsgi#connecting-into-apache-installation>.
 
 To know which packages to install, you can also read the Docker files in the `docker/` directory
 to know what packages Elixir needs in your favorite distribution.
@@ -87,8 +88,8 @@ mkdir -p /path/elixir-data/linux/data
 Two environment variables are used to tell Elixir where to find the project's
 local git repository and its databases:
 
-* LXR_REPO_DIR (the git repository directory for your project)
-* LXR_DATA_DIR (the database directory for your project)
+* `LXR_REPO_DIR` (the git repository directory for your project)
+* `LXR_DATA_DIR` (the database directory for your project)
 
 Now open `/etc/profile` and append the following content.
 
@@ -150,16 +151,16 @@ server. Since it includes support for indexing multiple projects,
 it expects a different variable (`LXR_PROJ_DIR`) which points to a
 directory with a specific structure:
 
-* <LXR_PROJ_DIR>
-  * <project 1>
-    * data
-    * repo
-  * <project 2>
-    * data
-    * repo
-  * <project 3>
-    * data
-    * repo
+* `<LXR_PROJ_DIR>`
+  * `<project 1>`
+    * `data`
+    * `repo`
+  * `<project 2>`
+    * `data`
+    * `repo`
+  * `<project 3>`
+    * `data`
+    * `repo`
 
 It will then generate the other two variables upon calling the query
 command.
@@ -415,4 +416,27 @@ The response body is of the following structure:
 }
 ```
 
-Note: this documentation applies to version 1.0 of Elixir.
+# Automated testing
+
+Elixir includes a simple test suite in `t/`.  To run it,
+from the top-level Elixir directory, run:
+
+    prove
+
+The test suite uses code extracted from Linux v5.4 in `t/tree`.
+
+## Licensing of code in `t/tree`
+
+The copied code is licensed as described in the [COPYING] file included with
+Linux.  All the files copied carry SPDX license identifiers of `GPL-2.0+` or
+`GPL-2.0-or-later`.  Per [GNU's compatibility table], GPL 2.0+ code can be used
+under GPLv3 provided the combination is under GPLv3.  Moreover, [GNU's overview
+of AGPLv3] indicates that its terms "effectively consist of the terms of GPLv3"
+plus the network-use paragraph.  Therefore, the developers have a good-faith
+belief that licensing these files under AGPLv3 is authorized.  (See also [this
+issue comment] for another example of a similar situation.)
+
+[COPYING]: https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/plain/COPYING
+[GNU's compatibility table]: https://www.gnu.org/licenses/gpl-faq.en.html#AllCompatibility
+[GNU's overview of AGPLv3]: https://www.gnu.org/licenses/license-list.en.html#AGPLv3.0
+[this issue comment]: https://github.com/Freemius/wordpress-sdk/issues/166#issuecomment-310561976
