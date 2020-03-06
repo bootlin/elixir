@@ -73,7 +73,7 @@ if m:
         else:
             mode = 'source'
             if not search('^[A-Za-z0-9_/.,+-]*$', path):
-                path = 'INVALID'
+                status = 400
             url = 'source'+path
 
     elif cmd == 'ident':
