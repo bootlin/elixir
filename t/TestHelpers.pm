@@ -18,8 +18,6 @@ TestHelpers - Common routines for use in tests
 
 C<use TestHelpers;>, and all the functions below will be exported.
 
-=head1 FUNCTIONS
-
 =cut
 
 package TestHelpers;
@@ -28,7 +26,9 @@ use strict;
 use warnings;
 use autodie;    # note: still need to check system() calls manually
 
+use Cwd qw(abs_path);
 use File::Spec;
+use File::Temp 0.14 qw(tempdir);
 use FindBin;
 use IO::Select;
 use IPC::Open3;
@@ -40,9 +40,23 @@ use Test::More;
 use parent 'Exporter';
 our @EXPORT;
 BEGIN { @EXPORT = qw(sibling_abs_path find_program run_program ok_or_die
-    run_produces_ok); }
+    run_produces_ok MUST_SUCCEED); }
 
 # ===========================================================================
+
+=head1 CONSTANTS
+
+=head2 MUST_SUCCEED
+
+True.  So that calls to L</run_produces_ok> will be more self-explanatory.
+
+=cut
+
+use constant MUST_SUCCEED => !!1;
+
+=head1 FUNCTIONS
+
+These are helper routines that generally perform specific tasks.
 
 =head2 sibling_abs_path
 

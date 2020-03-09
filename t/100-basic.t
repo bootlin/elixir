@@ -28,13 +28,11 @@ use autodie;    # note: still need to check system() calls manually
 use FindBin '$Bin';
 use lib $Bin;
 
-use Cwd qw(abs_path);
-use File::Path qw(remove_tree);
 use File::Spec;
-use File::Temp 0.14 qw(tempdir);
 
 use Test::More;
 
+use TestEnvironment;
 use TestHelpers;
 
 # ===========================================================================
@@ -44,15 +42,12 @@ use TestHelpers;
 my $tree_src_dir = sibling_abs_path('tree');
 my $db_dir = sibling_abs_path('db');        # the db dir is .gitignored
 
-{   # Remove any existing DB dir
-    my $ignore;
-    remove_tree($db_dir, {error => \$ignore});
-}
+my $tenv = TestEnvironment->new;
 
 # Check programs
-my $script_sh = find_program('script.sh');
-my $update_py = find_program('update.py');
-my $query_py = find_program('query.py');
+my $script_sh = $tenv->script_sh;
+my $update_py = $tenv->update_py;
+my $query_py = $tenv->query_py;
 
 ok_or_die( (-f $script_sh && -r _ && -x _), 'script.sh executable',
     "Could not find executable script.sh at $script_sh");
@@ -61,26 +56,8 @@ ok_or_die( (-f $update_py && -r _ && -x _), 'update.py executable',
 ok_or_die( (-f $query_py && -r _ && -x _), 'query.py executable',
     "Could not find executable query.py at $query_py");
 
-# Copy tree/ into a temporary Git repository, since script.sh requires
-# it be run in a Git repo.
-
-my $tempdir = tempdir(CLEANUP => 1);
-my $tempdir_path = abs_path($tempdir);
-diag "Using temporary directory $tempdir_path";
-run_program('bash', '-c', "cd \"$tempdir\" && git init") or die("git init failed");
-
-run_program('bash', '-c', "tar cf - -C \"$tree_src_dir\" . | tar xf - -C \"$tempdir\"")
-    or die("Could not copy files into $tempdir");
-
-my @gitdir = ('-C', $tempdir_path);
-
-run_program('git', @gitdir, 'add', '.') or die("git add failed");
-run_program('git', @gitdir, 'commit', '-am', 'Initial commit')
-    or die("git commit failed");
-run_program('git', @gitdir, 'tag', 'v5.4') or die("git tag failed");
-
-$ENV{LXR_REPO_DIR} = $tempdir;
-$ENV{LXR_DATA_DIR} = $db_dir;
+$tenv->build_repo($tree_src_dir);
+$tenv->update_env;  # Set LXR_REPO_DIR
 
 # Check for tags in `script.sh list-tags`, as a sanity check before
 # building the test DB
@@ -89,12 +66,8 @@ die("Could not list tags: $! ($?)") if $?;
 ok_or_die( @tags == 1, 'One tag present', "Not one tag (@{[scalar @tags]})");
 ok_or_die( $tags[0] =~ /^v5.4$/, 'Found the correct tag', 'Not the tag we expected');
 
-# Make the new database
-ok_or_die( mkdir($db_dir), "Created $db_dir",
-    "Could not create $db_dir");
-
-ok_or_die( run_program($update_py), 'update.py succeeded',
-    'Could not create database');
+$tenv->build_db($db_dir);
+$tenv->update_env;  # Set LXR_DATA_DIR
 
 ok_or_die( -d $db_dir, 'database dir exists',
     "Database dir $db_dir not present");
@@ -109,7 +82,7 @@ ok( (-r File::Spec->catfile($db_dir, $_)), "$_ exists" )
 run_produces_ok('ident query (nonexistent)',
     [$query_py, qw(v5.4 ident SOME_NONEXISTENT_IDENTIFIER_XYZZY_PLUGH)],
     [qr{^Symbol Definitions:}, qr{^Symbol References:}, qr{^\s*$}],
-    1);
+    MUST_SUCCEED);
 
 run_produces_ok('ident query (existent)',
     [$query_py, qw(v5.4 ident i2c_acpi_notify)],
@@ -117,7 +90,7 @@ run_produces_ok('ident query (existent)',
         qr{drivers/i2c/i2c-core-acpi\.c.+\b402\b.+\bfunction\b},    # def
         qr{drivers/i2c/i2c-core-acpi\.c.+\b402,439}                 # refs
     ],
-    1);
+    MUST_SUCCEED);
 
 # Spot-check some files
 
@@ -128,17 +101,17 @@ run_produces_ok('file query (nonexistent)',
 run_produces_ok('file query (existent), .h',
     [$query_py, qw(v5.4 file /drivers/i2c/i2c-dev.c)],
     [qr{\S}],
-    1);
+    MUST_SUCCEED);
 
 run_produces_ok('file query (existent), .c',
     [$query_py, qw(v5.4 file /drivers/i2c/i2c-dev.c)],
     [qr{i2c-dev\.c}, qr{\bVogl\b}],
-    1);
+    MUST_SUCCEED);
 
 run_produces_ok('file query (existent), .h',
     [$query_py, qw(v5.4 file /drivers/i2c/i2c-core.h)],
     [qr{i2c-core\.h}, qr{\bWe\b}],
-    1);
+    MUST_SUCCEED);
 
 #system('bash'); # Uncomment this if you want to interact with the test repo
 
