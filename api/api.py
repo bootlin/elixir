@@ -27,16 +27,12 @@ class IdentResource:
             version = query('latest')
 
         symbol_definitions, symbol_references = query('ident', version, ident)
-        if len(symbol_definitions) or len(symbol_references):
-            resp.body = json.dumps(
-                {
-                    'definitions': [sym.__dict__ for sym in symbol_definitions],
-                    'references': [sym.__dict__ for sym in symbol_references]
-                })
-            resp.status = falcon.HTTP_200
-        else:
-            raise falcon.HTTPNotFound({'title': 'Requested identifier not found in {} project'.format(project)})
-
+        resp.body = json.dumps(
+            {
+                'definitions': [sym.__dict__ for sym in symbol_definitions],
+                'references': [sym.__dict__ for sym in symbol_references]
+            })
+        resp.status = falcon.HTTP_200
 
 application = falcon.API()
 
