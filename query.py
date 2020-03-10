@@ -191,7 +191,7 @@ def query(cmd, *args):
 
 def cmd_ident(version, ident, **kwargs):
     symbol_definitions, symbol_references = query("ident", version, ident)
-    print("Symbol Definitionss:")
+    print("Symbol Definitions:")
     for symbol_definition in symbol_definitions:
         print(symbol_definition)
 
