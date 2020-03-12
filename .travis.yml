@@ -1,0 +1,14 @@
+language: python
+
+os:
+  - linux
+
+python:
+  - "3.6"
+
+before_install:
+  - sudo apt-get -y install libdb-dev exuberant-ctags
+  - pip install jinja2 pygments bsddb3 falcon 
+
+script: 
+  - prove
