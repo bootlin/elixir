@@ -195,6 +195,23 @@ sub update_env {
     return $self;
 } #update_env()
 
+=head2 report
+
+Returns a human-readable report of the current environment's state.
+
+=cut
+
+sub report {
+    my $self = shift;
+    return <<EOT;
+Repository: @{[$self->lxr_repo_dir]}
+Database:   @{[$self->lxr_data_dir]}
+script.sh:  @{[$self->script_sh]}
+update.py:  @{[$self->update_py]}
+query.py:   @{[$self->query_py]}
+EOT
+} #report()
+
 =head2 DESTROY
 
 Destructor.  Called automatically.
