@@ -1,64 +1,64 @@
 <!doctype html>
 <html class="no-js">
-	<head>
-		<meta charset="utf-8">
-		<meta http-equiv="x-ua-compatible" content="ie=edge">
-		<title>{{title}}</title>
-		<meta name="description" content="Elixir Cross Referencer">
-		<meta name="viewport" content="user-scalable=no, initial-scale=1, maximum-scale=1, minimum-scale=1" />
-		<link rel="stylesheet" href="/style.css?v=3">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="x-ua-compatible" content="ie=edge">
+        <title>{{title}}</title>
+        <meta name="description" content="Elixir Cross Referencer">
+        <meta name="viewport" content="user-scalable=no, initial-scale=1, maximum-scale=1, minimum-scale=1" />
+        <link rel="stylesheet" href="/style.css?v=3">
         <link rel="stylesheet" href="/banner.css">
-		<base href="{{baseurl}}"/>
-		<script>document.documentElement.className = 'js'</script>
-	</head>
-	<body>
-		<!--[if lte IE 9]>
-				<p class="browserupgrade">You are using an <strong>outdated</strong> browser. Please <a href="http://browsehappy.com/">upgrade your browser</a> to improve your experience and security.</p>
-		<![endif]-->
-		<div class="wrapper">
-			{% include 'header.html' %}
-			<header class="topbar">
-				<div class="breadcrumb">
-					<a href="{{version}}/{{url}}#menu" class="open-menu icon-menu screenreader" title="Open Menu">Open Menu</a>
-					{{breadcrumb}}
-				</div>
-				<div class="search">
-					<form method="post" action="{{version}}/ident">
-						<input placeholder="Search Identifier" type="text" name="i" value="{{ident}}"/>
-						<button class="icon-search"><span class="screenreader">Go get it</span></button>
-					</form>
-				</div>
-			</header>
-			<main>
-				<div class="workspace">
-					{{main}}
-				</div>
-				<aside class="sidebar" id="menu">
-				        <select class="select-projects" onchange="window.location.href=this.value">
-				        {%- for p in projects %}
-					        <option{% if p == project %} selected{% endif %} value="/{{p}}/latest/source">{{p}}</option>
-				        {%- endfor %}
-				        </select>
-					<nav>
-						<h3 class="screenreader">Projects</h3>
-						<ul class="projects">
-							{%- for p in projects %}
-							<li{% if p == project %} class="active"{% endif %}><a href="/{{p}}/latest/source">{{p}}</a></li>
-							{%- endfor %}
-						</ul>
-						<h3 class="screenreader">Versions</h3>
-						<ul class="versions">
-							{{versions}}
-						</ul>
-					</nav>
-				</aside>
-			</main>
-			<footer class="footer">
-				<span class="version"><a href="{{version}}/source">{{project}}</a> <em class="icon-tag">{{tag}}</em></span>
-				<a title="Go to top of the page" class="go-top icon-up screenreader" href="{{version}}/{{url}}#">Top</a>
-				<span class="poweredby">powered by <a target="_blank" href="https://github.com/bootlin/elixir">Elixir 1.0</a></span>
-			</footer>
-		</div>
-		<script src="/script.js?v=3"></script>
-	</body>
+        <base href="{{baseurl}}"/>
+        <script>document.documentElement.className = 'js'</script>
+    </head>
+    <body>
+        <!--[if lte IE 9]>
+                <p class="browserupgrade">You are using an <strong>outdated</strong> browser. Please <a href="http://browsehappy.com/">upgrade your browser</a> to improve your experience and security.</p>
+        <![endif]-->
+        <div class="wrapper">
+            {% include 'header.html' %}
+            <header class="topbar">
+                <div class="breadcrumb">
+                    <a href="{{version}}/{{url}}#menu" class="open-menu icon-menu screenreader" title="Open Menu">Open Menu</a>
+                    {{breadcrumb}}
+                </div>
+                <div class="search">
+                    <form method="post" action="{{version}}/ident">
+                        <input placeholder="Search Identifier" type="text" name="i" value="{{ident}}"/>
+                        <button class="icon-search"><span class="screenreader">Go get it</span></button>
+                    </form>
+                </div>
+            </header>
+            <main>
+                <div class="workspace">
+                    {{main}}
+                </div>
+                <aside class="sidebar" id="menu">
+                    <select class="select-projects" onchange="window.location.href=this.value">
+                        {%- for p in projects %}
+                            <option{% if p == project %} selected{% endif %} value="/{{p}}/latest/source">{{p}}</option>
+                        {%- endfor %}
+                    </select>
+                    <nav>
+                        <h3 class="screenreader">Projects</h3>
+                        <ul class="projects">
+                            {%- for p in projects %}
+                            <li{% if p == project %} class="active"{% endif %}><a href="/{{p}}/latest/source">{{p}}</a></li>
+                            {%- endfor %}
+                        </ul>
+                        <h3 class="screenreader">Versions</h3>
+                        <ul class="versions">
+                            {{versions}}
+                        </ul>
+                    </nav>
+                </aside>
+            </main>
+            <footer class="footer">
+                <span class="version"><a href="{{version}}/source">{{project}}</a> <em class="icon-tag">{{tag}}</em></span>
+                <a title="Go to top of the page" class="go-top icon-up screenreader" href="{{version}}/{{url}}#">Top</a>
+                <span class="poweredby">powered by <a target="_blank" href="https://github.com/bootlin/elixir">Elixir 1.0</a></span>
+            </footer>
+        </div>
+        <script src="/script.js?v=3"></script>
+    </body>
 </html>

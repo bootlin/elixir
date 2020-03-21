@@ -19,9 +19,9 @@ index() {
 
     if [ "$remote" != "" ]
     then
-	cd $LXR_REPO_DIR
-	git remote add other $remote
-	git fetch other
+        cd $LXR_REPO_DIR
+        git remote add other $remote
+        git fetch other
     fi
 
     cd $ELIXIR_INSTALL
@@ -37,16 +37,16 @@ index() {
 
 if [ "$ELIXIR_ROOT" = "" ]
 then
-	echo "Error: ELIXIR_ROOT environment variable not set"
-	echo "It's where Elixir data are stored"
-	exit 1
+    echo "Error: ELIXIR_ROOT environment variable not set"
+    echo "It's where Elixir data are stored"
+    exit 1
 fi
 
 if [ "$ELIXIR_INSTALL" = "" ]
 then
-	echo "Error: ELIXIR_INSTALL environment variable not set"
-	echo "It's where Elixir code is stored"
-	exit 1
+    echo "Error: ELIXIR_INSTALL environment variable not set"
+    echo "It's where Elixir code is stored"
+    exit 1
 fi
 
 index amazon-freertos https://github.com/aws/amazon-freertos.git &

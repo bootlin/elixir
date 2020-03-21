@@ -223,7 +223,7 @@ server.document-root = server_root + "/elixir/http"
 url.redirect = ( "^/$" => "/linux/latest/source" )
 url.rewrite  = ( "^/.*/(source|ident|search)" =>  "/web.py/$1")
 setenv.add-environment = ( "PYTHONIOENCODING" => "utf-8",
-	"LXR_PROJ_DIR" => "/path/to/elixir-data" )
+    "LXR_PROJ_DIR" => "/path/to/elixir-data" )
 ```
 
 ### Using a cache to improve performance

@@ -105,13 +105,13 @@ list_blobs()
     v=`echo $opt2 | version_rev`
 
     if [ "$opt1" = '-p' ]; then
-	# "path" option: return blob hash and full path
+        # "path" option: return blob hash and full path
         format='\1 \2'
     elif [ "$opt1" = '-f' ]; then
-	# "file" option: return blob hash and file name (without its path)
+        # "file" option: return blob hash and file name (without its path)
         format='\1 \4'
     else
-	# default option: return only blob hash
+        # default option: return only blob hash
         format='\1'
         v=`echo $opt1 | version_rev`
     fi
