@@ -113,10 +113,6 @@ run_produces_ok('file query (existent), .h',
     [qr{i2c-core\.h}, qr{\bWe\b}],
     MUST_SUCCEED);
 
-# Test the api using pytest. Prints the test results.
-
-run_produces_ok('api pytest suite', ["pytest", "-v"], [], MUST_SUCCEED, 1);
-
 #system('bash'); # Uncomment this if you want to interact with the test repo
 
 done_testing;
