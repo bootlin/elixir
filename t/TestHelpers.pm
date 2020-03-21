@@ -37,11 +37,21 @@ use Symbol;
 
 use Test::More;
 
-# Automatically export all the functions below
+# Automatically export all the functions listed in @EXPORT.  The functions
+# in @EXPORT_OK can be exported on request.
 use parent 'Exporter';
-our @EXPORT;
-BEGIN { @EXPORT = qw(sibling_abs_path find_program run_program ok_or_die
-    run_produces_ok MUST_SUCCEED); }
+our (@EXPORT, @EXPORT_OK, %EXPORT_TAGS);
+BEGIN {
+    @EXPORT = qw(sibling_abs_path find_program run_program ok_or_die
+                run_produces_ok MUST_SUCCEED);
+    @EXPORT_OK = qw(line_mark_string);
+    %EXPORT_TAGS = (
+        all => [@EXPORT, @EXPORT_OK],
+    );
+}
+
+# Forwards for internal functions
+sub line_mark_string;
 
 # ===========================================================================
 
@@ -131,9 +141,8 @@ Run a test, but die if it fails.  Usage:
 
 sub ok_or_die {
     my ($cond, $msg, $err_msg) = @_;
-    my $line = (caller)[2];
-    my $retval = eval <<EOT;    # Make the error message report the caller's line number
-#line $line
+    my (undef, $filename, $line) = caller;
+    my $retval = eval line_mark_string 1, <<EOT;    # Make the error message report the caller's line number
     ok(\$cond, \$msg);
 EOT
     die($err_msg) unless $retval;
@@ -195,19 +204,23 @@ sub run_produces_ok {
 
     # Basic checks
     if($mustSucceed) {
+        eval line_mark_string 1, <<'EOT';
         cmp_ok($exit_status, '==', 0, "$desc: exit status 0");
         cmp_ok(@errlines, '==', 0, "$desc: stderr empty");
+EOT
     }
 
     # Check regexes
     for my $entry (@$lrRegexes) {
 
         if(ref $entry eq 'Regexp') {
-            ok( (grep { m{$entry} } @outlines), "$desc: output includes $entry" );
+            eval line_mark_string 1,
+            q(ok( (grep { m{$entry} } @outlines), "$desc: output includes $entry" ));
 
         } elsif(ref $entry eq 'HASH' && ref $entry->{not} eq 'Regexp') {
             my $re = $entry->{not};
-            ok( !(grep { m{$re} } @outlines), "$desc: output excludes $re" );
+            eval line_mark_string 1,
+            q(ok( !(grep { m{$re} } @outlines), "$desc: output excludes $re" ));
 
         } else {
             die "Invalid entry $entry";
@@ -215,6 +228,82 @@ sub run_produces_ok {
     } #foreach $entry
 
 } #run_produces_ok()
+
+=head1 INTERNAL FUNCTIONS
+
+These are ones you probably won't need to call.
+
+=head2 _croak
+
+Lazy L<Carp/croak>
+
+=cut
+
+sub _croak {
+    require Carp;
+    goto &Carp::croak;
+}
+
+=head2 line_mark_string
+
+Add a C<#line> directive to a string.  Usage:
+
+To use the caller's filename and line number:
+
+    my $str = line_mark_string <<EOT ;
+    $contents
+    EOT
+
+To use a filename and line number from higher in the call stack:
+
+    my $str = line_mark_string $level, <<EOT ;
+    $contents
+    EOT
+
+To use a specified filename and line number:
+
+    my $str = line_mark_string __FILE__, __LINE__, <<EOT ;
+    $contents
+    EOT
+
+In the first and second forms, information from C<caller> will be used for the
+filename and line number.
+
+In the first and third forms, the C<#line> directive will point to the line
+after the C<line_mark_string> invocation, i.e., the first line of <C$contents>.
+Generally, C<$contents> will be source code, although this is not required.
+
+C<$contents> must be defined, but can be empty.
+
+=cut
+
+sub line_mark_string {
+    my ($contents, $filename, $line);
+
+    if(@_ == 1) {
+        $contents = $_[0];
+        (undef, $filename, $line) = caller;
+        ++$line;
+    } elsif(@_ == 2) {
+        (undef, $filename, $line) = caller($_[0]);
+        $contents = $_[1];
+    } elsif(@_ == 3) {
+        ($filename, $line, $contents) = @_;
+        ++$line;
+    } else {
+        _croak "Invalid invocation";
+    }
+
+    _croak "Need text" unless defined $contents;
+    die "Couldn't get location information" unless $filename && $line;
+
+    $filename =~ s/"/-/g;
+
+    return <<EOT;
+#line $line "$filename"
+$contents
+EOT
+} #line_mark_string()
 
 =head2 import
 
