@@ -146,17 +146,18 @@ Run a program and check whether it produces expected output.
 Usage:
 
     run_produces_ok($desc, \@program_and_args, \@expected_regexes,
-                    <optional> $mustSucceed)
+                    <optional> $mustSucceed, <optional> $printOutput)
 
 The test passes if each regex in C<@expected_regexes> matches at least one
 line in the output of C<@program_and_args>, and if each C<< { not => regex } >>
 in C<@expected_regexes> is NOT found in that output.
 If C<$mustSucceed> is true, also tests for exit status 0 and empty stderr.
+If C<$printOutput> is true, prints the output of C<@program_and_args>.
 
 =cut
 
 sub run_produces_ok {
-    my ($desc, $lrProgram, $lrRegexes, $mustSucceed) = @_;
+    my ($desc, $lrProgram, $lrRegexes, $mustSucceed, $printOutput) = @_;
 
     # Run program and capture stdout and stderr
     my ($in , $out, $err);      # Filehandles
@@ -187,6 +188,10 @@ sub run_produces_ok {
 
     waitpid $pid, 0;
     my $exit_status = $? >> 8;
+
+    if ($printOutput) {
+        diag "@outlines";
+    }
 
     # Basic checks
     if($mustSucceed) {
