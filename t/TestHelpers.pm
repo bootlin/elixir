@@ -17,6 +17,7 @@ TestHelpers - Common routines for use in tests
 =head1 SYNOPSIS
 
 C<use TestHelpers;>, and all the functions below will be exported.
+TestHelpers also turns on L<strict> and L<warnings>.
 
 =cut
 
@@ -210,9 +211,20 @@ sub run_produces_ok {
 
 } #run_produces_ok()
 
+=head2 import
+
+Set up.  Called automatically.
+
+=cut
+
+sub import {
+    __PACKAGE__->export_to_level(1, @_);
+    strict->import;
+    warnings->import;
+} #import()
+
 1;
 __END__
-
 
 =head1 AUTHOR
 
