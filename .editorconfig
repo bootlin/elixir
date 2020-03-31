@@ -1,0 +1,7 @@
+# see https://editorconfig.org for the format of this file
+root = true
+
+[*]
+end_of_line = LF
+indent_style = space
+indent_size = 4
