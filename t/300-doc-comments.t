@@ -48,7 +48,15 @@ run_produces_ok('doc-comment query (nonexistent)',
     [$tenv->query_py, qw(v5.4 ident SOME_NONEXISTENT_IDENTIFIER_XYZZY_PLUGH)],
     [
         qr{^Documented in:},
-        { not => qr{/} }    # No file paths in the output
+        {doc => { not => qr{/} }},   # No file paths in the doc section
+    ],
+    MUST_SUCCEED);
+
+run_produces_ok('doc-comment query (existent but not documented)',
+    [$tenv->query_py, qw(v5.4 ident gsb_buffer)],   # in drivers/i2c/i2c-core-acpi.c
+    [
+        qr{^Documented in:},
+        {doc => { not => qr{/} }}
     ],
     MUST_SUCCEED);
 
@@ -56,7 +64,7 @@ run_produces_ok('ident query (existent, function, documented in C file)',
     [$tenv->query_py, qw(v5.4 ident i2c_acpi_get_i2c_resource)],
     [
         qr{^Documented in:},
-        qr{drivers/i2c/i2c-core-acpi\.c.+\b45\b},
+        {doc => qr{drivers/i2c/i2c-core-acpi\.c.+\b45\b}},
     ],
     MUST_SUCCEED);
 

@@ -2,8 +2,8 @@
 
 #  This file is part of Elixir, a source code cross-referencer.
 #
-#  Copyright (C) 2017  Mikaël Bouillot
-#  <mikael.bouillot@bootlin.com>
+#  Copyright (C) 2017--2020  Mikaël Bouillot
+#  <mikael.bouillot@bootlin.com> and contributors
 #
 #  Elixir is free software: you can redistribute it and/or modify
 #  it under the terms of the GNU Affero General Public License as published by
@@ -22,6 +22,13 @@ if [ ! -d "$LXR_REPO_DIR" ]; then
     echo "$0: Can't find repository"
     exit 1
 fi
+
+# Get our path so we can find peer find-file-doc-comments.pl later
+cur_dir=`pwd`
+script_path=`realpath "$0"`
+cd `dirname "$script_path"`
+script_dir=`pwd`
+cd "$cur_dir"
 
 version_dir()
 {
@@ -140,6 +147,16 @@ parse_defs()
     rmdir $tmp
 }
 
+parse_docs()
+{
+    tmpfile=`mktemp`
+
+    git cat-file blob "$opt1" > "$tmpfile"
+    "$script_dir/find-file-doc-comments.pl" "$tmpfile"
+
+    rm -rf "$tmpfile"
+}
+
 project=$(basename `dirname $LXR_REPO_DIR`)
 
 plugin=projects/$project.sh
@@ -206,6 +223,10 @@ case $cmd in
 
     parse-defs)
         parse_defs
+        ;;
+
+    parse-docs)
+        parse_docs
         ;;
 
     help)

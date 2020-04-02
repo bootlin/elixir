@@ -18,12 +18,17 @@
 #  You should have received a copy of the GNU Affero General Public License
 #  along with Elixir.  If not, see <http://www.gnu.org/licenses/>.
 
+# Throughout, an "idx" is the sequential number associated with a blob.
+# This is different from that blob's Git hash.
+
 from sys import argv
 from lib import scriptLines
 import lib
 import data
 import os
 from data import PathList
+
+verbose = False
 
 db = data.DB(lib.getDataDir(), readonly=False)
 
@@ -39,17 +44,19 @@ def updateBlobIDs(tag):
     # Get blob hashes and associated file names (without path)
     blobs = scriptLines('list-blobs', '-f', tag)
 
-    newBlobs = []
+    newIdxes = []
     for blob in blobs:
         hash, filename = blob.split(b' ',maxsplit=1)
         if not db.blob.exists(hash):
             db.blob.put(hash, idx)
             db.hash.put(idx, hash)
             db.file.put(idx, filename)
-            newBlobs.append(idx)
+            newIdxes.append(idx)
+            if verbose:
+                print(f"New blob #{idx} {hash}:{filename}")
             idx += 1
     db.vars.put('numBlobs', idx)
-    return newBlobs
+    return newIdxes
 
 def updateVersions(tag):
 
@@ -66,13 +73,15 @@ def updateVersions(tag):
     obj = PathList()
     for idx, path in buf:
         obj.append(idx, path)
+        if verbose:
+            print(f"Tag {tag}: adding #{idx} {path}")
     db.vers.put(tag, obj, sync=True)
 
-def updateDefinitions(blobs):
-    for blob in blobs:
-        if (blob % 1000 == 0): progress('defs: ' + str(blob))
-        hash = db.hash.get(blob)
-        filename = db.file.get(blob)
+def updateDefinitions(idxes):
+    for idx in idxes:
+        if (idx % 1000 == 0): progress('defs: ' + str(idx))
+        hash = db.hash.get(idx)
+        filename = db.file.get(idx)
 
         if not lib.hasSupportedExt(filename): continue
 
@@ -87,14 +96,16 @@ def updateDefinitions(blobs):
             else:
                 obj = data.DefList()
 
-            obj.append(blob, type, line)
+            obj.append(idx, type, line)
+            if verbose:
+                print(f"def {type} {ident} in #{idx} @ {line}");
             db.defs.put(ident, obj)
 
-def updateReferences(blobs):
-    for blob in blobs:
-        if (blob % 1000 == 0): progress('refs: ' + str(blob))
-        hash = db.hash.get(blob)
-        filename = db.file.get(blob)
+def updateReferences(idxes):
+    for idx in idxes:
+        if (idx % 1000 == 0): progress('refs: ' + str(idx))
+        hash = db.hash.get(idx)
+        filename = db.file.get(idx)
 
         if not lib.hasSupportedExt(filename): continue
 
@@ -119,8 +130,33 @@ def updateReferences(blobs):
             else:
                 obj = data.RefList()
 
-            obj.append(blob, lines)
+            obj.append(idx, lines)
+            if verbose:
+                print(f"ref: {ident} in #{idx} @ {lines}");
             db.refs.put(ident, obj)
+
+def updateDocComments(idxes):
+    for idx in idxes:
+        if (idx % 1000 == 0): progress('docs: ' + str(idx))
+        hash = db.hash.get(idx)
+        filename = db.file.get(idx)
+
+        if not lib.hasSupportedExt(filename): continue
+
+        lines = scriptLines('parse-docs', hash, filename)
+        for l in lines:
+            ident, line = l.split(b' ')
+            line = int(line.decode())
+
+            if db.docs.exists(ident):
+                obj = db.docs.get(ident)
+            else:
+                obj = data.RefList()
+
+            obj.append(idx, str(line))
+            if verbose:
+                print(f"doc: {ident} in #{idx} @ {line}");
+            db.docs.put(ident, obj)
 
 def progress(msg):
     print('{} - {} ({:.0%})'.format(project, msg, tagCount/numTags))
@@ -140,8 +176,9 @@ print(project + ' - found ' + str(len(tagBuf)) + ' new tags')
 
 for tag in tagBuf:
     tagCount +=1
-    newBlobs = updateBlobIDs(tag)
-    progress(tag.decode() + ': ' + str(len(newBlobs)) + ' new blobs')
+    newIdxes = updateBlobIDs(tag)
+    progress(tag.decode() + ': ' + str(len(newIdxes)) + ' new blobs')
     updateVersions(tag)
-    updateDefinitions(newBlobs)
-    updateReferences(newBlobs)
+    updateDefinitions(newIdxes)
+    updateReferences(newIdxes)
+    updateDocComments(newIdxes)

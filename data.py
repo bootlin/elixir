@@ -49,6 +49,8 @@ defTypeD = {v: k for k, v in defTypeR.items()}
 maxId = 999999999
 
 class DefList:
+    '''Stores associations between a blob ID, a type (e.g., "function"),
+        and a line number.'''
     def __init__(self, data=b''):
         self.data = data
 
@@ -75,6 +77,8 @@ class DefList:
         return self.data
 
 class PathList:
+    '''Stores associations between a blob ID and a file path.
+        Inserted by update.py sorted by blob ID.'''
     def __init__(self, data=b''):
         self.data = data
 
@@ -96,6 +100,7 @@ class PathList:
         return self.data
 
 class RefList:
+    '''Stores a mapping from blob ID to list of lines.'''
     def __init__(self, data=b''):
         self.data = data
 
@@ -162,9 +167,15 @@ class DB:
         ro = readonly
 
         self.vars = BsdDB(dir + '/variables.db', ro, lambda x: int(x.decode()) )
+            # Key-value store of basic information
         self.blob = BsdDB(dir + '/blobs.db', ro, lambda x: int(x.decode()) )
+            # Map hash to sequential integer serial number
         self.hash = BsdDB(dir + '/hashes.db', ro, lambda x: x )
+            # Map serial number back to hash
         self.file = BsdDB(dir + '/filenames.db', ro, lambda x: x.decode() )
+            # Map serial number to filename
         self.vers = BsdDB(dir + '/versions.db', ro, PathList)
         self.defs = BsdDB(dir + '/definitions.db', ro, DefList)
         self.refs = BsdDB(dir + '/references.db', ro, RefList)
+        self.docs = BsdDB(dir + '/doccomments.db', ro, RefList)
+            # Use a RefList in case there are multiple doc comments for an identifier
