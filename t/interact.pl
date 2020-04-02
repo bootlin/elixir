@@ -19,8 +19,6 @@
 #
 # This file uses core Perl modules only.
 
-use autodie;
-
 use FindBin '$Bin';
 use lib $Bin;
 
@@ -32,7 +30,10 @@ use TestHelpers;
 
 # These two lines are all that's required to set up for a test.
 my $tenv = TestEnvironment->new;
-$tenv->build_repo(sibling_abs_path('tree'))->build_db->update_env;
+$tenv->build_repo(sibling_abs_path('tree'));	# dies on error
+eval { $tenv->build_db; };
+warn "Could not update database: $@" if $@;
+$tenv->update_env;
 
 print($tenv->report);
 
@@ -44,7 +45,9 @@ system(qw(ln -s), $tenv->update_py, 'update.py') == 0
     or warn "error creating ./update.py: $? $!";
 system(qw(ln -s), $tenv->query_py, 'query.py') == 0
     or warn "error creating ./query.py: $? $!";
+system(qw(ln -s), $tenv->find_doc, 'find-file-doc-comments.pl') == 0
+    or warn "error creating ./find-file-doc-comments.pl: $? $!";
 
 print("Exit when done, and the repository and database will be removed.\n");
-system($ENV{SHELL} || 'sh');
-
+my $retval = system($ENV{SHELL} || 'sh');
+exit $retval>>8;

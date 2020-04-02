@@ -1,4 +1,9 @@
+# Generated files
 __pycache__
+tags
+/.cache/
+
+# Web-specific
 http/images
 http/*.html
 http/favicon.ico

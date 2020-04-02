@@ -37,11 +37,21 @@ use Symbol;
 
 use Test::More;
 
-# Automatically export all the functions below
+# Automatically export all the functions listed in @EXPORT.  The functions
+# in @EXPORT_OK can be exported on request.
 use parent 'Exporter';
-our @EXPORT;
-BEGIN { @EXPORT = qw(sibling_abs_path find_program run_program ok_or_die
-    run_produces_ok MUST_SUCCEED); }
+our (@EXPORT, @EXPORT_OK, %EXPORT_TAGS);
+BEGIN {
+    @EXPORT = qw(sibling_abs_path find_program run_program ok_or_die
+                run_produces_ok MUST_SUCCEED);
+    @EXPORT_OK = qw(line_mark_string);
+    %EXPORT_TAGS = (
+        all => [@EXPORT, @EXPORT_OK],
+    );
+} #BEGIN
+
+# Forwards for internal functions
+sub line_mark_string;
 
 # ===========================================================================
 
@@ -70,7 +80,7 @@ this file.  Usage:
 
 sub sibling_abs_path {
     return File::Spec->rel2abs(File::Spec->catfile($FindBin::Bin, @_));
-}
+} #sibling_abs_path()
 
 =head2 find_program
 
@@ -131,9 +141,8 @@ Run a test, but die if it fails.  Usage:
 
 sub ok_or_die {
     my ($cond, $msg, $err_msg) = @_;
-    my $line = (caller)[2];
-    my $retval = eval <<EOT;    # Make the error message report the caller's line number
-#line $line
+    my (undef, $filename, $line) = caller;
+    my $retval = eval line_mark_string 1, <<EOT;    # Make the error message report the caller's line number
     ok(\$cond, \$msg);
 EOT
     die($err_msg) unless $retval;
@@ -148,11 +157,46 @@ Usage:
     run_produces_ok($desc, \@program_and_args, \@expected_regexes,
                     <optional> $mustSucceed, <optional> $printOutput)
 
-The test passes if each regex in C<@expected_regexes> matches at least one
-line in the output of C<@program_and_args>, and if each C<< { not => regex } >>
-in C<@expected_regexes> is NOT found in that output.
+The test passes if each condition in C<@conditions> is true.
 If C<$mustSucceed> is true, also tests for exit status 0 and empty stderr.
 If C<$printOutput> is true, prints the output of C<@program_and_args>.
+
+=head3 Conditions that can be used any time
+
+=over
+
+=item *
+
+A regex: true if the regex matches at least one line in the output of
+C<@program_and_args>
+
+=item *
+
+C<< { not => regex } >>: true if the regex is NOT found in any line of
+the output of C<@program_and_args>.
+
+=back
+
+=head3 Conditions for the output of C<query.py>
+
+=over
+
+=item *
+
+C<< { def => regex } >>: true if the regex matches at least one line in
+the "Symbol Definitions" section of the output of C<@program_and_args>.
+
+=item *
+
+C<< { ref => regex } >>: true if the regex matches at least one line in
+the "Symbol References" section of the output of C<@program_and_args>.
+
+=item *
+
+C<< { doc => regex } >>: true if the regex matches at least one line in
+the "Documented in" section of the output of C<@program_and_args>.
+
+=back
 
 =cut
 
@@ -195,26 +239,174 @@ sub run_produces_ok {
 
     # Basic checks
     if($mustSucceed) {
+        eval line_mark_string 1, <<'EOT';
         cmp_ok($exit_status, '==', 0, "$desc: exit status 0");
         cmp_ok(@errlines, '==', 0, "$desc: stderr empty");
+EOT
     }
 
     # Check regexes
+    my %query_py_output;    # filled in only if we see a def/ref/doc
     for my $entry (@$lrRegexes) {
+        my ($re, $negated, $source) = _parse_condition($entry);
 
-        if(ref $entry eq 'Regexp') {
-            ok( (grep { m{$entry} } @outlines), "$desc: output includes $entry" );
+        # Parse query.py output if we need it and haven't done so
+        %query_py_output = _parseq(@outlines)
+            if $source ne 'output' && !%query_py_output;
 
-        } elsif(ref $entry eq 'HASH' && ref $entry->{not} eq 'Regexp') {
-            my $re = $entry->{not};
-            ok( !(grep { m{$re} } @outlines), "$desc: output excludes $re" );
-
+        # Build a line of test code to run
+        my $test = 'ok( ';
+        $test .= '!' if $negated;
+        $test .= '(grep { m{$re} } ';
+        if($source eq 'output') {
+            $test .= '@outlines';
         } else {
-            die "Invalid entry $entry";
+            $test .= '@{$query_py_output{' . $source . '}}';
         }
+        $test .= '), "$desc: ' . $source;
+        $test .= ($negated ? ' excludes ' : ' includes ') . "\Q$re\E" . '");';
+
+        # Run it
+        #diag "Running $test";
+        eval line_mark_string 1, $test;
     } #foreach $entry
 
 } #run_produces_ok()
+
+=head1 INTERNAL FUNCTIONS
+
+These are ones you probably won't need to call.
+
+=head2 _parseq
+
+Parse the output of query.py.  Usage:
+
+    %parsed = _parseq(@lines_of_output);
+
+=cut
+
+sub _parseq {
+    my %retval = { def => [], ref => [], doc => [] };
+    my $list;
+    foreach(@_) {
+        chomp;
+        if($_ eq 'Symbol Definitions:') {
+            $list = 'def';
+            next;
+        } elsif($_ eq 'Symbol References:') {
+            $list = 'ref';
+            next;
+        } elsif($_ eq 'Documented in:') {
+            $list = 'doc';
+            next;
+        }
+
+        #diag "Adding `$_' to list $list";
+        push @{$retval{$list}}, $_;
+    }
+    return %retval;
+} #_parseq()
+
+=head2 _parse_condition
+
+Parse a condition for L</run_produces_ok>.  Usage:
+
+    ($regex, $negated, $source) = _parse_condition($entry[, $source]);
+
+=cut
+
+sub _parse_condition {
+    my ($entry, $source_in) = @_;
+    my ($regex, $negated, $source);     # Return values
+
+    # Basic cases
+    if(ref $entry eq 'Regexp') {
+        return ($entry, 0, $source_in || 'output');
+    } elsif(ref $entry eq 'HASH' && ref $entry->{not} eq 'Regexp') {
+        return ($entry->{not}, 1, $source_in || 'output');
+    }
+
+    # Sub-keys: chain
+    if(ref $entry eq 'HASH' && scalar keys %{$entry} == 1) {
+        return _parse_condition((values %{$entry})[0], (keys %{$entry})[0]);
+    }
+
+    # If we get here, we don't know how to handle it
+    die "Invalid entry $entry";
+} #_parse_condition()
+
+
+=head2 _croak
+
+Lazy invoker for L<Carp/croak>.
+
+=cut
+
+sub _croak {
+    require Carp;
+    goto &Carp::croak;
+} #_croak()
+
+=head2 line_mark_string
+
+Add a C<#line> directive to a string.  Usage:
+
+To use the caller's filename and line number:
+
+    my $str = line_mark_string <<EOT ;
+    $contents
+    EOT
+
+To use a filename and line number from higher in the call stack:
+
+    my $str = line_mark_string $level, <<EOT ;
+    $contents
+    EOT
+
+To use a specified filename and line number:
+
+    my $str = line_mark_string __FILE__, __LINE__, <<EOT ;
+    $contents
+    EOT
+
+In the first and second forms, information from C<caller> will be used for the
+filename and line number.
+
+In the first and third forms, the C<#line> directive will point to the line
+after the C<line_mark_string> invocation, i.e., the first line of <C$contents>.
+Generally, C<$contents> will be source code, although this is not required.
+
+C<$contents> must be defined, but can be empty.
+
+=cut
+
+sub line_mark_string {
+    my ($contents, $filename, $line);
+
+    if(@_ == 1) {
+        $contents = $_[0];
+        (undef, $filename, $line) = caller;
+        ++$line;
+    } elsif(@_ == 2) {
+        (undef, $filename, $line) = caller($_[0]);
+        $contents = $_[1];
+    } elsif(@_ == 3) {
+        ($filename, $line, $contents) = @_;
+        ++$line;
+    } else {
+        _croak "Invalid invocation";
+    }
+
+    _croak "Need text" unless defined $contents;
+    die "Couldn't get location information" unless $filename && $line;
+
+    $filename =~ s/"/-/g;
+
+    return <<EOT;
+#line $line "$filename"
+$contents
+EOT
+} #line_mark_string()
 
 =head2 import
 

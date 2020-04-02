@@ -146,37 +146,60 @@ def query(cmd, *args):
 
         symbol_definitions = []
         symbol_references = []
+        symbol_doccomments = []
 
         if not db.defs.exists(ident):
-            return symbol_definitions, symbol_references
+            return symbol_definitions, symbol_references, symbol_doccomments
 
         if not db.vers.exists(version):
-            return symbol_definitions, symbol_references
+            return symbol_definitions, symbol_references, symbol_doccomments
 
-        vers = db.vers.get(version).iter()
-        defs = db.defs.get(ident).iter(dummy=True)
-        # FIXME: see why we can have a discrepancy between defs and refs
+        files_this_version = db.vers.get(version).iter()
+        defs_this_ident = db.defs.get(ident).iter(dummy=True)
+        # FIXME: see why we can have a discrepancy between defs_this_ident and refs
         if db.refs.exists(ident):
             refs = db.refs.get(ident).iter(dummy=True)
         else:
             refs = data.RefList().iter(dummy=True)
 
-        id2, type, dline = next(defs)
-        id3, rlines = next(refs)
+        if db.docs.exists(ident):
+            docs = db.docs.get(ident).iter(dummy=True)
+        else:
+            docs = data.RefList().iter(dummy=True)
+
+        # vers, defs, refs, and docs are all populated by update.py in order of
+        # idx, and there is a one-to-one mapping between blob hashes and idx
+        # values.  Therefore, we can sequentially step through the defs, refs,
+        # and docs for each file in a version.
+
+        def_idx, def_type, def_line = next(defs_this_ident)
+        ref_idx, ref_lines = next(refs)
+        doc_idx, doc_line = next(docs)
 
         dBuf = []
         rBuf = []
+        docBuf = []
 
-        for id1, path in vers:
-            while id1 > id2:
-                id2, type, dline = next(defs)
-            while id1 > id3:
-                id3, rlines = next(refs)
-            while id1 == id2:
-                dBuf.append((path, type, dline))
-                id2, type, dline = next(defs)
-            if id1 == id3:
-                rBuf.append((path, rlines))
+        for file_idx, file_path in files_this_version:
+            # Advance defs, refs, and docs to the current file
+            while def_idx < file_idx:
+                def_idx, def_type, def_line = next(defs_this_ident)
+            while ref_idx < file_idx:
+                ref_idx, ref_lines = next(refs)
+            while doc_idx < file_idx:
+                doc_idx, doc_line = next(docs)
+
+            # Copy information about this identifier into dBuf, rBuf, and docBuf.
+            while def_idx == file_idx:
+                dBuf.append((file_path, def_type, def_line))
+                def_idx, def_type, def_line = next(defs_this_ident)
+
+            if ref_idx == file_idx:
+                rBuf.append((file_path, ref_lines))
+
+            if doc_idx == file_idx: # TODO should this be a `while`?
+                docBuf.append((file_path, doc_line))
+
 
         for path, type, dline in sorted(dBuf):
             symbol_definitions.append(SymbolInstance(path, dline, type))
@@ -184,13 +207,16 @@ def query(cmd, *args):
         for path, rlines in sorted(rBuf):
             symbol_references.append(SymbolInstance(path, rlines))
 
-        return symbol_definitions, symbol_references
+        for path, docline in sorted(docBuf):
+            symbol_doccomments.append(SymbolInstance(path, docline))
+
+        return symbol_definitions, symbol_references, symbol_doccomments
 
     else:
         return('Unknown subcommand: ' + cmd + '\n')
 
 def cmd_ident(version, ident, **kwargs):
-    symbol_definitions, symbol_references = query("ident", version, ident)
+    symbol_definitions, symbol_references, symbol_doccomments = query("ident", version, ident)
     print("Symbol Definitions:")
     for symbol_definition in symbol_definitions:
         print(symbol_definition)
@@ -198,6 +224,10 @@ def cmd_ident(version, ident, **kwargs):
     print("\nSymbol References:")
     for symbol_reference in symbol_references:
         print(symbol_reference)
+
+    print("\nDocumented in:")
+    for symbol_doccomment in symbol_doccomments:
+        print(symbol_doccomment)
 
 def cmd_file(version, path, **kwargs):
     code = query("file", version, path)

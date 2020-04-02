@@ -69,6 +69,10 @@ As L</script_sh>, but for C<query.py>.
 
 As L</script_sh>, but for C<update.py>.
 
+=head2 find_doc
+
+As L</script_sh>, but for C<find-file-doc-comments.pl>.
+
 =cut
 
 has lxr_data_dir => ();
@@ -81,6 +85,9 @@ has query_py => (
 );
 has update_py => (
     default => sub { find_program('update.py') }
+);
+has find_doc => (
+    default => sub { find_program('find-file-doc-comments.pl') }
 );
 
 # Internal attributes
@@ -204,11 +211,12 @@ Returns a human-readable report of the current environment's state.
 sub report {
     my $self = shift;
     return <<EOT;
-Repository: @{[$self->lxr_repo_dir]}
-Database:   @{[$self->lxr_data_dir]}
-script.sh:  @{[$self->script_sh]}
-update.py:  @{[$self->update_py]}
-query.py:   @{[$self->query_py]}
+Repository: @{[$self->lxr_repo_dir || '<unknown>']}
+Database:   @{[$self->lxr_data_dir || '<unknown>']}
+script.sh:  @{[$self->script_sh || '<unknown>']}
+update.py:  @{[$self->update_py || '<unknown>']}
+query.py:   @{[$self->query_py || '<unknown>']}
+find-file-doc-comments.pl: @{[$self->find_doc || '<unknown>']}
 EOT
 } #report()
 

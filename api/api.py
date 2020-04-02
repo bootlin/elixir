@@ -23,11 +23,11 @@ class IdentGetter:
             version = req.params['version']
         else:
             raise falcon.HTTPMissingParam('version')
-        
+
         if version == 'latest':
             version = query('latest')
 
-        symbol_definitions, symbol_references = query('ident', version, ident)
+        symbol_definitions, symbol_references, symbol_doccomments_UNUSED = query('ident', version, ident)
         resp.body = json.dumps(
             {
                 'definitions': [sym.__dict__ for sym in symbol_definitions],

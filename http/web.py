@@ -294,7 +294,7 @@ if mode == 'source':
 elif mode == 'ident':
     data['title'] = ident+' identifier - '+title_suffix
 
-    symbol_definitions, symbol_references = query('ident', tag, ident)
+    symbol_definitions, symbol_references, symbol_doccomments_UNUSED = query('ident', tag, ident)
 
     print('<div class="lxrident">')
     if len(symbol_definitions):
