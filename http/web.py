@@ -28,14 +28,20 @@ def print(arg, end='\n'):
     global outputBuffer
     outputBuffer.write(arg + end)
 
-# Enable CGI Trackback Manager for debugging (https://docs.python.org/fr/3/library/cgitb.html)
 import cgitb
-cgitb.enable(display=0, logdir='/tmp/elixir-errors', format='text')
-
 import cgi
 import os
 import re
 from re import search, sub
+
+# Create /tmp/elixir-errors if not existing yet (could happen after a reboot)
+errdir = '/tmp/elixir-errors'
+
+if not(os.path.isdir(errdir))
+    os.makedirs(errdir, exist_ok=True)
+
+# Enable CGI Trackback Manager for debugging (https://docs.python.org/fr/3/library/cgitb.html)
+cgitb.enable(display=0, logdir=errdir, format='text')
 
 ident = ''
 status = 200
