@@ -37,7 +37,7 @@ from re import search, sub
 # Create /tmp/elixir-errors if not existing yet (could happen after a reboot)
 errdir = '/tmp/elixir-errors'
 
-if not(os.path.isdir(errdir))
+if not(os.path.isdir(errdir)):
     os.makedirs(errdir, exist_ok=True)
 
 # Enable CGI Trackback Manager for debugging (https://docs.python.org/fr/3/library/cgitb.html)
