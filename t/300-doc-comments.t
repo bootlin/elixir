@@ -68,4 +68,12 @@ run_produces_ok('ident query (existent, function, documented in C file)',
     ],
     MUST_SUCCEED);
 
+run_produces_ok('ident query (existent, function, documented in C file, #102)',
+    [$tenv->query_py, qw(v5.4 ident documented_function_XYZZY)],
+    [
+        qr{^Documented in:},
+        {doc => qr{issue102\.c.+\b6\b}},
+    ],
+    MUST_SUCCEED);
+
 done_testing;

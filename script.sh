@@ -152,7 +152,7 @@ parse_docs()
     tmpfile=`mktemp`
 
     git cat-file blob "$opt1" > "$tmpfile"
-    "$script_dir/find-file-doc-comments.pl" "$tmpfile"
+    "$script_dir/find-file-doc-comments.pl" "$tmpfile" || exit "$?"
 
     rm -rf "$tmpfile"
 }
