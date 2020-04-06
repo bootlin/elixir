@@ -18,7 +18,7 @@ Note: this documentation applies to version 1.0 of Elixir.
 
 # Requirements
 
-* Python >= 3.5
+* Python >= 3.6
 * The Jinja2 and Pygments (>= 2.2) Python libraries
 * Berkeley DB (and its Python binding)
 * Exuberant Ctags
