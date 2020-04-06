@@ -98,7 +98,7 @@ def updateDefinitions(idxes):
 
             obj.append(idx, type, line)
             if verbose:
-                print(f"def {type} {ident} in #{idx} @ {line}");
+                print(f"def {type} {ident} in #{idx} @ {line}")
             db.defs.put(ident, obj)
 
 def updateReferences(idxes):
@@ -132,7 +132,7 @@ def updateReferences(idxes):
 
             obj.append(idx, lines)
             if verbose:
-                print(f"ref: {ident} in #{idx} @ {lines}");
+                print(f"ref: {ident} in #{idx} @ {lines}")
             db.refs.put(ident, obj)
 
 def updateDocComments(idxes):
@@ -155,7 +155,7 @@ def updateDocComments(idxes):
 
             obj.append(idx, str(line))
             if verbose:
-                print(f"doc: {ident} in #{idx} @ {line}");
+                print(f"doc: {ident} in #{idx} @ {line}")
             db.docs.put(ident, obj)
 
 def progress(msg):
