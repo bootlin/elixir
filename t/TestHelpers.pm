@@ -286,7 +286,7 @@ Parse the output of query.py.  Usage:
 =cut
 
 sub _parseq {
-    my %retval = { def => [], ref => [], doc => [] };
+    my %retval = ( def => [], ref => [], doc => [] );
     my $list;
     foreach(@_) {
         chomp;

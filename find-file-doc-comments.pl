@@ -7,7 +7,7 @@
 
 use 5.010001;
 use strict;
-use warnings;
+use warnings FATAL => qw(uninitialized);
 use autodie;
 
 my $VERBOSE = $ENV{V};
@@ -16,6 +16,7 @@ exit main(@ARGV);
 
 sub main {
     die "Need a filename" unless @_;
+    say "Processing file $_[0]" if $VERBOSE;
 
     # Do `script.sh parse-defs` on the file
     my @ctags = qx{ ctags -x --c-kinds=+p-m --language-force=C "$_[0]" |
@@ -65,7 +66,7 @@ sub main {
 
         # Find the last line that could be a doc-comment header
         # for this function.
-        while($source_lines[$lineno] =~
+        while($lineno && $source_lines[$lineno] =~
             qr{
                     ^\s*$               # Empty line
                 |   ^\s+\*\/            # End of comment
@@ -84,7 +85,7 @@ sub main {
 
         # We have found a header.  Confirm it's a doc comment.
         --$lineno;
-        next unless $source_lines[$lineno] =~ $doc_comment_opener;
+        next unless $lineno > 0 && $source_lines[$lineno] =~ $doc_comment_opener;
         print "  * Match\n" if $VERBOSE;
 
         # We have found a doc comment for this function!  Record it.
@@ -92,7 +93,8 @@ sub main {
     }
 
     # Report the doc comments for each function
-    while(my ($funcname, $comment_lines) = each %doc_comments) {
+    for my $funcname (keys %doc_comments) {
+        my $comment_lines = $doc_comments{$funcname};
         print "$funcname $_\n" foreach @$comment_lines;
     }
 
