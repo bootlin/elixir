@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.com/bootlin/elixir.svg?branch=master)](https://travis-ci.com/bootlin/elixir)
+
 # The Elixir Cross Referencer
 
 Elixir is a source code cross-referencer inspired by
