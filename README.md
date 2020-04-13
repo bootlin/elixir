@@ -63,7 +63,7 @@ yum install python36-jinja2 python36-pygments python36-bsddb3 python3-falcon glo
 > For Debian
 
 ```
-sudo apt install python3 python3-jinja2 python3-pygments python3-bsddb3 python3-falcon exuberant-ctags perl git apache2 libapache2-mod-wsgi-py3
+sudo apt install python3 python3-jinja2 python3-pygments python3-bsddb3 python3-falcon python3-pytest exuberant-ctags perl git apache2 libapache2-mod-wsgi-py3
 ```
 
 To enable the REST api, follow the installation instructions on [`mod_wsgi`](https://github.com/GrahamDumpleton/mod_wsgi)
