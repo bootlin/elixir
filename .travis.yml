@@ -3,12 +3,15 @@ language: python
 os:
   - linux
 
+dist:
+  - bionic
+
 python:
   - "3.6"
 
 before_install:
-  - sudo apt-get -y install libdb-dev exuberant-ctags
-  - pip install jinja2 pygments bsddb3 falcon 
+  - sudo apt-get -y install libdb-dev exuberant-ctags python3-pytest
+  - pip install jinja2 pygments bsddb3 falcon
 
 script: 
   - prove
