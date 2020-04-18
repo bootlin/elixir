@@ -1,9 +1,10 @@
+= The Elixir Cross Referencer
 :doctype: book
 :pp: {plus}{plus}
+:toc:
+:toc-placement!:
 
 image::https://travis-ci.com/bootlin/elixir.svg?branch=master[Build Status,link=https://travis-ci.com/bootlin/elixir]
-
-= The Elixir Cross Referencer
 
 Elixir is a source code cross-referencer inspired by
 https://en.wikipedia.org/wiki/LXR_Cross_Referencer[LXR]. It's written
@@ -18,6 +19,8 @@ duplicating work and data. It has a straightforward data structure
 You can see it in action on https://elixir.bootlin.com/
 
 NOTE: this documentation applies to version 1.0 of Elixir.
+
+toc::[]
 
 = Requirements
 
