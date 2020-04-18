@@ -31,9 +31,7 @@ toc::[]
 * Perl (for non-greedy regexes and automated testing)
 * Falcon and `mod_wsgi` (for the REST api)
 
-= Installation
-
-== Architecture
+= Architecture
 
 Elixir has the following architecture:
 
@@ -56,9 +54,17 @@ pages and to answer REST queries, respectively.
 When installing the system, you should test each layer manually and make
 sure it works correctly before moving on to the next one.
 
-== Install Manually
+== Database design
 
-=== Install Dependences
+`./update.py` stores a bidirectionnal mapping between git object hashes ("blobs") and a sequential key.
+The goal of indexing such hashes is to reduce their storage footprint (20 bytes for a SHA-1 hash
+versus 4 bytes for a 32 bit integer).
+
+A detailed diagram of the databases will be provided. Until then, just use the Source, Luke.
+
+= Manual Installation
+
+== Install Dependences
 
 ____
 For RedHat/CentOS
@@ -82,20 +88,20 @@ and connect it to the apache installation as detailed in https://github.com/Grah
 To know which packages to install, you can also read the Docker files in the `docker/` directory
 to know what packages Elixir needs in your favorite distribution.
 
-=== Download Elixir Project
+== Download Elixir Project
 
 ----
 git clone https://github.com/bootlin/elixir.git /usr/local/elixir/
 ----
 
-=== Create Directory
+== Create Directory
 
 ----
 mkdir -p /path/elixir-data/linux/repo
 mkdir -p /path/elixir-data/linux/data
 ----
 
-=== Set environment variables
+== Set environment variables
 
 Two environment variables are used to tell Elixir where to find the project's
 local git repository and its databases:
@@ -112,7 +118,7 @@ export LXR_DATA_DIR=/path/elixir-data/linux/data
 
 And then run `source /etc/profile`.
 
-=== Clone Kernel source code
+== Clone Kernel source code
 
 First clone the master tree released by Linus Torvalds:
 
@@ -131,14 +137,14 @@ git fetch stable
 
 Feel free to add more remote branches in this way, as Elixir will consider tags from all remote branches.
 
-=== First Test
+== First Test
 
 ----
 cd /usr/local/elixir/
 ./script.sh list-tags
 ----
 
-=== Create Database
+== Create Database
 
 ----
 ./update.py
@@ -148,7 +154,7 @@ ____
 Generating the full database can take a long time: it takes about 15 hours on a Xeon E3-1245 v5 to index 1800 tags in the Linux kernel. For that reason, you may want to tweak the script (for example, by limiting the number of tags with a "head") in order to test the update and query commands. You can even create a new Git repository and just create one tag instead of using the official kernel repository which is very large.
 ____
 
-=== Second Test
+== Second Test
 
 Verify that the queries work:
 
@@ -157,7 +163,7 @@ Verify that the queries work:
 
 NOTE: `v4.10` can be replaced with any other tag.
 
-=== Configure httpd
+== Configure httpd
 
 The CGI interface (`web.py`) is meant to be called from your web
 server. Since it includes support for indexing multiple projects,
@@ -228,7 +234,7 @@ Finally, start the httpd server.
 systemctl start httpd
 ----
 
-=== Configure lighthttpd
+== Configure lighthttpd
 
 Here's a sample configuration for lighthttpd:
 
@@ -240,7 +246,9 @@ setenv.add-environment = ( "PYTHONIOENCODING" => "utf-8",
     "LXR_PROJ_DIR" => "/path/to/elixir-data" )
 ----
 
-=== Using a cache to improve performance
+= Maintenance and enhancements
+
+== Using a cache to improve performance
 
 At Bootlin, we're using the https://varnish-cache.org/[Varnish http cache]
 as a front-end to reduce the load on the server running the Elixir code.
@@ -249,13 +257,13 @@ as a front-end to reduce the load on the server running the Elixir code.
  | Http client | --------> | Varnish cache | --------> | Apache running Elixir |
  '-------------'           '---------------'           '-----------------------'
 
-=== Keeping Elixir databases up to date
+== Keeping Elixir databases up to date
 
 To keep your Elixir databases up to date and index new versions that are released,
 we're proposing to use a script like `utils/update-elixir-data` which is called
 through a daily cron job.
 
-=== Keeping git repository disk usage under control
+== Keeping git repository disk usage under control
 
 As you keep updating your git repositories, you may notice that some can become
 considerably bigger than they originally were. This seems to happen when a `gc.log`
@@ -278,7 +286,7 @@ To process multiple git repositories in a loop, you may use the
 `utils/pack-repositories` that we are providing, run from the directory
 where all repositories are found.
 
-== Building Docker images
+= Building Docker images
 
 Docker files are provided in the `docker/` directory. To generate your own
 Docker image for indexing the sources of a project (for example for the Musl
@@ -293,14 +301,6 @@ Then you can use your new container as follows (you get the container id from th
 
 You can the open the below URL in a browser on your host: http://172.17.0.2/musl/latest/source
 (change the container IP address if you don't get the default one)
-
-= Database design
-
-`./update.py` stores a bidirectionnal mapping between git object hashes ("blobs") and a sequential key.
-The goal of indexing such hashes is to reduce their storage footprint (20 bytes for a SHA-1 hash
-versus 4 bytes for a 32 bit integer).
-
-A detailed diagram of the databases will be provided. Until then, just use the Source, Luke.
 
 = Hardware requirements
 
