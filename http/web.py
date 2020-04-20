@@ -53,6 +53,7 @@ m = search('^/([^/]*)/([^/]*)/([^/]*)(.*)$', url)
 if m:
     project = m.group(1)
     version = m.group(2)
+    versionDecoded = parse.unquote(version)
     cmd = m.group(3)
     arg = m.group(4)
 
@@ -125,10 +126,10 @@ import sys
 sys.path = [ sys.path[0] + '/..' ] + sys.path
 from query import query
 
-if version == 'latest':
+if versionDecoded == 'latest':
     tag = query('latest')
 else:
-    tag = version
+    tag = versionDecoded
 
 data = {
     'baseurl': '/' + project + '/',
@@ -161,8 +162,9 @@ for topmenu in versions:
             v += '\t\t\t<span>'+submenu+'</span>\n'
             v += '\t\t\t<ul>\n'
             for _tag in tags:
-                if _tag == tag: v += '\t\t\t\t<li class="li-link active"><a href="'+_tag+'/'+url+'">'+_tag+'</a></li>\n'
-                else: v += '\t\t\t\t<li class="li-link"><a href="'+_tag+'/'+url+'">'+_tag+'</a></li>\n'
+                _tagEncoded = parse.quote(_tag, safe='')
+                if _tag == tag: v += '\t\t\t\t<li class="li-link active"><a href="'+_tagEncoded+'/'+url+'">'+_tag+'</a></li>\n'
+                else: v += '\t\t\t\t<li class="li-link"><a href="'+_tagEncoded+'/'+url+'">'+_tag+'</a></li>\n'
             v += '\t\t\t</ul></li>\n'
     v += '\t</ul></li>\n'
 
