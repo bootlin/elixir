@@ -13,7 +13,7 @@ if [ -z "$ELIXIR_INSTALL" ]; then
     exit 1
 fi
 
-for p in linux u-boot busybox zephyr musl barebox uclibc-ng arm-trusted-firmware amazon-freertos qemu glibc coreboot llvm mesa ofono dpdk; do
+for p in linux u-boot busybox zephyr musl barebox uclibc-ng arm-trusted-firmware amazon-freertos qemu glibc coreboot llvm mesa ofono dpdk toybox; do
     echo "Processing project $root/$p ..."
     export LXR_DATA_DIR=$root/$p/data
     export LXR_REPO_DIR=$root/$p/repo
