@@ -319,7 +319,9 @@ and 2 GB for the git repository.
 * We're using an LXD instance with 8 GB of RAM on a cloud server with 8 CPU cores
 running at 3.1 GHz.
 
-= Supporting a new project
+= Contributing to Elixir
+
+== Supporting a new project
 
 Elixir has a very simple modular architecture that allows to support
 new source code projects by just adding a new file to the Elixir sources.
@@ -410,6 +412,16 @@ new project:
  ./update.py
 
 You can then check that Elixir works through your http server.
+
+== Coding style
+
+If you wish to contribute to Elixir's Python code, please
+follow the https://www.python.org/dev/peps/pep-0008/[official coding style for Python].
+
+== How to send patches
+
+The best way to share your contributions with us is to https://github.com/bootlin/elixir/pulls[file a pull
+request on GitHub].
 
 = REST api usage
 
