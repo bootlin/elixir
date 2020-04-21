@@ -56,13 +56,6 @@ if m:
     cmd = m.group(3)
     arg = m.group(4)
 
-    # Support old LXR links
-    if not(project and search('^[A-Za-z0-9-]+$', project)) \
-    or not(version and search('^[A-Za-z0-9._-]+$', version)):
-        status = 302
-        location = '/linux/latest/'+cmd+arg
-        cmd = ''
-
     basedir = os.environ['LXR_PROJ_DIR']
     datadir = basedir + '/' + project + '/data'
     repodir = basedir + '/' + project + '/repo'
