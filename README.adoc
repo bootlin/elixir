@@ -216,6 +216,8 @@ AddHandler cgi-script .py
     # To enable REST api after installing mod_wsgi: Fill path and uncomment:
     #WSGIScriptAlias /api /usr/local/elixir/api/api.py
 
+    AllowEncodedSlashes On
+
     RewriteEngine on
     RewriteRule "^/$" "/linux/latest/source" [R]
     RewriteRule "^/(?!api).*/(source|ident|search)" "/web.py" [PT]
