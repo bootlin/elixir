@@ -29,7 +29,7 @@ toc::[]
 * Berkeley DB (and its Python binding)
 * Exuberant Ctags
 * Perl (for non-greedy regexes and automated testing)
-* Falcon and `mod_wsgi` (for the REST api)
+* Falcon and `mod_wsgi` (for the REST API)
 
 = Architecture
 
@@ -82,7 +82,7 @@ ____
 sudo apt install python3 python3-jinja2 python3-pygments python3-bsddb3 python3-falcon python3-pytest exuberant-ctags perl git apache2 libapache2-mod-wsgi-py3
 ----
 
-To enable the REST api, follow the installation instructions on https://github.com/GrahamDumpleton/mod_wsgi[`mod_wsgi`]
+To enable the REST API, follow the installation instructions on https://github.com/GrahamDumpleton/mod_wsgi[`mod_wsgi`]
 and connect it to the apache installation as detailed in https://github.com/GrahamDumpleton/mod_wsgi#connecting-into-apache-installation.
 
 To know which packages to install, you can also read the Docker files in the `docker/` directory
@@ -244,6 +244,28 @@ url.redirect = ( "^/$" => "/linux/latest/source" )
 url.rewrite  = ( "^/.*/(source|ident|search)" =>  "/web.py/$1")
 setenv.add-environment = ( "PYTHONIOENCODING" => "utf-8",
     "LXR_PROJ_DIR" => "/path/to/elixir-data" )
+----
+
+= REST API usage
+
+After configuring httpd, you can test the API usage:
+
+== ident query
+
+Send a get request to `/api/ident/<Project>/<Ident>?version=<version>`.
+For example:
+
+ curl http://127.0.0.1/api/ident/barebox/cdev?version=latest
+
+The response body is of the following structure:
+
+----
+{
+    "definitions":
+        [{"path": "commands/loadb.c", "line": 71, "type": "variable"}, ...],
+    "references":
+        [{"path": "arch/arm/boards/cm-fx6/board.c", "line": "64,64,71,72,75", "type": null}, ...]
+}
 ----
 
 = Maintenance and enhancements
@@ -422,28 +444,6 @@ follow the https://www.python.org/dev/peps/pep-0008/[official coding style for P
 
 The best way to share your contributions with us is to https://github.com/bootlin/elixir/pulls[file a pull
 request on GitHub].
-
-= REST api usage
-
-After configuring httpd, you can test the api usage:
-
-== ident query
-
-Send a get request to `/api/ident/<Project>/<Ident>?version=<version>`.
-For example:
-
- curl http://127.0.0.1/api/ident/barebox/cdev?version=latest
-
-The response body is of the following structure:
-
-----
-{
-    "definitions":
-        [{"path": "commands/loadb.c", "line": 71, "type": "variable"}, ...],
-    "references":
-        [{"path": "arch/arm/boards/cm-fx6/board.c", "line": "64,64,71,72,75", "type": null}, ...]
-}
-----
 
 = Automated testing
 
