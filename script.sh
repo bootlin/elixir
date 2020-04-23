@@ -159,7 +159,7 @@ parse_docs()
 
 project=$(basename `dirname $LXR_REPO_DIR`)
 
-plugin=projects/$project.sh
+plugin=$script_dir/projects/$project.sh
 if [ -f "$plugin" ] ; then
     . $plugin
 fi
