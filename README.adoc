@@ -88,6 +88,24 @@ and connect it to the apache installation as detailed in https://github.com/Grah
 To know which packages to install, you can also read the Docker files in the `docker/` directory
 to know what packages Elixir needs in your favorite distribution.
 
+== Special dependencies
+
+=== Device Tree Source syntax highlighting
+
+The service on https://elixir.bootlin.com relies on a modified version of https://pygments.org/[Pygments],
+to enable syntax highlighting on Device Tree Source (DTS) files.
+
+The changes have been sent upstream and should appear in future distributions.
+
+In the meantime, you can either rebuild this package from its source on
+https://github.com/MaximeChretien/pygments/tree/devicetree-lexer[GitHub], or download this
+https://bootlin.com/pub/elixir/Pygments-2.6.1.devicetree-py3-none-any.whl[binary module]
+and install it as follows:
+
+----
+sudo pip3-install Pygments-2.6.1.devicetree-py3-none-any.whl
+----
+
 == Download Elixir Project
 
 ----
