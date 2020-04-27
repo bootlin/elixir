@@ -1,7 +1,7 @@
 #!/bin/sh
 #
 # Goes through all git repositories in the current directory
-# and runs "git prune" and "git gcc --aggressive" to pack
+# and runs "git prune" and "git gc --aggressive" to pack
 # objects very efficiently and reduce size sometimes dramatically
 #
 # Works by finding the repositories which have a gc.log
