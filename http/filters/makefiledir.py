@@ -9,12 +9,17 @@ def keep_makefiledir(m):
 
 def replace_makefiledir(m):
     w = makefiledir[int(m.group(1)) - 1]
-    return '<a href="'+version+'/source'+os.path.dirname(path)+'/'+w+'/Makefile">'+w+'/</a>'
+    dir_name = os.path.dirname(path)
+    
+    if dir_name != '/':
+        dir_name += '/'
+
+    return '<a href="'+version+'/source'+dir_name+w+'/Makefile">'+w+'/</a>'
 
 makefiledir_filters = {
                 'case': 'filename',
                 'match': {'Makefile'},
-                'prerex': '([-\w]+)/(\s*|$)',
+                'prerex': '([-\w]+)/(\s+|$)',
                 'prefunc': keep_makefiledir,
                 'postrex': '__KEEPMAKEFILEDIR__(\d+)/',
                 'postfunc': replace_makefiledir
