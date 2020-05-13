@@ -9,7 +9,13 @@ def keep_makefilesubdir(m):
 
 def replace_makefilesubdir(m):
     w = makefilesubdir[int(m.group(1)) - 1]
-    return '<a href="'+version+'/source'+os.path.dirname(path)+'/'+w+'/Makefile">'+w+'</a>'
+
+    dir_name = os.path.dirname(path)
+    
+    if dir_name != '/':
+        dir_name += '/'
+
+    return '<a href="'+version+'/source'+dir_name+w+'/Makefile">'+w+'</a>'
 
 makefilesubdir_filters = {
                 'case': 'filename',

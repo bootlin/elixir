@@ -9,7 +9,13 @@ def keep_makefileo(m):
 
 def replace_makefileo(m):
     w = makefileo[int(m.group(1)) - 1]
-    return '<a href="'+version+'/source'+os.path.dirname(path)+'/'+w+'.c">'+w+'.o</a>'
+
+    dir_name = os.path.dirname(path)
+    
+    if dir_name != '/':
+        dir_name += '/'
+
+    return '<a href="'+version+'/source'+dir_name+w+'.c">'+w+'.o</a>'
 
 makefileo_filters = {
                 'case': 'filename',

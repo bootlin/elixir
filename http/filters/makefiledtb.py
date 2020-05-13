@@ -9,7 +9,13 @@ def keep_makefiledtb(m):
 
 def replace_makefiledtb(m):
     w = makefiledtb[int(m.group(1)) - 1]
-    return '<a href="'+version+'/source'+os.path.dirname(path)+'/'+w+'.dts">'+w+'.dtb</a>'
+
+    dir_name = os.path.dirname(path)
+    
+    if dir_name != '/':
+        dir_name += '/'
+
+    return '<a href="'+version+'/source'+dir_name+w+'.dts">'+w+'.dtb</a>'
 
 makefiledtb_filters = {
                 'case': 'filename',
