@@ -20,7 +20,7 @@ def replace_makefileo(m):
 makefileo_filters = {
                 'case': 'filename',
                 'match': {'Makefile'},
-                'prerex': '([-\w]+)\.o(?!\w)',
+                'prerex': '(?<=\s)([-\w/]+)\.o(?!\w)',
                 'prefunc': keep_makefileo,
                 'postrex': '__KEEPMAKEFILEO__(\d+)\.o',
                 'postfunc': replace_makefileo

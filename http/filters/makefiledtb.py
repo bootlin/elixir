@@ -20,7 +20,7 @@ def replace_makefiledtb(m):
 makefiledtb_filters = {
                 'case': 'filename',
                 'match': {'Makefile'},
-                'prerex': '([-\w]+)\.dtb',
+                'prerex': '(?<=\s)([-\w/]+)\.dtb',
                 'prefunc': keep_makefiledtb,
                 'postrex': '__KEEPMAKEFILEDTB__(\d+)\.dtb',
                 'postfunc': replace_makefiledtb

@@ -19,7 +19,7 @@ def replace_makefiledir(m):
 makefiledir_filters = {
                 'case': 'filename',
                 'match': {'Makefile'},
-                'prerex': '([-\w]+)/(\s+|$)',
+                'prerex': '(?<=\s)([-\w/]+)/(\s+|$)',
                 'prefunc': keep_makefiledir,
                 'postrex': '__KEEPMAKEFILEDIR__(\d+)/',
                 'postfunc': replace_makefiledir
