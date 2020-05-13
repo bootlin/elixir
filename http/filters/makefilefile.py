@@ -3,8 +3,16 @@
 makefilefile = []
 
 def keep_makefilefile(m):
-    makefilefile.append(m.group(1))
-    return '__KEEPMAKEFILEFILE__' + str(len(makefilefile)) + m.group(2)
+    dir_name = os.path.dirname(path)
+
+    if dir_name != '/':
+        dir_name += '/'
+
+    if query('exist', tag, dir_name + m.group(1)):
+        makefilefile.append(m.group(1))
+        return '__KEEPMAKEFILEFILE__' + str(len(makefilefile)) + m.group(2)
+    else:
+        return m.group(0)
 
 def replace_makefilefile(m):
     w = makefilefile[int(m.group(1)) - 1]

@@ -103,6 +103,24 @@ def query(cmd, *args):
         path = args[1]
         return decode(script('get-type', version, path)).strip()
 
+    elif cmd == 'exist':
+
+        # Returns True if the requested file exists, overwise returns False
+
+        version = args[0]
+        path = args[1]
+
+        dirname, filename = os.path.split(path)
+
+        entries = decode(script('get-dir', version, dirname)).split("\n")[:-1]
+        for entry in entries:
+            fname = entry.split(" ")[1]
+
+            if fname == filename:
+                return True
+
+        return False
+
     elif cmd == 'dir':
 
         # Returns the contents (trees or blobs) of the specified directory
