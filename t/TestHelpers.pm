@@ -43,7 +43,7 @@ use parent 'Exporter';
 our (@EXPORT, @EXPORT_OK, %EXPORT_TAGS);
 BEGIN {
     @EXPORT = qw(sibling_abs_path find_program run_program ok_or_die
-                run_produces_ok MUST_SUCCEED);
+                run_produces_ok http_request_ok MUST_SUCCEED);
     @EXPORT_OK = qw(line_mark_string);
     %EXPORT_TAGS = (
         all => [@EXPORT, @EXPORT_OK],
@@ -142,9 +142,9 @@ for consistency with bash (L<https://tldp.org/LDP/abs/html/exitcodes.html>).
 =cut
 
 sub _run_and_capture;   # forward
+sub _check_queries;     # forward
 
 sub run_program {
-    diag "Running @_";
 
     if(wantarray) {
         goto &_run_and_capture;
@@ -152,6 +152,7 @@ sub run_program {
 
     my $errmsg;
 
+    diag "Running @_";
     my $status = system(@_);
 
     if ($status == -1) {
@@ -199,7 +200,7 @@ EOT
 Run a program and check whether it produces expected output.
 Usage:
 
-    run_produces_ok($desc, \@program_and_args, \@expected_regexes,
+    run_produces_ok($desc, \@program_and_args, \@conditions,
                     <optional> $mustSucceed, <optional> $printOutput)
 
 The test passes if each condition in C<@conditions> is true.
@@ -286,11 +287,18 @@ sub _run_and_capture {
 } #_run_and_capture()
 
 sub run_produces_ok {
-    my ($desc, $lrProgram, $lrRegexes, $mustSucceed, $printOutput) = @_;
+    my ($desc, $lrProgram, $lrConditions, $mustSucceed, $printOutput) = @_;
 
     my ($exit_status, $outlines, $errlines) = _run_and_capture(@$lrProgram);
-    my @outlines = @$outlines;
-    my @errlines = @$errlines;
+
+    _check_queries($desc, $lrConditions, $mustSucceed, $printOutput, $exit_status, $outlines, $errlines);
+} #run_produces_ok()
+
+sub _check_queries {
+    my ($desc, $lrConditions, $mustSucceed, $printOutput, $exit_status, $lrStdout, $lrStderr) = @_;
+
+    my @outlines = @$lrStdout;
+    my @errlines = @$lrStderr;
 
     if ($printOutput) {
         diag "@outlines";
@@ -298,15 +306,16 @@ sub run_produces_ok {
 
     # Basic checks
     if($mustSucceed) {
-        eval line_mark_string 1, <<'EOT';
+        eval line_mark_string 2, <<'EOT';
         cmp_ok($exit_status, '==', 0, "$desc: exit status 0");
         cmp_ok(@errlines, '==', 0, "$desc: stderr empty");
 EOT
+        die $@ if $@;
     }
 
     # Check regexes
     my %query_py_output;    # filled in only if we see a def/ref/doc
-    for my $entry (@$lrRegexes) {
+    for my $entry (@$lrConditions) {
         my ($re, $negated, $source) = _parse_condition($entry);
 
         # Parse query.py output if we need it and haven't done so
@@ -327,10 +336,41 @@ EOT
 
         # Run it
         #diag "Running $test";
-        eval line_mark_string 1, $test;
+        eval line_mark_string 2, $test;
+        die $@ if $@;
     } #foreach $entry
 
 } #run_produces_ok()
+
+=head2 http_request_ok
+
+Run C<web.py> against a given path and check whether it produces expected
+output.  Usage:
+
+    http_request_ok($desc, $tenv, $path, \@conditions, <optional> $printOutput)
+
+The test passes if the HTTP request succeeds, and if each condition in
+C<@conditions> is true of the result (headers and body).
+
+C<$tenv> is a L<TestEnvironment>.
+
+C<$path> is the path part of the URL, e.g., C</testproj/latest/source>.
+
+See L</run_produces_ok> for C<@conditions>.
+
+If C<$printOutput> is true, prints the output of C<@program_and_args>.
+
+=cut
+
+sub http_request_ok {
+    my ($desc, $tenv, $path, $lrConditions, $printOutput) = @_;
+    die "Invalid args" unless $desc && ref $tenv && eval { @$lrConditions };
+
+    my ($exit_status, $lrStdout, $lrStderr) = $tenv->make_web_request($path);
+
+    _check_queries($desc, $lrConditions, MUST_SUCCEED, $printOutput,
+        $exit_status, $lrStdout, $lrStderr);
+} #http_request_ok()
 
 =head1 INTERNAL FUNCTIONS
 
@@ -349,16 +389,17 @@ sub _parseq {
     my $list;
     foreach(@_) {
         chomp;
-        if($_ eq 'Symbol Definitions:') {
+        if(/(?:^Symbol Definitions:$)|\bDefined in \d+/) {
             $list = 'def';
             next;
-        } elsif($_ eq 'Symbol References:') {
+        } elsif(/(?:^Symbol References:$)|\bReferenced in \d+/) {
             $list = 'ref';
             next;
-        } elsif($_ eq 'Documented in:') {
+        } elsif(/(?:^Documented in:$)|\bDocumented in \d+/) {
             $list = 'doc';
             next;
         }
+        next unless $list;
 
         #diag "Adding `$_' to list $list";
         push @{$retval{$list}}, $_;
