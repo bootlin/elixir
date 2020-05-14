@@ -4,10 +4,10 @@ configin = []
 
 def keep_configin(m):
     configin.append(m.group(4))
-    return m.group(1) + m.group(2) + m.group(3) + '"__KEEPCONFIGIN__' + str(len(configin)) + '"'
+    return m.group(1) + m.group(2) + m.group(3) + '"__KEEPCONFIGIN__' + encode_number(len(configin)) + '"'
 
 def replace_configin(m):
-    w = configin[int(m.group(1)) - 1]
+    w = configin[decode_number(m.group(1)) - 1]
     return '<a href="'+version+'/source/'+w+'">'+w+'</a>'
 
 configin_filters = {
@@ -15,7 +15,7 @@ configin_filters = {
                 'match': {'Config'},
                 'prerex': '^(\s*)(source)(\s*)\"(.*)\"',
                 'prefunc': keep_configin,
-                'postrex': '__KEEPCONFIGIN__(\d+)',
+                'postrex': '__KEEPCONFIGIN__([A-J]+)',
                 'postfunc': replace_configin
                 }
 

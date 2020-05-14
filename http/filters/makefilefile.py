@@ -10,12 +10,12 @@ def keep_makefilefile(m):
 
     if query('exist', tag, dir_name + m.group(1)):
         makefilefile.append(m.group(1))
-        return '__KEEPMAKEFILEFILE__' + str(len(makefilefile)) + m.group(2)
+        return '__KEEPMAKEFILEFILE__' + encode_number(len(makefilefile)) + m.group(2)
     else:
         return m.group(0)
 
 def replace_makefilefile(m):
-    w = makefilefile[int(m.group(1)) - 1]
+    w = makefilefile[decode_number(m.group(1)) - 1]
     dir_name = os.path.dirname(path)
     
     if dir_name != '/':
@@ -28,7 +28,7 @@ makefilefile_filters = {
                 'match': {'Makefile'},
                 'prerex': '(?<=\s)(?!/)([-\w/]+/[-\w\.]+)(\s+|$)',
                 'prefunc': keep_makefilefile,
-                'postrex': '__KEEPMAKEFILEFILE__(\d+)',
+                'postrex': '__KEEPMAKEFILEFILE__([A-J]+)',
                 'postfunc': replace_makefilefile
                 }
 
