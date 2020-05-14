@@ -4,10 +4,10 @@ kconfig = []
 
 def keep_kconfig(m):
     kconfig.append(m.group(4))
-    return m.group(1) + m.group(2) + m.group(3) + '"__KEEPKCONFIG__' + str(len(kconfig)) + '"'
+    return m.group(1) + m.group(2) + m.group(3) + '"__KEEPKCONFIG__' + encode_number(len(kconfig)) + '"'
 
 def replace_kconfig(m):
-    w = kconfig[int(m.group(1)) - 1]
+    w = kconfig[decode_number(m.group(1)) - 1]
     return '<a href="'+version+'/source/'+w+'">'+w+'</a>'
 
 kconfig_filters = {
@@ -15,7 +15,7 @@ kconfig_filters = {
                 'match': {'Kconfig'},
                 'prerex': '^(\s*)(source)(\s*)\"(.*?)\"',
                 'prefunc': keep_kconfig,
-                'postrex': '__KEEPKCONFIG__(\d+)',
+                'postrex': '__KEEPKCONFIG__([A-J]+)',
                 'postfunc': replace_kconfig
                 }
 

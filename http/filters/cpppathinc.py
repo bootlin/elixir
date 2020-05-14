@@ -14,13 +14,13 @@ def keep_cpppathinc(m):
     if re.match('^asm/.*', inc):
         # Keep the original string in case the path contains "asm/"
         # Because there are then multiple include possibilites, one per architecture
-        return m1 + '#include' + m2 + '<' + inc + '>'
+        return m.group(0)
     else:
         cpppathinc.append(inc)
-        return m1 + '#include' + m2 + '<__KEEPCPPPATHINC__' + str(len(cpppathinc)) + '>'
+        return m1 + '#include' + m2 + '<__KEEPCPPPATHINC__' + encode_number(len(cpppathinc)) + '>'
 
 def replace_cpppathinc(m):
-    w = cpppathinc[int(m.group(1)) - 1]
+    w = cpppathinc[decode_number(m.group(1)) - 1]
     return '<a href="'+version+'/source'+'/include/'+w+'">'+w+'</a>'
 
 cpppathinc_filters = {
@@ -28,7 +28,7 @@ cpppathinc_filters = {
                 'match': {'dts', 'dtsi', 'c', 'cc', 'cpp', 'c++', 'cxx', 'h', 's'},
                 'prerex': '^(\s*)#include(\s*)<(.*?)>',
                 'prefunc': keep_cpppathinc,
-                'postrex': '__KEEPCPPPATHINC__(\d+)',
+                'postrex': '__KEEPCPPPATHINC__([A-J]+)',
                 'postfunc': replace_cpppathinc
                 }
 

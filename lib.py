@@ -154,6 +154,7 @@ blacklist = (
     b'extern',
     b'driver',
     b'ptr',
+    b'return',
     )
 
 def isIdent(bstr):

@@ -5,10 +5,10 @@ makefileo = []
 
 def keep_makefileo(m):
     makefileo.append(m.group(1))
-    return '__KEEPMAKEFILEO__' + str(len(makefileo)) + '.o'
+    return '__KEEPMAKEFILEO__' + encode_number(len(makefileo)) + '.o'
 
 def replace_makefileo(m):
-    w = makefileo[int(m.group(1)) - 1]
+    w = makefileo[decode_number(m.group(1)) - 1]
 
     dir_name = os.path.dirname(path)
     
@@ -22,7 +22,7 @@ makefileo_filters = {
                 'match': {'Makefile'},
                 'prerex': '(?<=\s)([-\w/]+)\.o(?!\w)',
                 'prefunc': keep_makefileo,
-                'postrex': '__KEEPMAKEFILEO__(\d+)\.o',
+                'postrex': '__KEEPMAKEFILEO__([A-J]+)\.o',
                 'postfunc': replace_makefileo
                 }
 
