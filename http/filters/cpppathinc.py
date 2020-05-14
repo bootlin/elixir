@@ -14,7 +14,7 @@ def keep_cpppathinc(m):
     if re.match('^asm/.*', inc):
         # Keep the original string in case the path contains "asm/"
         # Because there are then multiple include possibilites, one per architecture
-        return m1 + '#include' + m2 + '<' + inc + '>'
+        return m.group(0)
     else:
         cpppathinc.append(inc)
         return m1 + '#include' + m2 + '<__KEEPCPPPATHINC__' + encode_number(len(cpppathinc)) + '>'
