@@ -26,7 +26,7 @@ def replace_makefilefile(m):
 makefilefile_filters = {
                 'case': 'filename',
                 'match': {'Makefile'},
-                'prerex': '(?:(?<=\s)|(?<=-I))(?!/)([-\w/]+/[-\w\.]+)(\s+|\)|$)',
+                'prerex': '(?:(?<=\s|=)|(?<=-I))(?!/)([-\w/]+/[-\w\.]+)(\s+|\)|$)',
                 'prefunc': keep_makefilefile,
                 'postrex': '__KEEPMAKEFILEFILE__([A-J]+)',
                 'postfunc': replace_makefilefile

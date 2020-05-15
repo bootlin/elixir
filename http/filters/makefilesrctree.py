@@ -16,7 +16,7 @@ def replace_makefilesrctree(m):
 makefilesrctree_filters = {
                 'case': 'filename',
                 'match': {'Makefile'},
-                'prerex': '(?:(?<=\s)|(?<=-I))(?!/)\$\(srctree\)/((?:[-\w/]+/)?[-\w\.]+)(\s+|\)|$)',
+                'prerex': '(?:(?<=\s|=)|(?<=-I))(?!/)\$\(srctree\)/((?:[-\w/]+/)?[-\w\.]+)(\s+|\)|$)',
                 'prefunc': keep_makefilesrctree,
                 'postrex': '__KEEPMAKEFILESRCTREE__([A-J]+)',
                 'postfunc': replace_makefilesrctree
