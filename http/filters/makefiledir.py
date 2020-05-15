@@ -4,8 +4,16 @@
 makefiledir = []
 
 def keep_makefiledir(m):
-    makefiledir.append(m.group(1))
-    return '__KEEPMAKEFILEDIR__' + encode_number(len(makefiledir)) + '/' + m.group(2)
+    dir_name = os.path.dirname(path)
+
+    if dir_name != '/':
+        dir_name += '/'
+
+    if query('exist', tag, dir_name + m.group(1) + '/Makefile'):
+        makefiledir.append(m.group(1))
+        return '__KEEPMAKEFILEDIR__' + encode_number(len(makefiledir)) + '/' + m.group(2)
+    else:
+        return m.group(0)
 
 def replace_makefiledir(m):
     w = makefiledir[decode_number(m.group(1)) - 1]
