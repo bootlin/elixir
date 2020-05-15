@@ -7,6 +7,7 @@ exec(open('makefiledtb.py').read())
 exec(open('makefiledir.py').read())
 exec(open('makefilefile.py').read())
 exec(open('makefilesubdir.py').read())
+exec(open('symlinks.py').read())
 
 exec(open('cpppathinc.py').read())
 # include/uapi contains includes to user headers under #ifndef __KERNEL__
