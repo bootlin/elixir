@@ -87,7 +87,7 @@ get_dir()
 {
         v=`echo $opt1 | version_rev`
         git ls-tree -l "$v:`denormalize $opt2`" 2>/dev/null |
-        awk '{print $2" "$5" "$4}' |
+        awk '{print $2" "$5" "$4" "$1}' |
         grep -v ' \.' |
         sort -t ' ' -k 1,1r -k 2,2
 }

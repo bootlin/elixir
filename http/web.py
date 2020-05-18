@@ -186,7 +186,7 @@ if mode == 'source':
                      else path_split[-1]+' - '+'/'.join(path_split)+' - ') \
             +title_suffix
 
-    lines = ['null - -']
+    lines = ['null - - -']
 
     type = query('type', tag, path)
     if len(type) > 0:
@@ -200,12 +200,12 @@ if mode == 'source':
 
     if type == 'tree':
         if path != '':
-            lines[0] = 'back - -'
+            lines[0] = 'back - - -'
 
         print('<div class="lxrtree">')
         print('<table><tbody>\n')
         for l in lines:
-            type, name, size = l.split(' ')
+            type, name, size, perm = l.split(' ')
 
             if type == 'null':
                 continue
@@ -216,6 +216,19 @@ if mode == 'source':
             elif type == 'blob':
                 size = size+' bytes'
                 path2 = path+'/'+name
+
+                if perm == '120000':
+                    # 120000 permission means it's a symlink
+                    # So we need to handle that correctly
+                    dir_name = os.path.dirname(path)
+                    rel_path = query('file', tag, path2)
+
+                    if dir_name != '/':
+                        dir_name += '/'
+
+                    path2 = os.path.abspath(dir_name + rel_path)
+
+                    name = name + ' -> ' + path2
             elif type == 'back':
                 size = ''
                 path2 = os.path.dirname(path[:-1])
