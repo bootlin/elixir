@@ -84,11 +84,17 @@ def query(cmd, *args):
     elif cmd == 'latest':
 
         # Returns the tag considered as the latest one
-        # TODO: this latest tag may have just been retrieved
-        # in the git repository and may not have been indexed yet
-        # This could results in failed queries
+        previous = None
+        tag = ''
+        index = 0
 
-        return decode(script('get-latest')).rstrip('\n')
+        # If we get the same tag twice, we are at the oldest one
+        while not db.vers.exists(tag) and previous != tag:
+            previous = tag
+            tag = decode(script('get-latest', str(index))).rstrip('\n')
+            index += 1
+
+        return tag
 
     elif cmd == 'type':
 

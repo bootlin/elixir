@@ -63,7 +63,7 @@ list_tags_h()
 
 get_latest()
 {
-    git tag | version_dir | grep -v '\-rc' | sort -V | tail -n 1
+    git tag | version_dir | grep -v '\-rc' | sort -V | tail -n $(($opt1 + 1)) | head -1
 }
 
 get_type()
