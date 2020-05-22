@@ -1,3 +1,3 @@
 # Elixir Python definitions for qemu
 
-exec(open('kconfig.py').read())
+exec(open('commonkconfig.py').read())

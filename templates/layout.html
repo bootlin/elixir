@@ -23,7 +23,13 @@
                     {{breadcrumb}}
                 </div>
                 <div class="search">
-                    <form method="post" action="{{version}}/ident">
+                    <form  method="post" action="{{version}}/ident">
+                        <select name="f">
+                            <option value="C" {% if family=="C" %} selected="selected"{% endif %}>C/CPP/ASM</option>
+                            <option value="K" {% if family=="K" %} selected="selected"{% endif %}>Kconfig</option>
+                            <option value="D" {% if family=="D" %} selected="selected"{% endif %}>Devicetree</option>
+                        </select>
+
                         <input placeholder="Search Identifier" type="text" name="i" value="{{ident}}"/>
                         <button class="icon-search"><span class="screenreader">Go get it</span></button>
                     </form>

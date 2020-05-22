@@ -48,14 +48,18 @@ status = 200
 
 url = os.environ.get('REQUEST_URI') or os.environ.get('SCRIPT_URL')
 # Split the URL into its components (project, version, cmd, arg)
-m = search('^/([^/]*)/([^/]*)/([^/]*)(.*)$', url)
+m = search('^/([^/]*)/([^/]*)(?:/([^/]))?/([^/]*)(.*)$', url)
 
 if m:
     project = m.group(1)
     version = m.group(2)
     version_decoded = parse.unquote(version)
-    cmd = m.group(3)
-    arg = m.group(4)
+    family = m.group(3)
+    cmd = m.group(4)
+    arg = m.group(5)
+
+    if family == None:
+        family = 'C'
 
     basedir = os.environ['LXR_PROJ_DIR']
     datadir = basedir + '/' + project + '/data'
@@ -80,15 +84,16 @@ if m:
         ident = arg[1:]
         form = cgi.FieldStorage()
         ident2 = form.getvalue('i')
+        family2 = form.getvalue('f')
         if ident == '' and ident2:
             status = 302
             ident2 = parse.quote(ident2.strip())
-            location = '/'+project+'/'+version+'/ident/'+ident2
+            location = '/'+project+'/'+version+'/'+family2+'/ident/'+ident2
         else:
             mode = 'ident'
             if not(ident and search('^[A-Za-z0-9_-]*$', ident)):
                 ident = ''
-            url = 'ident/'+ident
+            url = family + '/ident/' + ident
     else:
         status = 400
 else:
@@ -132,6 +137,7 @@ data = {
     'project': project,
     'projects': projects,
     'ident': ident,
+    'family': family,
     'breadcrumb': '<a class="project" href="'+version+'/source">/</a>'
 }
 
@@ -249,9 +255,11 @@ if mode == 'source':
         import pygments.lexers
         import pygments.formatters
 
-        filename, extension = os.path.splitext(path)
+        fname = os.path.basename(path)
+        filename, extension = os.path.splitext(fname)
         extension = extension[1:].lower()
-        filename = os.path.basename(filename)
+        family = query('family', fname)
+        data['family'] = family
 
         # Source common filter definitions
         os.chdir('filters')
@@ -302,7 +310,7 @@ if mode == 'source':
 elif mode == 'ident':
     data['title'] = ident+' identifier - '+title_suffix
 
-    symbol_definitions, symbol_references, symbol_doccomments_UNUSED = query('ident', tag, ident)
+    symbol_definitions, symbol_references, symbol_doccomments_UNUSED = query('ident', tag, ident, family)
 
     print('<div class="lxrident">')
     if len(symbol_definitions):

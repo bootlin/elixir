@@ -13,7 +13,7 @@ def replace_kconfig(m):
 kconfig_filters = {
                 'case': 'filename',
                 'match': {'Kconfig'},
-                'prerex': '^(\s*)(source)(\s*)\"(.*?)\"',
+                'prerex': '^(\s*)(source)(\s*)\"([\w/_-]*)\"',
                 'prefunc': keep_kconfig,
                 'postrex': '__KEEPKCONFIG__([A-J]+)',
                 'postfunc': replace_kconfig
