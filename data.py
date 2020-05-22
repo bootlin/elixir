@@ -29,6 +29,7 @@ import errno
 ##################################################################################
 
 defTypeR = {
+    'c': 'config',
     'd': 'define',
     'e': 'enum',
     'E': 'enumerator',
@@ -50,31 +51,43 @@ maxId = 999999999
 
 class DefList:
     '''Stores associations between a blob ID, a type (e.g., "function"),
-        and a line number.'''
-    def __init__(self, data=b''):
-        self.data = data
+        a line number and a file family.
+        Also stores in which families the ident exists for faster tests.'''
+    def __init__(self, data=b'#'):
+        self.data, self.families = data.split(b'#')
 
     def iter(self, dummy=False):
         for p in self.data.split(b','):
-            p = re.search(b'(\d*)(\w)(\d*)', p)
-            id, type, line = p.groups()
+            p = re.search(b'(\d*)(\w)(\d*)(\w)', p)
+            id, type, line, family = p.groups()
             id = int(id)
             type = defTypeR [type.decode()]
             line = int(line)
-            yield(id, type, line)
+            family = family.decode()
+            yield(id, type, line, family)
         if dummy:
-            yield(maxId, None, None)
+            yield(maxId, None, None, None)
 
-    def append(self, id, type, line):
+    def append(self, id, type, line, family):
         if type not in defTypeD:
             return
-        p = str(id) + defTypeD[type] + str(line)
+        p = str(id) + defTypeD[type] + str(line) + family
         if self.data != b'':
             p = ',' + p
         self.data += p.encode()
 
     def pack(self):
-        return self.data
+        return self.data + b'#' + self.families
+
+    def add_family(self, family):
+        family = family.encode()
+        if not family in self.families.split(b','):
+            if self.families != b'':
+                family = b',' + family
+            self.families += family
+
+    def get_families(self):
+        return self.families.decode().split(',')
 
 class PathList:
     '''Stores associations between a blob ID and a file path.
@@ -100,7 +113,8 @@ class PathList:
         return self.data
 
 class RefList:
-    '''Stores a mapping from blob ID to list of lines.'''
+    '''Stores a mapping from blob ID to list of lines 
+        and the corresponding family.'''
     def __init__(self, data=b''):
         self.data = data
 
@@ -110,16 +124,17 @@ class RefList:
         while s.tell() < size:
             line = s.readline()
             line = line [:-1]
-            b,c = line.split(b':')
+            b,c,d = line.split(b':')
             b = int(b.decode())
             c = c.decode()
-            yield(b, c)
+            d = d.decode()
+            yield(b, c, d)
         s.close()
         if dummy:
-            yield(maxId, None)
+            yield(maxId, None, None)
 
-    def append(self, id, lines):
-        p = str(id) + ':' + lines + '\n'
+    def append(self, id, lines, family):
+        p = str(id) + ':' + lines + ':' + family + '\n'
         self.data += p.encode()
 
     def pack(self):

@@ -101,9 +101,15 @@ tokenize_file()
         ref="$v:`denormalize $opt2`"
     fi
 
+    if [ $opt3 = "D" ]; then #Don't cut around '-' in devicetrees
+        regex='s%((/\*.*?\*/|//.*?\001|[^'"'"']"(\\.|.)*?"|# *include *<.*?>|[^\w-])+)([\w-]+)?%\1\n\4\n%g'
+    else
+        regex='s%((/\*.*?\*/|//.*?\001|[^'"'"']"(\\.|.)*?"|# *include *<.*?>|\W)+)(\w+)?%\1\n\4\n%g'
+    fi
+
     git cat-file blob $ref 2>/dev/null |
     tr '\n' '\1' |
-    perl -pe 's%((/\*.*?\*/|//.*?\001|[^'"'"']"(\\.|.)*?"|# *include *<.*?>|\W)+)(\w+)?%\1\n\4\n%g' |
+    perl -pe "$regex" |
     head -n -1
 }
 
@@ -137,11 +143,48 @@ untokenize()
 
 parse_defs()
 {
+    case $opt3 in
+    "C")
+        parse_defs_C
+        ;;
+    "K")
+        parse_defs_K
+        ;;
+    "D")
+        parse_defs_D
+        ;;
+    esac
+}
+
+parse_defs_C()
+{
     tmp=`mktemp -d`
     full_path=$tmp/$opt2
     git cat-file blob "$opt1" > "$full_path"
-    ctags -x --c-kinds=+p-m "$full_path" |
-    grep -av "^operator " |
+    ctags -x --kinds-c=+p-m "$full_path" |
+    grep -avE "^operator |CONFIG_" |
+    awk '{print $1" "$2" "$3}'
+    rm "$full_path"
+    rmdir $tmp
+}
+
+parse_defs_K()
+{
+    tmp=`mktemp -d`
+    full_path=$tmp/$opt2
+    git cat-file blob "$opt1" > "$full_path"
+    ctags -x --language-force=kconfig "$full_path" |
+    awk '{print "CONFIG_"$1" "$2" "$3}'
+    rm "$full_path"
+    rmdir $tmp
+}
+
+parse_defs_D()
+{
+    tmp=`mktemp -d`
+    full_path=$tmp/$opt2
+    git cat-file blob "$opt1" > "$full_path"
+    ctags -x --language-force=dts "$full_path" |
     awk '{print $1" "$2" "$3}'
     rm "$full_path"
     rmdir $tmp
@@ -171,6 +214,7 @@ test $# -gt 0 || set help
 cmd=$1
 opt1=$2
 opt2=$3
+opt3=$4
 shift
 
 denormalize()

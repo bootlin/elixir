@@ -253,6 +253,10 @@ h2 {
   padding: 0.5em;
   padding-top: 0;
 }
+.search form {
+  display: flex;
+  flex-direction: row;
+}
 .search button:focus,
 .search button:hover {
   color: #000;
@@ -262,9 +266,18 @@ h2 {
   color: #000;
   background: #ddd;
   padding-right: 3em;
+  min-width: 0;
+  flex: 4;
 }
 .search input:focus {
   background: #eee;
+}
+.search select {
+  font-size: 0.9em;
+  padding: 0.45em;
+  margin: 0;
+  min-width: 0;
+  flex: 1;
 }
 
 .filter {

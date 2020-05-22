@@ -1,7 +1,7 @@
 # Elixir Python definitions for Linux
 
 exec(open('dtsi.py').read())
-exec(open('kconfig.py').read())
+exec(open('commonkconfig.py').read())
 exec(open('makefileo.py').read())
 exec(open('makefiledtb.py').read())
 exec(open('makefiledir.py').read())
