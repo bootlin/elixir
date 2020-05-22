@@ -90,20 +90,20 @@ to know what packages Elixir needs in your favorite distribution.
 
 == Special dependencies
 
-=== Device Tree Source syntax highlighting
+=== Device Tree and Kconfig Source syntax highlighting
 
 The service on https://elixir.bootlin.com relies on a modified version of https://pygments.org/[Pygments],
-to enable syntax highlighting on Device Tree Source (DTS) files.
+to enable syntax highlighting on Device Tree Source (DTS) files and on all Kconfig files.
 
 The changes have been sent upstream and should appear in future distributions.
 
 In the meantime, you can either rebuild this package from its source on
-https://github.com/MaximeChretien/pygments/tree/devicetree-lexer[GitHub], or download this
-https://bootlin.com/pub/elixir/Pygments-2.6.1.devicetree-py3-none-any.whl[binary module]
+https://github.com/MaximeChretien/pygments/tree/dev[GitHub], or download this
+https://bootlin.com/pub/elixir/Pygments-2.6.1.elixir-py3-none-any.whl[binary module]
 and install it as follows:
 
 ----
-sudo pip3-install Pygments-2.6.1.devicetree-py3-none-any.whl
+sudo pip3-install Pygments-2.6.1.elixir-py3-none-any.whl
 ----
 
 == Download Elixir Project
