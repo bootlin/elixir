@@ -29,7 +29,12 @@ class IdentGetter:
         if version == 'latest':
             version = query('latest')
 
-        symbol_definitions, symbol_references, symbol_doccomments_UNUSED = query('ident', version, ident)
+        if 'family' in req.params:
+            family = req.params['family']
+        else:
+            family = 'C'
+
+        symbol_definitions, symbol_references, symbol_doccomments_UNUSED = query('ident', version, ident, family)
         resp.body = json.dumps(
             {
                 'definitions': [sym.__dict__ for sym in symbol_definitions],
