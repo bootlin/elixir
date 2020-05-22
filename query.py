@@ -146,14 +146,24 @@ def query(cmd, *args):
         version = args[0]
         path = args[1]
 
-        if lib.hasSupportedExt(path):
+        filename = os.path.basename(path)
+        family = lib.getFileFamily(filename)
+
+        if family != None:
             buffer = BytesIO()
-            tokens = scriptLines('tokenize-file', version, path)
+            tokens = scriptLines('tokenize-file', version, path, family)
             even = True
+
+            prefix = b''
+            if family == 'K':
+                prefix = b'CONFIG_'
+
             for tok in tokens:
                 even = not even
-                if even and db.defs.exists(tok) and lib.isIdent(tok):
-                    tok = b'\033[31m' + tok + b'\033[0m'
+                tok2 = prefix + tok
+                if (even and db.defs.exists(tok2) and lib.isIdent(tok2)
+                    and lib.compatibleFamily(db.defs.get(tok2).get_families(), family)):
+                    tok = b'\033[31m' + tok2 + b'\033[0m'
                 else:
                     tok = lib.unescape(tok)
                 buffer.write(tok)
@@ -161,12 +171,20 @@ def query(cmd, *args):
         else:
             return decode(script('get-file', version, path))
 
+    elif cmd == 'family':
+        # Get the family of a given file
+
+        filename = args[0]
+
+        return lib.getFileFamily(filename)
+
     elif cmd == 'ident':
 
         # Returns identifier search results
 
         version = args[0]
         ident = args[1]
+        family = args[2]
 
         symbol_definitions = []
         symbol_references = []
@@ -196,9 +214,9 @@ def query(cmd, *args):
         # values.  Therefore, we can sequentially step through the defs, refs,
         # and docs for each file in a version.
 
-        def_idx, def_type, def_line = next(defs_this_ident)
-        ref_idx, ref_lines = next(refs)
-        doc_idx, doc_line = next(docs)
+        def_idx, def_type, def_line, def_family = next(defs_this_ident)
+        ref_idx, ref_lines, ref_family = next(refs)
+        doc_idx, doc_line, doc_family = next(docs)
 
         dBuf = []
         rBuf = []
@@ -207,19 +225,21 @@ def query(cmd, *args):
         for file_idx, file_path in files_this_version:
             # Advance defs, refs, and docs to the current file
             while def_idx < file_idx:
-                def_idx, def_type, def_line = next(defs_this_ident)
+                def_idx, def_type, def_line, def_family = next(defs_this_ident)
             while ref_idx < file_idx:
-                ref_idx, ref_lines = next(refs)
+                ref_idx, ref_lines, ref_family = next(refs)
             while doc_idx < file_idx:
-                doc_idx, doc_line = next(docs)
+                doc_idx, doc_line, doc_family = next(docs)
 
             # Copy information about this identifier into dBuf, rBuf, and docBuf.
             while def_idx == file_idx:
-                dBuf.append((file_path, def_type, def_line))
-                def_idx, def_type, def_line = next(defs_this_ident)
+                if def_family == family:
+                    dBuf.append((file_path, def_type, def_line))
+                def_idx, def_type, def_line, def_family = next(defs_this_ident)
 
             if ref_idx == file_idx:
-                rBuf.append((file_path, ref_lines))
+                if lib.compatibleFamily(family, ref_family):
+                    rBuf.append((file_path, ref_lines))
 
             if doc_idx == file_idx: # TODO should this be a `while`?
                 docBuf.append((file_path, doc_line))
@@ -239,8 +259,8 @@ def query(cmd, *args):
     else:
         return('Unknown subcommand: ' + cmd + '\n')
 
-def cmd_ident(version, ident, **kwargs):
-    symbol_definitions, symbol_references, symbol_doccomments = query("ident", version, ident)
+def cmd_ident(version, ident, family, **kwargs):
+    symbol_definitions, symbol_references, symbol_doccomments = query("ident", version, ident, family)
     print("Symbol Definitions:")
     for symbol_definition in symbol_definitions:
         print(symbol_definition)
@@ -266,6 +286,7 @@ if __name__ == "__main__":
 
     ident_subparser = subparsers.add_parser('ident', help="Get definitions and references of an identifier")
     ident_subparser.add_argument('ident', type=str, help="The name of the identifier")
+    ident_subparser.add_argument('family', type=str, help="The file family requested")
     ident_subparser.set_defaults(func=cmd_ident)
 
     file_subparser = subparsers.add_parser('file', help="Get a source file")
