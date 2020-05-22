@@ -17,7 +17,7 @@ class APITest(testing.TestCase):
         self.app = create_ident_getter()
 
     def test_identifier_not_found(self):
-        result = self.simulate_get('/ident/tree/SOME_NONEXISTENT_IDENTIFIER', query_string="version=latest")
+        result = self.simulate_get('/ident/tree/SOME_NONEXISTENT_IDENTIFIER', query_string="version=latest&family=C")
 
         self.assertEqual(result.status_code, 200)
         self.assertEqual(result.json, {'definitions': [], 'references':[]})
@@ -33,14 +33,13 @@ class APITest(testing.TestCase):
         self.assertEqual(result.json["description"], required_response.description)
 
     def test_existing_identifier(self):
-        result_for_specific_version = self.simulate_get('/ident/tree/of_i2c_get_board_info', query_string="version=v5.4")
-        result_for_latest_version = self.simulate_get('/ident/tree/of_i2c_get_board_info', query_string="version=latest")
+        result_for_specific_version = self.simulate_get('/ident/tree/of_i2c_get_board_info', query_string="version=v5.4&family=C")
+        result_for_latest_version = self.simulate_get('/ident/tree/of_i2c_get_board_info', query_string="version=latest&family=C")
 
         expected_json = {
             'definitions': 
             [
                 {'path': 'drivers/i2c/i2c-core-of.c', 'line': 22, 'type': 'function'},
-                {'path': 'drivers/i2c/i2c-core-of.c', 'line': 62, 'type': 'variable'},
                 {'path': 'include/linux/i2c.h', 'line': 968, 'type': 'function'},
                 {'path': 'include/linux/i2c.h', 'line': 941, 'type': 'prototype'}
             ], 

@@ -80,12 +80,12 @@ ok( (-r File::Spec->catfile($db_dir, $_)), "$_ exists" )
 # Spot-check some identifiers
 
 run_produces_ok('ident query (nonexistent)',
-    [$query_py, qw(v5.4 ident SOME_NONEXISTENT_IDENTIFIER_XYZZY_PLUGH)],
+    [$query_py, qw(v5.4 ident SOME_NONEXISTENT_IDENTIFIER_XYZZY_PLUGH C)],
     [qr{^Symbol Definitions:}, qr{^Symbol References:}, qr{^\s*$}],
     MUST_SUCCEED);
 
 run_produces_ok('ident query (existent)',
-    [$query_py, qw(v5.4 ident i2c_acpi_notify)],
+    [$query_py, qw(v5.4 ident i2c_acpi_notify C)],
     [qr{^Symbol Definitions:}, qr{^Symbol References:},
         qr{drivers/i2c/i2c-core-acpi\.c.+\b402\b.+\bfunction\b},    # def
         qr{drivers/i2c/i2c-core-acpi\.c.+\b402,439}                 # refs
