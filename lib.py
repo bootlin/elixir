@@ -183,6 +183,28 @@ def getDataDir():
 def currentProject():
     return os.path.basename(os.path.dirname(getDataDir()))
 
-def hasSupportedExt(filename):
-    ext = os.path.splitext(filename)[1]
-    return ext.lower() in ['.c', '.cc', '.cpp', '.c++', '.cxx', '.h', '.s']
+def getFileFamily(filename):
+    name, ext = os.path.splitext(filename)
+
+    if ext.lower() in ['.c', '.cc', '.cpp', '.c++', '.cxx', '.h', '.s'] :
+        return 'C' # C file family and ASM
+    elif ext.lower() in ['.dts', '.dtsi'] :
+        return 'D' # Devicetree files
+    elif name.lower()[:7] in ['kconfig'] and not ext.lower() in ['.rst']:
+        # Some files are named like Kconfig-nommu so we only check the first 7 letters
+        # We also exclude documentation files that can be named kconfig
+        return 'K' # Kconfig files
+    else :
+        return None
+
+compatibility_list = {
+    'C' : ['C', 'K'],
+    'K' : ['K'],
+    'D' : ['D']
+}
+
+# Check if families are compatible
+# First argument can be a list of different families
+# Second argument is the key for chossing the right array in the compatibility list
+def compatibleFamily(file_family, requested_family):
+    return any(item in file_family for item in compatibility_list[requested_family])

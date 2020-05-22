@@ -156,9 +156,10 @@ class UpdateDefs(Thread):
                 hash = db.hash.get(idx)
                 filename = db.file.get(idx)
 
-            if not lib.hasSupportedExt(filename): continue
+            family = lib.getFileFamily(filename);
+            if family == None: continue
 
-            lines = scriptLines('parse-defs', hash, filename)
+            lines = scriptLines('parse-defs', hash, filename, family)
             for l in lines:
                 ident, type, line = l.split(b' ')
                 type = type.decode()
@@ -170,7 +171,8 @@ class UpdateDefs(Thread):
                     else:
                         obj = data.DefList()
 
-                obj.append(idx, type, line)
+                obj.add_family(family)
+                obj.append(idx, type, line, family)
                 if verbose:
                     print(f"def {type} {ident} in #{idx} @ {line}")
                 with defs_lock:
@@ -210,16 +212,23 @@ class UpdateRefs(Thread):
                 hash = db.hash.get(idx)
                 filename = db.file.get(idx)
 
-            if not lib.hasSupportedExt(filename): continue
+            family = lib.getFileFamily(filename)
+            if family == None: continue
 
-            tokens = scriptLines('tokenize-file', '-b', hash)
+            prefix = b''
+            # Kconfig values are saved as CONFIG_<value>
+            if family == 'K':
+                prefix = b'CONFIG_'
+
+            tokens = scriptLines('tokenize-file', '-b', hash, family)
             even = True
             line_num = 1
             idents = {}
             for tok in tokens:
                 even = not even
                 if even:
-                    
+                    tok = prefix + tok
+
                     with defs_lock:
                         if db.defs.exists(tok) and lib.isIdent(tok):
                             if tok in idents:
@@ -236,7 +245,7 @@ class UpdateRefs(Thread):
                 else:
                     obj = data.RefList()
 
-                obj.append(idx, lines)
+                obj.append(idx, lines, family)
                 if verbose:
                     print(f"ref: {ident} in #{idx} @ {lines}")
                 db.refs.put(ident, obj)
@@ -274,7 +283,8 @@ class UpdateDocs(Thread):
                 hash = db.hash.get(idx)
                 filename = db.file.get(idx)
 
-            if not lib.hasSupportedExt(filename): continue
+            family = lib.getFileFamily(filename)
+            if family == None: continue
 
             lines = scriptLines('parse-docs', hash, filename)
             for l in lines:
@@ -286,7 +296,7 @@ class UpdateDocs(Thread):
                 else:
                     obj = data.RefList()
 
-                obj.append(idx, str(line))
+                obj.append(idx, str(line), family)
                 if verbose:
                     print(f"doc: {ident} in #{idx} @ {line}")
                 db.docs.put(ident, obj)
