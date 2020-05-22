@@ -13,7 +13,7 @@ def replace_makefilekconfig(m):
 makefilekconfig_filters = {
                 'case': 'filename',
                 'match': {'Makefile'},
-                'prerex': '(\$\(CONFIG_\w+\))',
+                'prerex': '\$\((CONFIG_\w+)\)',
                 'prefunc': keep_makefilekconfig,
                 'postrex': '__KEEPMAKEFILEKCONFIG__([A-J]+)',
                 'postfunc': replace_makefilekconfig
