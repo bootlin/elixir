@@ -27,7 +27,7 @@ toc::[]
 * Python >= 3.6
 * The Jinja2 and Pygments (>= 2.2) Python libraries
 * Berkeley DB (and its Python binding)
-* Exuberant Ctags
+* Universal Ctags
 * Perl (for non-greedy regexes and automated testing)
 * Falcon and `mod_wsgi` (for the REST API)
 
@@ -109,17 +109,23 @@ sudo pip3 install Pygments-2.6.1.elixir-py3-none-any.whl
 === Kconfig identifiers support
 
 The service on https://elixir.bootlin.com relies on a modified version of https://ctags.io/[Universal-ctags],
-to enable indexation of Kconfig identifiers.
+to enable indexing of Kconfig identifiers.
 
 The changes have been sent upstream and should appear in future distributions.
 
 In the meantime, you can either rebuild this package from its source on
  https://github.com/MaximeChretien/ctags/tree/kconfig-parser[GitHub], or download this
-https://bootlin.com/pub/elixir/universal-ctags_0+git20221222-0ubuntu1_amd64.deb[binary module]
+https://bootlin.com/pub/elixir/universal-ctags_0+git20221222-0ubuntu1_amd64.deb[binary package]
 and install it as follows:
 
 ----
 sudo dpkg -i universal-ctags_0+git20221222-0ubuntu1_amd64.deb
+----
+
+Then tell `apt` to hold this package and block future updates of the normal package:
+
+----
+sudo apt-mark hold universal-ctags
 ----
 
 == Download Elixir Project
