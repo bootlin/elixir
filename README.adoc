@@ -103,7 +103,7 @@ https://bootlin.com/pub/elixir/Pygments-2.6.1.elixir-py3-none-any.whl[binary mod
 and install it as follows:
 
 ----
-sudo pip3-install Pygments-2.6.1.elixir-py3-none-any.whl
+sudo pip3 install Pygments-2.6.1.elixir-py3-none-any.whl
 ----
 
 == Download Elixir Project
