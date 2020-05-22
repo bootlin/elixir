@@ -79,7 +79,7 @@ For Debian
 ____
 
 ----
-sudo apt install python3 python3-jinja2 python3-pygments python3-bsddb3 python3-falcon python3-pytest universal-ctags perl git apache2 libapache2-mod-wsgi-py3
+sudo apt install python3 python3-jinja2 python3-pygments python3-bsddb3 python3-falcon python3-pytest universal-ctags perl git apache2 libapache2-mod-wsgi-py3 libjansson4
 ----
 
 To enable the REST API, follow the installation instructions on https://github.com/GrahamDumpleton/mod_wsgi[`mod_wsgi`]
