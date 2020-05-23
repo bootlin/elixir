@@ -49,4 +49,32 @@ http_request_ok 'identifier query', $tenv, '/testproj/v5.4/ident/gsb_buffer',
             line[ ]23.+?
             \bstruct\b}x ];
 
+# Doc comments: testcases pulled from t/300
+http_request_ok 'doc-comment query (nonexistent)', $tenv,
+    '/testproj/v5.4/ident/SOME_NONEXISTENT_IDENTIFIER_XYZZY_PLUGH',
+    [ qr{^Content-Type:\s*text/html}, qr{<h\d>Identifier not used</h\d>}i], 1;
+
+http_request_ok 'doc-comment query (existent but not documented)', $tenv,
+    '/testproj/v5.4/ident/gsb_buffer',   # in drivers/i2c/i2c-core-acpi.c
+    [
+        qr{^Content-Type:\s*text/html},
+        { not => qr{\bDocumented in\b} },
+    ], 1;
+
+http_request_ok 'ident query (existent, function, documented in C file)', $tenv,
+    '/testproj/v5.4/ident/i2c_acpi_get_i2c_resource',
+    [
+        qr{^Content-Type:\s*text/html},
+        qr{\bDocumented in \d},
+        {doc => qr{drivers/i2c/i2c-core-acpi\.c.+\b45\b}},
+    ], 1;
+
+http_request_ok 'ident query (existent, function, documented in C file, #102)',
+    $tenv, '/testproj/v5.4/ident/documented_function_XYZZY',
+    [
+        qr{^Content-Type:\s*text/html},
+        qr{\bDocumented in \d},
+        {doc => qr{issue102\.c.+\b6\b}},
+    ], 1;
+
 done_testing;
