@@ -410,7 +410,8 @@ EOT
 
 =head2 import
 
-Set up.  Called automatically.
+Set up.  Called automatically.  Activates L<strict> and L<warnings>
+in the caller.
 
 =cut
 

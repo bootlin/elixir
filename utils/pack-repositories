@@ -8,8 +8,25 @@
 # file, indicating that git garbage collection failed at some
 # point, causing the repository to grow very fast
 # each time new objects are fetched.
-# 
+#
 # Example: llvm-project: divided disk usage by 60!
+
+#  This file is part of Elixir, a source code cross-referencer.
+#
+#  Copyright (C) 2019--2020 Michael Opdenacker and contributors
+#
+#  Elixir is free software: you can redistribute it and/or modify
+#  it under the terms of the GNU Affero General Public License as published by
+#  the Free Software Foundation, either version 3 of the License, or
+#  (at your option) any later version.
+#
+#  Elixir is distributed in the hope that it will be useful,
+#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#  GNU Affero General Public License for more details.
+#
+#  You should have received a copy of the GNU Affero General Public License
+#  along with Elixir.  If not, see <http://www.gnu.org/licenses/>.
 
 for f in `find . -name gc.log`
 do

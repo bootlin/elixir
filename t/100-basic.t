@@ -21,8 +21,6 @@
 #
 # This file uses core Perl modules only.
 
-use strict;
-use warnings;
 use autodie;    # note: still need to check system() calls manually
 
 use FindBin '$Bin';

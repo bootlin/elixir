@@ -1,3 +1,4 @@
+# .travis.yml for Elixir, https://github.com/bootlin/elixir
 language: python
 
 os:
