@@ -20,7 +20,7 @@ TestEnvironment - Class representing an Elixir test environment
     use TestEnvironment;
     my $tenv = TestEnvironment->new;
     $tenv->build_repo($source_path);    # Make a git repo
-    $tenv->build_db($db_path);          # Run update.py
+    $tenv->build_db();                  # Run update.py
     $tenv->export_env;                  # Set $LXR_* environment vars
     # Now run tests against the database in $db_path
 
@@ -131,6 +131,7 @@ Dies on error.  On success, returns the instance, for chaining.
 
 sub build_repo {
     my ($self, $tree_src_dir) = @_;
+    die "Incorrect parameters" unless @_==2 && ref $self && $tree_src_dir;
     die "Need a source dir" unless $tree_src_dir;
     die "No repo dir" unless $self->lxr_repo_dir;
 
@@ -167,6 +168,7 @@ unconditionally.
 
 sub build_db {
     my $self = shift;
+    die "No parameters allowed" if @_;
     die "No repo dir" unless $self->lxr_repo_dir;
     die "No data dir" unless $self->lxr_data_dir;
     my $db_dir = $self->lxr_data_dir;
