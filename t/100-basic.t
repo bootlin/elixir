@@ -92,6 +92,14 @@ run_produces_ok('ident query (existent)',
     ],
     MUST_SUCCEED);
 
+run_produces_ok('ident query (existent, #131)',
+    [$query_py, qw(v5.4 ident class C)],
+    [qr{^Symbol Definitions:}, qr{^Symbol References:},
+        qr{issue131\.h.+\b9\b.+\bstruct\b},                         # def
+        qr{issue131\.h.+\b13}                                       # refs
+    ],
+    MUST_SUCCEED);
+
 # Spot-check some files
 
 run_produces_ok('file query (nonexistent)',
