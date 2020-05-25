@@ -40,14 +40,14 @@ diag $tenv->report;
 
 http_request_ok 'index query', $tenv, '/testproj/latest/source',
     [ qr{^Content-Type:\s*text/html}, qr{href="latest/source/issue102.c"},
-        qr{href="latest/source/arch"} ];
+        qr{href="latest/source/arch"} ], 1;
 
 http_request_ok 'identifier query', $tenv, '/testproj/v5.4/ident/gsb_buffer',
     [ qr{^Content-Type:\s*text/html}, qr{\bgsb_buffer\b},
         qr{"v5.4/source/drivers/i2c/i2c-core-acpi.c\#L23".+?
             drivers/i2c/i2c-core-acpi.c.+?
             line[ ]23.+?
-            \bstruct\b}x ];
+            \bstruct\b}x ], 1;
 
 # Doc comments: testcases pulled from t/300
 http_request_ok 'doc-comment query (nonexistent)', $tenv,

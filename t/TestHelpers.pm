@@ -304,6 +304,22 @@ sub _check_queries {
         diag "@outlines";
     }
 
+    # Check for and report Python errors
+    foreach(@outlines, @errlines) {
+        if (/^.*?(\S+)\s+contains the description of this error/) {
+            my $logfn = $1;
+
+            no autodie;
+            open my $logfh, '<', $logfn
+                or warn("Could not open Python log file $logfn: $!"), last;
+            my $logtext = do { local $/; <$logfh> };
+            close $logfh;
+
+            diag "Python error log $logfn:\n$logtext";
+            last;
+        }
+    }
+
     # Basic checks
     if($mustSucceed) {
         eval line_mark_string 2, <<'EOT';
@@ -335,7 +351,6 @@ EOT
         $test .= ($negated ? ' excludes ' : ' includes ') . "\Q$re\E" . '");';
 
         # Run it
-        #diag "Running $test";
         eval line_mark_string 2, $test;
         die $@ if $@;
     } #foreach $entry
