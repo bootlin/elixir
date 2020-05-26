@@ -1,9 +1,24 @@
 #!/usr/bin/env perl
 # find-file-doc-comments.pl: Find the doc comments for a file.
 # Usage: find-file-doc-comments.pl <C source file name>
-# By Christopher White <cwhite@d3engineering.com>
-# Copyright (c) 2019 D3 Engineering, LLC.
-# Licensed AGPLv3
+
+#  This file is part of Elixir, a source code cross-referencer.
+#
+#  By Christopher White <cwhite@d3engineering.com>
+#  Copyright (c) 2019--2020 D3 Engineering, LLC.
+#
+#  Elixir is free software: you can redistribute it and/or modify
+#  it under the terms of the GNU Affero General Public License as published by
+#  the Free Software Foundation, either version 3 of the License, or
+#  (at your option) any later version.
+#
+#  Elixir is distributed in the hope that it will be useful,
+#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#  GNU Affero General Public License for more details.
+#
+#  You should have received a copy of the GNU Affero General Public License
+#  along with Elixir.  If not, see <http://www.gnu.org/licenses/>.
 
 use 5.010001;
 use strict;

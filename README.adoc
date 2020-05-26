@@ -506,3 +506,8 @@ of AGPLv3] indicates that its terms "effectively consist of the terms of GPLv3"
 plus the network-use paragraph.  Therefore, the developers have a good-faith
 belief that licensing these files under AGPLv3 is authorized.  (See also https://github.com/Freemius/wordpress-sdk/issues/166#issuecomment-310561976[this
 issue comment] for another example of a similar situation.)
+
+= License
+
+Elixir is copyright (c) 2017--2020 its contributors.  It is licensed AGPLv3.
+See the `COPYING` file included with Elixir for details.

@@ -1,4 +1,22 @@
 #!/usr/bin/env python3
+
+#  This file is part of Elixir, a source code cross-referencer.
+#
+#  Copyright (C) 2020 Maxime Chretien
+#
+#  Elixir is free software: you can redistribute it and/or modify
+#  it under the terms of the GNU Affero General Public License as published by
+#  the Free Software Foundation, either version 3 of the License, or
+#  (at your option) any later version.
+#
+#  Elixir is distributed in the hope that it will be useful,
+#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#  GNU Affero General Public License for more details.
+#
+#  You should have received a copy of the GNU Affero General Public License
+#  along with Elixir.  If not, see <http://www.gnu.org/licenses/>.
+
 from time import time
 import os
 import sys
@@ -27,9 +45,9 @@ idents = [  ('loopback', 'C'),
             ('eth_header', 'C'),
             ('sk_buff', 'C') ]
 
-files = [   '/block/partitions/osf.c', 
-            '/mm/kasan/quarantine.c', 
-            '/include/crypto/internal/hash.h', 
+files = [   '/block/partitions/osf.c',
+            '/mm/kasan/quarantine.c',
+            '/include/crypto/internal/hash.h',
             '/drivers/gpu/drm/gma500/gma_display.c',
             '/drivers/hwmon/pmbus/ltc2978.c',
             '/virt/lib/irqbypass.c',
@@ -59,7 +77,7 @@ def init_query(project):
     basedir = os.environ['LXR_PROJ_DIR']
     os.environ['LXR_DATA_DIR']= basedir + '/' + project + '/data'
     os.environ['LXR_REPO_DIR'] = basedir + '/' + project + '/repo'
-    
+
     import query
     return query.query
 
@@ -119,7 +137,7 @@ for version in versions:
     idents_max = max(idents_results)
     idents_average = sum(idents_results)/len(idents_results)
 
-    print((BOLD + "Min:" + NORMAL + " {0:.6f} ms\n" 
+    print((BOLD + "Min:" + NORMAL + " {0:.6f} ms\n"
             + BOLD + "Max:" + NORMAL + " {1:.6f} ms\n"
             + BOLD + "Average:" + NORMAL + " {2:.6f} ms\n"
             ).format(idents_min, idents_max, idents_average))
@@ -143,7 +161,7 @@ for version in versions:
     files_max = max(files_results)
     files_average = sum(files_results)/len(files_results)
 
-    print((BOLD + "Min:" + NORMAL + " {0:.6f} ms\n" 
+    print((BOLD + "Min:" + NORMAL + " {0:.6f} ms\n"
             + BOLD + "Max:" + NORMAL + " {1:.6f} ms\n"
             + BOLD + "Average:" + NORMAL + " {2:.6f} ms\n"
             ).format(files_min, files_max, files_average))

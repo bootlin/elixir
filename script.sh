@@ -4,6 +4,7 @@
 #
 #  Copyright (C) 2017--2020  Mikaël Bouillot
 #  <mikael.bouillot@bootlin.com> and contributors
+#  Portions copyright (c) 2019 D3 Engineering, LLC
 #
 #  Elixir is free software: you can redistribute it and/or modify
 #  it under the terms of the GNU Affero General Public License as published by

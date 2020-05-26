@@ -2,8 +2,8 @@
 
 #  This file is part of Elixir, a source code cross-referencer.
 #
-#  Copyright (C) 2017  Mikaël Bouillot
-#  <mikael.bouillot@bootlin.com>
+#  Copyright (C) 2017--2020 Mikaël Bouillot <mikael.bouillot@bootlin.com>
+#  and contributors
 #
 #  Elixir is free software: you can redistribute it and/or modify
 #  it under the terms of the GNU Affero General Public License as published by
@@ -33,7 +33,6 @@ verbose = False
 
 db = data.DB(lib.getDataDir(), readonly=False)
 
-
 hash_file_lock = Lock() #Lock for db.hash and db.file
 defs_lock = Lock() #Lock for db.defs
 tag_ready = Condition() #Waiting for new tags
@@ -56,7 +55,7 @@ class UpdateIdVersion(Thread):
 
             new_idxes.append((self.update_blob_ids(tag), Event(), Event()))
 
-            progress(tag.decode() + ': ' + str(len(new_idxes[self.index][0])) + 
+            progress(tag.decode() + ': ' + str(len(new_idxes[self.index][0])) +
                         ' new blobs', self.index+1)
 
             self.update_versions(tag)
@@ -118,7 +117,6 @@ class UpdateIdVersion(Thread):
             if verbose:
                 print(f"Tag {tag}: adding #{idx} {path}")
         db.vers.put(tag, obj, sync=True)
-
 
 
 class UpdateDefs(Thread):
