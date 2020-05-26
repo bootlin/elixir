@@ -173,7 +173,7 @@ parse_defs_K()
     tmp=`mktemp -d`
     full_path=$tmp/$opt2
     git cat-file blob "$opt1" > "$full_path"
-    ctags -x --language-force=kconfig "$full_path" |
+    ctags -x --language-force=kconfig --kinds-kconfig=c --extras-kconfig=-{configPrefixed} "$full_path" |
     awk '{print "CONFIG_"$1" "$2" "$3}'
     rm "$full_path"
     rmdir $tmp
