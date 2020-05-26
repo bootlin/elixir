@@ -246,6 +246,7 @@ sub make_web_request {
     $self->update_env;  # just in case
 
     local $ENV{REQUEST_URI} = $url;
+    diag "Requesting `$url'";
     my ($exit_status, $lrStdout, $lrStderr) = run_program($self->web_py);
 
     if(!wantarray) {
