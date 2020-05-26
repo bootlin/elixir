@@ -38,7 +38,6 @@ use TestHelpers;
 
 # Set up
 my $tree_src_dir = sibling_abs_path('tree');
-my $db_dir = sibling_abs_path('db');        # the db dir is .gitignored
 
 my $tenv = TestEnvironment->new;
 
@@ -57,6 +56,8 @@ ok_or_die( (-f $query_py && -r _ && -x _), 'query.py executable',
 $tenv->build_repo($tree_src_dir);
 $tenv->update_env;  # Set LXR_REPO_DIR
 
+diag $tenv->report;
+
 # Check for tags in `script.sh list-tags`, as a sanity check before
 # building the test DB
 my @tags = `$script_sh list-tags`;
@@ -64,8 +65,9 @@ die("Could not list tags: $! ($?)") if $?;
 ok_or_die( @tags == 1, 'One tag present', "Not one tag (@{[scalar @tags]})");
 ok_or_die( $tags[0] =~ /^v5.4$/, 'Found the correct tag', 'Not the tag we expected');
 
-$tenv->build_db($db_dir);
+$tenv->build_db;
 $tenv->update_env;  # Set LXR_DATA_DIR
+my $db_dir = $tenv->lxr_data_dir;
 
 ok_or_die( -d $db_dir, 'database dir exists',
     "Database dir $db_dir not present");
@@ -110,7 +112,5 @@ run_produces_ok('file query (existent), .h',
     [$query_py, qw(v5.4 file /drivers/i2c/i2c-core.h)],
     [qr{i2c-core\.h}, qr{\bWe\b}],
     MUST_SUCCEED);
-
-#system('bash'); # Uncomment this if you want to interact with the test repo
 
 done_testing;

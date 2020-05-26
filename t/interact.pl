@@ -22,13 +22,16 @@
 use FindBin '$Bin';
 use lib $Bin;
 
+use Cwd;
 use TestEnvironment;
 use TestHelpers;
 
 # ===========================================================================
 # Main
 
-# These two lines are all that's required to set up for a test.
+my $pwd = getcwd;
+
+# This block is all that's required to set up for a test.
 my $tenv = TestEnvironment->new;
 $tenv->build_repo(sibling_abs_path('tree'));	# dies on error
 eval { $tenv->build_db; };
@@ -45,9 +48,15 @@ system(qw(ln -s), $tenv->update_py, 'update.py') == 0
     or warn "error creating ./update.py: $? $!";
 system(qw(ln -s), $tenv->query_py, 'query.py') == 0
     or warn "error creating ./query.py: $? $!";
+system(qw(ln -s), $tenv->web_py, 'web.py') == 0
+    or warn "error creating ./web.py: $? $!";
 system(qw(ln -s), $tenv->find_doc, 'find-file-doc-comments.pl') == 0
     or warn "error creating ./find-file-doc-comments.pl: $? $!";
 
 print("Exit when done, and the repository and database will be removed.\n");
 my $retval = system($ENV{SHELL} || 'sh');
+
+# Don't stay in the temp dir --- the dir can't be removed if we are there.
+chdir $pwd;
+
 exit $retval>>8;

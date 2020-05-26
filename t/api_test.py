@@ -23,7 +23,7 @@ import sys
 import falcon
 from falcon import testing
 
-api_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..','api'))
+api_dir = os.path.abspath(os.path.join(os.path.dirname(os.path.realpath(__file__)), '..','api'))
 sys.path.insert(0, api_dir)
 
 from api import create_ident_getter
@@ -35,14 +35,14 @@ class APITest(testing.TestCase):
         self.app = create_ident_getter()
 
     def test_identifier_not_found(self):
-        result = self.simulate_get('/ident/tree/SOME_NONEXISTENT_IDENTIFIER', query_string="version=latest&family=C")
+        result = self.simulate_get('/ident/testproj/SOME_NONEXISTENT_IDENTIFIER', query_string="version=latest&family=C")
 
         self.assertEqual(result.status_code, 200)
         self.assertEqual(result.json, {'definitions': [], 'references':[]})
 
     def test_missing_version(self):
         # A get request without a version query string
-        result = self.simulate_get('/ident/tree/of_i2c_get_board_info')
+        result = self.simulate_get('/ident/testproj/of_i2c_get_board_info', query_string="")
 
         self.assertEqual(result.status_code, 400)
 
@@ -51,8 +51,8 @@ class APITest(testing.TestCase):
         self.assertEqual(result.json["description"], required_response.description)
 
     def test_existing_identifier(self):
-        result_for_specific_version = self.simulate_get('/ident/tree/of_i2c_get_board_info', query_string="version=v5.4&family=C")
-        result_for_latest_version = self.simulate_get('/ident/tree/of_i2c_get_board_info', query_string="version=latest&family=C")
+        result_for_specific_version = self.simulate_get('/ident/testproj/of_i2c_get_board_info', query_string="version=v5.4&family=C")
+        result_for_latest_version = self.simulate_get('/ident/testproj/of_i2c_get_board_info', query_string="version=latest&family=C")
 
         expected_json = {
             'definitions':

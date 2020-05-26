@@ -20,9 +20,12 @@ TestEnvironment - Class representing an Elixir test environment
     use TestEnvironment;
     my $tenv = TestEnvironment->new;
     $tenv->build_repo($source_path);    # Make a git repo
-    $tenv->build_db($db_path);          # Run update.py
+    $tenv->build_db();                  # Run update.py
     $tenv->export_env;                  # Set $LXR_* environment vars
     # Now run tests against the database in $db_path
+
+This module creates a temporary project dir and populates it with repo and
+data subdirs in a single project, named "testproj".
 
 =cut
 
@@ -44,7 +47,14 @@ use Test::More;
 
 use TestHelpers;
 
+use constant PROJECT => 'testproj';
+
 =head1 ATTRIBUTES
+
+=head2 lxr_proj_dir
+
+C<$lxr_proj_dir> is the value to use in the C<LXR_DATA_DIR> environment
+variable.
 
 =head2 lxr_data_dir
 
@@ -69,12 +79,17 @@ As L</script_sh>, but for C<query.py>.
 
 As L</script_sh>, but for C<update.py>.
 
+=head2 web_py
+
+As L</script_sh>, but for C<web.py>.
+
 =head2 find_doc
 
 As L</script_sh>, but for C<find-file-doc-comments.pl>.
 
 =cut
 
+has lxr_proj_dir => ();
 has lxr_data_dir => ();
 has lxr_repo_dir => ();
 has script_sh => (
@@ -86,19 +101,18 @@ has query_py => (
 has update_py => (
     default => sub { find_program('update.py') }
 );
+has web_py => (
+    default => sub { find_program(qw(http web.py)) }
+);
 has find_doc => (
     default => sub { find_program('find-file-doc-comments.pl') }
 );
 
 # Internal attributes
 
-# a variable representing the temporary repository directory.
+# a variable representing the temporary project directory.
 # When this goes out of scope, the directory will be removed.
-has _repo_dir_token => ();
-
-# a variable representing the temporary DB directory, if any.
-# When this goes out of scope, the directory will be removed.
-has _data_dir_token => ();
+has _proj_dir_token => ();
 
 =head1 MEMBER FUNCTIONS
 
@@ -117,26 +131,23 @@ Dies on error.  On success, returns the instance, for chaining.
 
 sub build_repo {
     my ($self, $tree_src_dir) = @_;
+    die "Incorrect parameters" unless @_==2 && ref $self && $tree_src_dir;
     die "Need a source dir" unless $tree_src_dir;
+    die "No repo dir" unless $self->lxr_repo_dir;
 
-    my $tempdir = tempdir(CLEANUP => 1);
-    my $tempdir_path = abs_path($tempdir);
+    my $tempdir_path = $self->lxr_repo_dir;
     my @gitdir = ('-C', $tempdir_path);
 
     diag "Using temporary directory $tempdir_path";
     run_program('git', 'init', $tempdir_path) or die("git init failed");
 
-    run_program('bash', '-c', "tar cf - -C \"$tree_src_dir\" . | tar xf - -C \"$tempdir_path\"")
+    run_program('sh', '-c', "tar cf - -C \"$tree_src_dir\" . | tar xf - -C \"$tempdir_path\"")
         or die("Could not copy files into $tempdir_path");
 
     run_program('git', @gitdir, 'add', '.') or die("git add failed");
     run_program('git', @gitdir, 'commit', '-am', 'Initial commit')
         or die("git commit failed");
     run_program('git', @gitdir, 'tag', 'v5.4') or die("git tag failed");
-
-    # Save the results in the instance
-    $self->_repo_dir_token($tempdir);
-    $self->lxr_repo_dir($tempdir_path);
 
     return $self;
 } #build_repo()
@@ -146,32 +157,25 @@ sub build_repo {
 Build a test database for the repository.  L</lxr_repo_dir> must be set
 before calling this.  Usage:
 
-    $tenv->build_db([$db_dir])
-
-C<$db_dir> is the directory where you want to put the database.  If you do
-not provide one, a temporary directory will be created.
+    $tenv->build_db()
 
 Dies on error.  On success, returns the instance, for chaining.
 
-B<CAUTION>: This function will remove the contents of C<$db_dir>
+B<CAUTION>: This function will remove the contents of C<< $tenv->lxr_data_dir >>
 unconditionally.
 
 =cut
 
 sub build_db {
-    my ($self, $db_dir) = @_;
+    my $self = shift;
+    die "No parameters allowed" if @_;
     die "No repo dir" unless $self->lxr_repo_dir;
+    die "No data dir" unless $self->lxr_data_dir;
+    my $db_dir = $self->lxr_data_dir;
 
-    if($db_dir) {   # Remove any existing DB dir
+    if(-e $db_dir) {   # Remove any existing DB dir
         remove_tree($db_dir);
         mkdir($db_dir) or die "Could not create fresh $db_dir";
-    }
-
-    # Create a temp DB dir if necessary
-    my $temp_db_dir;
-    unless($db_dir) {
-        $temp_db_dir = tempdir(CLEANUP => 1);
-        $db_dir = abs_path($temp_db_dir);
     }
 
     local $ENV{LXR_REPO_DIR} = $self->lxr_repo_dir;
@@ -180,16 +184,14 @@ sub build_db {
     run_program($self->update_py)
         or die "Could not create database from $ENV{LXR_REPO_DIR} in $ENV{LXR_DATA_DIR}";
 
-    $self->_data_dir_token($temp_db_dir);
-    $self->lxr_data_dir($db_dir);
-
     return $self;
 } #build_db()
 
 =head2 update_env
 
-Set the C<LXR_REPO_DIR> and C<LXR_DATA_DIR> environment variables.
-Will not set a variable if the corresponding member does not have a value.
+Set the C<LXR_PROJ_DIR>, C<LXR_REPO_DIR>, and C<LXR_DATA_DIR> environment
+variables.  Will not set a variable if the corresponding member does not have
+a value.
 
 Returns the instance, for chaining.
 
@@ -197,6 +199,7 @@ Returns the instance, for chaining.
 
 sub update_env {
     my $self = shift;
+    $ENV{LXR_PROJ_DIR} = $self->lxr_proj_dir if $self->lxr_proj_dir;
     $ENV{LXR_REPO_DIR} = $self->lxr_repo_dir if $self->lxr_repo_dir;
     $ENV{LXR_DATA_DIR} = $self->lxr_data_dir if $self->lxr_data_dir;
     return $self;
@@ -211,14 +214,72 @@ Returns a human-readable report of the current environment's state.
 sub report {
     my $self = shift;
     return <<EOT;
+Project:    @{[$self->lxr_proj_dir || '<unknown>']}
 Repository: @{[$self->lxr_repo_dir || '<unknown>']}
 Database:   @{[$self->lxr_data_dir || '<unknown>']}
 script.sh:  @{[$self->script_sh || '<unknown>']}
 update.py:  @{[$self->update_py || '<unknown>']}
 query.py:   @{[$self->query_py || '<unknown>']}
+web.py:     @{[$self->web_py || '<unknown>']}
 find-file-doc-comments.pl: @{[$self->find_doc || '<unknown>']}
 EOT
 } #report()
+
+=head2 make_web_request
+
+Request a URL from L</web_py>.  Usage:
+
+    my $html = $tenv->make_web_request($url);
+        # Returns the HTML from stdout, or dies
+
+    my ($exit_status, $lrStdout, $lrStderr) = $tenv->make_web_request($url);
+        # Returns the shell exit status, stdout text, and stderr text.
+
+See L<TestEnvironment/run_program> for the details of the return values
+in the second case.
+
+=cut
+
+sub make_web_request {
+    my ($self, $url) = @_;
+
+    $self->update_env;  # just in case
+
+    local $ENV{REQUEST_URI} = $url;
+    my ($exit_status, $lrStdout, $lrStderr) = run_program($self->web_py);
+
+    if(!wantarray) {
+        return $lrStdout;
+    } else {
+        return ($exit_status, $lrStdout, $lrStderr);
+    }
+} #make_web_request()
+
+=head2 BUILD
+
+Constructor.  Creates the temporary project dir.
+
+=cut
+
+sub BUILD {
+    my $self = shift;
+
+    my $temp_proj_dir = tempdir(CLEANUP => 1);
+    my $proj_dir = abs_path($temp_proj_dir);
+
+    # Make the directory structure
+    mkdir File::Spec->catdir($proj_dir, PROJECT);
+    my $data_dir = File::Spec->catdir($proj_dir, PROJECT, 'data');
+    my $repo_dir = File::Spec->catdir($proj_dir, PROJECT, 'repo');
+    mkdir $data_dir;
+    mkdir $repo_dir;
+
+    # Save the paths
+    $self->_proj_dir_token($temp_proj_dir);
+    $self->lxr_proj_dir($proj_dir);
+    $self->lxr_data_dir($data_dir);
+    $self->lxr_repo_dir($repo_dir);
+} #BUILD()
 
 =head2 DESTROY
 
@@ -231,9 +292,8 @@ sub DESTROY {
     my $self = shift;
 
     # Release the temporary directories
-    $self->_data_dir_token(undef);
-    $self->_repo_dir_token(undef);
-}
+    $self->_proj_dir_token(undef);
+} #DESTROY()
 
 1;
 __END__

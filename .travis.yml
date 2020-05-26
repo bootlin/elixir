@@ -17,4 +17,4 @@ before_install:
   - sudo dpkg -i universal-ctags_0+git20221222-0ubuntu1_amd64.deb
 
 script:
-  - prove
+  - prove -v

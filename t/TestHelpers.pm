@@ -87,45 +87,90 @@ sub sibling_abs_path {
 Looks for a program in the parent directory of this script.
 Usage:
 
-    $path = find_program('program name')
+    $path = find_program(['subdir', ]'program name')
 
 =cut
 
 sub find_program {
-    my $program = shift;
+    my $pgm_file = pop;  # Last arg
+    my @pgm_dirs = @_;  # Any args before the last are additional dirs.
 
-    my ($vol, $directories, $file) = File::Spec->splitpath($FindBin::Bin, 1);   # 1 => is a dir
+    my ($my_vol, $my_dirs, undef) = File::Spec->splitpath($FindBin::Bin, 1);   # 1 => is a dir
 
     # Go up to the parent of the directory holding this file
-    my @dirs = File::Spec->splitdir($directories);
-    die "Cannot run from the root directory" unless @dirs >= 2;
-    pop @dirs;
-    $directories = File::Spec->catdir(@dirs);
+    my @my_dirs = File::Spec->splitdir($my_dirs);
+    die "Cannot run from the root directory" unless @my_dirs >= 2;
+    pop @my_dirs;
+    my $dest_dirs = File::Spec->catdir(@my_dirs, @pgm_dirs);
 
-    return File::Spec->catpath($vol, $directories, $program);
+    return File::Spec->catpath($my_vol, $dest_dirs, $pgm_file);
 } #find_program()
 
 =head2 run_program
 
-Print a command, then run it.  Returns true if system() and the command
-succeed, false otherwise.  Usage:
+Print a command, then run it.  Can be used three ways:
 
-    $ok = run_program('program', 'arg1', ...)
+=over
+
+=item In void context
+
+Returns if system() and the command succeed, dies otherwise.  Usage:
+
+    run_program('program', 'arg1', ...);
+
+=item In scalar context
+
+Returns true if system() and the command succeed, false otherwise.  Usage:
+
+    my $ok = run_program('program', 'arg1', ...);
+
+=item In list context
+
+Returns the exit status, stdout, and stderr.  Usage:
+
+    my ($exit_status, $lrStdout, $lrStderr) = run_program('program', 'arg1', ...);
+        # Returns the shell exit status, stdout text, and stderr text.
+
+C<$lrStdout> and C<$lrStderr> are references to the lists of output lines
+on the respective handles.
+
+C<$exit_status> is C<128+signal> if the process was killed by C<signal>,
+for consistency with bash (L<https://tldp.org/LDP/abs/html/exitcodes.html>).
+
+=back
 
 =cut
 
+sub _run_and_capture;   # forward
+
 sub run_program {
     diag "Running @_";
+
+    if(wantarray) {
+        goto &_run_and_capture;
+    }
+
+    my $errmsg;
+
     my $status = system(@_);
+
     if ($status == -1) {
-        diag "failed to execute $_[0]: $!";
+        $errmsg = "failed to execute $_[0]: $!";
     }
     elsif ($status & 127) {
-        diag sprintf "$_[0] died with signal %d, %s coredump\n",
+        $errmsg = sprintf "$_[0] died with signal %d, %s coredump\n",
             ($status & 127),  ($status & 128) ? 'with' : 'without';
     }
+    elsif($status != 0) {
+        $errmsg = sprintf "$_[0] exited with value %d\n", $status >> 8;
+    }
     else {
-        diag sprintf "$_[0] exited with value %d\n", $status >> 8;
+        diag "$_[0] reported success";
+    }
+
+    if($errmsg) {
+        die $errmsg unless defined wantarray;
+        diag $errmsg;
     }
 
     return($status == 0);
@@ -200,14 +245,16 @@ the "Documented in" section of the output of C<@program_and_args>.
 
 =cut
 
-sub run_produces_ok {
-    my ($desc, $lrProgram, $lrRegexes, $mustSucceed, $printOutput) = @_;
+# _run_and_capture: run a program and return its exit status and output.
+# Usage:
+#   my ($exit_status, \@stdout, \@stderr) = run_program('program', 'arg1', ...);
 
-    # Run program and capture stdout and stderr
+sub _run_and_capture {
     my ($in , $out, $err);      # Filehandles
     $err = Symbol::gensym;
-    diag "Running @$lrProgram";
-    my $pid = open3($in, $out, $err, @$lrProgram);
+
+    diag "Running @_";
+    my $pid = open3($in, $out, $err, @_);
 
     my (@outlines, @errlines);  # Captured output
     my $s = IO::Select->new;
@@ -231,7 +278,19 @@ sub run_produces_ok {
     }
 
     waitpid $pid, 0;
-    my $exit_status = $? >> 8;
+    my $exit_status = $?;
+
+    $exit_status = ($exit_status & 127) + 128 if $exit_status & 127;   # Killed by signal
+
+    return ($exit_status, \@outlines, \@errlines);
+} #_run_and_capture()
+
+sub run_produces_ok {
+    my ($desc, $lrProgram, $lrRegexes, $mustSucceed, $printOutput) = @_;
+
+    my ($exit_status, $outlines, $errlines) = _run_and_capture(@$lrProgram);
+    my @outlines = @$outlines;
+    my @errlines = @$errlines;
 
     if ($printOutput) {
         diag "@outlines";

@@ -22,13 +22,17 @@ import os
 
 import falcon
 
-ELIXIR_DIR = os.path.dirname(__file__) + '/..'
+ELIXIR_DIR = os.path.dirname(os.path.realpath(__file__)) + '/..'
 
 def build_query(env, project):
-    if 'LXR_DATA_DIR' not in os.environ or 'LXR_REPO_DIR' not in os.environ:
+    try:
         basedir = env['LXR_PROJ_DIR']
-        os.environ['LXR_DATA_DIR']= basedir + '/' + project + '/data'
-        os.environ['LXR_REPO_DIR'] = basedir + '/' + project + '/repo'
+    except KeyError:
+        basedir = os.environ['LXR_PROJ_DIR']
+        # fail if it's not defined either place
+
+    os.environ['LXR_DATA_DIR']= basedir + '/' + project + '/data'
+    os.environ['LXR_REPO_DIR'] = basedir + '/' + project + '/repo'
 
     import sys
     sys.path = [ ELIXIR_DIR ] + sys.path
