@@ -41,7 +41,8 @@ defTypeR = {
     's': 'struct',
     't': 'typedef',
     'u': 'union',
-    'v': 'variable' }
+    'v': 'variable', 
+    'x': 'externvar'}
 
 defTypeD = {v: k for k, v in defTypeR.items()}
 
