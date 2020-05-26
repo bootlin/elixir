@@ -115,11 +115,11 @@ The changes have been sent upstream and should appear in future distributions.
 
 In the meantime, you can either rebuild this package from its source on
  https://github.com/MaximeChretien/ctags/tree/kconfig-parser[GitHub], or download this
-https://bootlin.com/pub/elixir/universal-ctags_0+git20221222-0ubuntu1_amd64.deb[binary package]
+https://bootlin.com/pub/elixir/universal-ctags_0+git20200526-0ubuntu1_amd64.deb[binary package]
 and install it as follows:
 
 ----
-sudo dpkg -i universal-ctags_0+git20221222-0ubuntu1_amd64.deb
+sudo dpkg -i universal-ctags_0+git20200526-0ubuntu1_amd64.deb
 ----
 
 Then tell `apt` to hold this package and block future updates of the normal package:
