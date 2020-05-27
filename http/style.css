@@ -267,17 +267,55 @@ h2 {
   background: #ddd;
   padding-right: 3em;
   min-width: 0;
-  flex: 4;
+  flex: 3.5;
 }
 .search input:focus {
   background: #eee;
 }
 .search select {
+  -moz-appearance: none;
+  -webkit-appearance: none;
+  appearance: none;
+
+  font-family: 'Ubuntu Mono', monospace;
   font-size: 0.9em;
-  padding: 0.45em;
+  min-height: 32px;
+
+  padding: 7px;
+  padding-right: 20px;
+  text-decoration: none;
+
+  background-color: #aaa;
+  background-image: url("/img/arrow-dropdown-16.svg");
+  background-position: right 2px center;
+  background-repeat: no-repeat;
+
+  opacity: 0.9;
+  border: 0 none;
   margin: 0;
   min-width: 0;
   flex: 1;
+}
+.search select:-moz-focusring { /* Remove unwanted firefox borders */
+  color: #000;
+  color: rgba(0,0,0,0);
+  text-shadow: 0 0 0 #000;
+  outline: 1px;
+  outline-style: dotted;
+  outline-offset: -1px;
+}
+.search select:focus {
+  outline: 1px;
+  outline-style: dotted;
+  outline-offset: -1px;
+  outline-color: #000;
+}
+.search select:hover,
+.search select:focus {
+  opacity: 1;
+}
+.search option { /* Firefox ignores that on linux but the default color is close */
+  background-color: #ccc;
 }
 
 .filter {
