@@ -7,20 +7,20 @@ def keep_kconfigidents(m):
     return '__KEEPKCONFIGIDENTS__' + encode_number(len(kconfigidents))
 
 def replace_kconfigidents(m):
-    i = kconfigidents[decode_number(m.group(1)) - 1]
+    i = kconfigidents[decode_number(m.group(2)) - 1]
 
     n = i
     #Remove the CONFIG_ when we are in a Kconfig file
     if family == 'K':
         n = n[7:]
 
-    return '<a href="'+version+'/K/ident/'+i+'">'+n+'</a>'
+    return str(m.group(1) or '') + '<a href="'+version+'/K/ident/'+i+'">'+n+'</a>'
 
 kconfigident_filters = {
                 'case': 'any',
                 'prerex': '\033\[31m(?=CONFIG_)(.*?)\033\[0m',
                 'prefunc': keep_kconfigidents,
-                'postrex': '__KEEPKCONFIGIDENTS__([A-J]+)',
+                'postrex': '__(<.+?>)?KEEPKCONFIGIDENTS__([A-J]+)',
                 'postfunc': replace_kconfigidents
                 }
 
