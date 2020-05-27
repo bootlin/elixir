@@ -13,8 +13,8 @@ python:
 before_install:
   - sudo apt-get -y install libdb-dev python3-pytest libjansson4
   - pip install jinja2 pygments bsddb3 falcon
-  - wget https://bootlin.com/pub/elixir/universal-ctags_0+git20221222-0ubuntu1_amd64.deb
-  - sudo dpkg -i universal-ctags_0+git20221222-0ubuntu1_amd64.deb
+  - wget https://bootlin.com/pub/elixir/universal-ctags_0+git20200526-0ubuntu1_amd64.deb
+  - sudo dpkg -i universal-ctags_0+git20200526-0ubuntu1_amd64.deb
 
 script:
   - prove -v
