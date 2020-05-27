@@ -114,7 +114,7 @@ to enable indexing of Kconfig identifiers.
 The changes have been sent upstream and should appear in future distributions.
 
 In the meantime, you can either rebuild this package from its source on
- https://github.com/MaximeChretien/ctags/tree/kconfig-parser[GitHub], or download this
+ https://github.com/universal-ctags/ctags[GitHub], or download this
 https://bootlin.com/pub/elixir/universal-ctags_0+git20200526-0ubuntu1_amd64.deb[binary package]
 and install it as follows:
 
