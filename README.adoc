@@ -18,7 +18,7 @@ duplicating work and data. It has a straightforward data structure
 
 You can see it in action on https://elixir.bootlin.com/
 
-NOTE: this documentation applies to version 1.0 of Elixir.
+NOTE: this documentation applies to version 2.0 of Elixir.
 
 toc::[]
 
