@@ -162,7 +162,7 @@ parse_defs_C()
     tmp=`mktemp -d`
     full_path=$tmp/$opt2
     git cat-file blob "$opt1" > "$full_path"
-    ctags -x --kinds-c=+p-m "$full_path" |
+    ctags -x --kinds-c=+p+x-m "$full_path" |
     grep -avE "^operator |CONFIG_" |
     awk '{print $1" "$2" "$3}'
     rm "$full_path"
