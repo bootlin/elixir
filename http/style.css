@@ -279,6 +279,8 @@ h2 {
 
   font-family: 'Ubuntu Mono', monospace;
   font-size: 0.9em;
+  text-align: center;
+  text-align-last: center;
   min-height: 32px;
 
   padding: 7px;
