@@ -24,7 +24,7 @@
                 </div>
                 <div class="search">
                     <form  method="post" action="{{version}}/ident">
-                        <select name="f">
+                        <select name="f" title="Restricts search to specific file families">
                             <option value="A" {% if family=="A" %} selected="selected"{% endif %}>All</option>
                             <option value="C" {% if family=="C" %} selected="selected"{% endif %}>C/CPP/ASM</option>
                             <option value="K" {% if family=="K" %} selected="selected"{% endif %}>Kconfig</option>
