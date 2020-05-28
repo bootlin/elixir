@@ -61,6 +61,8 @@ if m:
     if family == None:
         family = 'C'
 
+    search_family = 'A'
+
     basedir = os.environ['LXR_PROJ_DIR']
     datadir = basedir + '/' + project + '/data'
     repodir = basedir + '/' + project + '/repo'
@@ -81,6 +83,8 @@ if m:
             url = 'source'+path
 
     elif cmd == 'ident':
+        search_family = family
+
         ident = arg[1:]
         form = cgi.FieldStorage()
         ident2 = form.getvalue('i')
@@ -137,7 +141,7 @@ data = {
     'project': project,
     'projects': projects,
     'ident': ident,
-    'family': family,
+    'family': search_family,
     'breadcrumb': '<a class="project" href="'+version+'/source">/</a>'
 }
 
@@ -259,7 +263,6 @@ if mode == 'source':
         filename, extension = os.path.splitext(fname)
         extension = extension[1:].lower()
         family = query('family', fname)
-        data['family'] = family
 
         # Source common filter definitions
         os.chdir('filters')

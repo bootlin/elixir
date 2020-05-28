@@ -233,12 +233,12 @@ def query(cmd, *args):
 
             # Copy information about this identifier into dBuf, rBuf, and docBuf.
             while def_idx == file_idx:
-                if def_family == family:
+                if def_family == family or family == 'A':
                     dBuf.append((file_path, def_type, def_line))
                 def_idx, def_type, def_line, def_family = next(defs_this_ident)
 
             if ref_idx == file_idx:
-                if lib.compatibleFamily(family, ref_family):
+                if lib.compatibleFamily(family, ref_family) or family == 'A':
                     rBuf.append((file_path, ref_lines))
 
             if doc_idx == file_idx: # TODO should this be a `while`?
