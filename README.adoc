@@ -175,6 +175,14 @@ git remote add stable git://git.kernel.org/pub/scm/linux/kernel/git/stable/linux
 git fetch stable
 ----
 
+Then, you can also declare an `history` remote branch corresponding to the old Linux versions not present in the other repos, to get all the old version still available:
+
+----
+cd repo
+git remote add history https://github.com/bootlin/linux-history.git
+git fetch history --tags
+----
+
 Feel free to add more remote branches in this way, as Elixir will consider tags from all remote branches.
 
 == First Test
