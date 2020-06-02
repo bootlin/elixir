@@ -129,33 +129,31 @@ class UpdateIdVersion(Thread):
 
 
 class UpdateDefs(Thread):
-    def __init__(self, odd):
+    def __init__(self, start, inc):
         Thread.__init__(self, name="UpdateDefsElixir")
-        if odd:
-            self.index = 1
-        else:
-            self.index = 0
+        self.index = start
+        self.inc = inc # Equivalient to the number of defs threads
 
     def run(self):
         global new_idxes, tags_done, tag_ready, tags_defs, tags_defs_lock
 
         while(not (tags_done and self.index >= len(new_idxes))):
             if(self.index >= len(new_idxes)):
-                #Wait for new tags
+                # Wait for new tags
                 with tag_ready:
                     tag_ready.wait()
                 continue
 
-            new_idxes[self.index][1].wait() #Make sure the tag is ready
+            new_idxes[self.index][1].wait() # Make sure the tag is ready
 
             with tags_defs_lock:
                 tags_defs += 1
 
             self.update_definitions(new_idxes[self.index][0])
 
-            new_idxes[self.index][2].set() #Tell that UpdateDefs processed the tag
+            new_idxes[self.index][2].set() # Tell that UpdateDefs processed the tag
 
-            self.index += 2
+            self.index += self.inc
 
 
     def update_definitions(self, idxes):
@@ -192,32 +190,30 @@ class UpdateDefs(Thread):
 
 
 class UpdateRefs(Thread):
-    def __init__(self, odd):
+    def __init__(self, start, inc):
         Thread.__init__(self, name="UpdateRefsElixir")
-        if odd:
-            self.index = 1
-        else:
-            self.index = 0
+        self.index = start
+        self.inc = inc # Equivalient to the number of refs threads
 
     def run(self):
         global new_idxes, tags_done, tags_refs, tags_refs_lock
 
         while(not (tags_done and self.index >= len(new_idxes))):
             if(self.index >= len(new_idxes)):
-                #Wait for new tags
+                # Wait for new tags
                 with tag_ready:
                     tag_ready.wait()
                 continue
 
-            new_idxes[self.index][1].wait() #Make sure the tag is ready
-            new_idxes[self.index][2].wait() #Make sure UpdateDefs processed the tag
+            new_idxes[self.index][1].wait() # Make sure the tag is ready
+            new_idxes[self.index][2].wait() # Make sure UpdateDefs processed the tag
 
             with tags_refs_lock:
                 tags_refs += 1
 
             self.update_references(new_idxes[self.index][0])
 
-            self.index += 2
+            self.index += self.inc
 
     def update_references(self, idxes):
         global hash_file_lock, defs_lock, refs_lock, tags_refs
@@ -270,31 +266,29 @@ class UpdateRefs(Thread):
 
 
 class UpdateDocs(Thread):
-    def __init__(self, odd):
+    def __init__(self, start, inc):
         Thread.__init__(self, name="UpdateDocsElixir")
-        if odd:
-            self.index = 1
-        else:
-            self.index = 0
+        self.index = start
+        self.inc = inc # Equivalient to the number of docs threads
 
     def run(self):
         global new_idxes, tags_done, tags_docs, tags_docs_lock
 
         while(not (tags_done and self.index >= len(new_idxes))):
             if(self.index >= len(new_idxes)):
-                #Wait for new tags
+                # Wait for new tags
                 with tag_ready:
                     tag_ready.wait()
                 continue
 
-            new_idxes[self.index][1].wait() #Make sure the tag is ready
+            new_idxes[self.index][1].wait() # Make sure the tag is ready
 
             with tags_docs_lock:
                 tags_docs += 1
 
             self.update_doc_comments(new_idxes[self.index][0])
 
-            self.index += 2
+            self.index += self.inc
 
     def update_doc_comments(self, idxes):
         global hash_file_lock, docs_lock, tags_docs
@@ -343,35 +337,43 @@ project = lib.currentProject()
 print(project + ' - found ' + str(len(tag_buf)) + ' new tags')
 
 id_version_thread = UpdateIdVersion(tag_buf)
-#One half of the threads process the odd indexes of new_idxes
-#While the other half process the even indexes of new_idxes
-defs_thread_even = UpdateDefs(False)
-defs_thread_odd = UpdateDefs(True)
-refs_thread_even = UpdateRefs(False)
-refs_thread_odd = UpdateRefs(True)
-docs_thread_even = UpdateDocs(False)
-docs_thread_odd = UpdateDocs(True)
 
-#Start to process tags
+# Define defs threads
+defs_thread_0 = UpdateDefs(0, 2)
+defs_thread_1 = UpdateDefs(1, 2)
+# Define refs threads
+refs_thread_0 = UpdateRefs(0, 4)
+refs_thread_1 = UpdateRefs(1, 4)
+refs_thread_2 = UpdateRefs(2, 4)
+refs_thread_3 = UpdateRefs(3, 4)
+# Define docs threads
+docs_thread_0 = UpdateDocs(0, 2)
+docs_thread_1 = UpdateDocs(1, 2)
+
+# Start to process tags
 id_version_thread.start()
 
-#Wait until the first tag is ready
+# Wait until the first tag is ready
 with tag_ready:
     tag_ready.wait()
 
-#Start remaining threads
-defs_thread_even.start()
-refs_thread_even.start()
-docs_thread_even.start()
-defs_thread_odd.start()
-refs_thread_odd.start()
-docs_thread_odd.start()
+# Start remaining threads
+defs_thread_0.start()
+defs_thread_1.start()
+refs_thread_0.start()
+refs_thread_1.start()
+refs_thread_2.start()
+refs_thread_3.start()
+docs_thread_0.start()
+docs_thread_1.start()
 
-#Make sure all threads finished
+# Make sure all threads finished
 id_version_thread.join()
-defs_thread_even.join()
-defs_thread_odd.join()
-refs_thread_even.join()
-refs_thread_odd.join()
-docs_thread_even.join()
-docs_thread_odd.join()
+defs_thread_0.join()
+defs_thread_1.join()
+refs_thread_0.join()
+refs_thread_1.join()
+refs_thread_2.join()
+refs_thread_3.join()
+docs_thread_0.join()
+docs_thread_1.join()
