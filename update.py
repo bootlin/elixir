@@ -33,6 +33,10 @@ verbose = False
 
 db = data.DB(lib.getDataDir(), readonly=False)
 
+#Number of cpu threads (+1 for version indexing)
+cpu = 8
+threads_list = []
+
 hash_file_lock = Lock() #Lock for db.hash and db.file
 defs_lock = Lock() #Lock for db.defs
 refs_lock = Lock() #Lock for db.refs
@@ -326,6 +330,28 @@ def progress(msg, current):
 
 # Main
 
+# Check number of threads arg
+if len(sys.argv) >= 2 and sys.argv[1].isdigit() :
+    cpu = int(sys.argv[1])
+
+    if cpu < 3 :
+        cpu = 3
+
+# Distribute threads among functions using the following rules :
+# There are more refs threads than others
+# There are more (or equal) defs threads than docs threads
+# Example : if cpu=6 : refs=3, defs=2, docs=1
+#           if cpu=7 : refs=3, defs=2, docs=2
+#           if cpu=8 : refs=4, defs=2, docs=2
+#           if cpu=11: refs=5, defs=3, docs=3
+quo, rem = divmod(cpu, 2)
+num_th_refs = quo
+
+quo, rem = divmod(quo+rem, 2)
+num_th_defs = quo + rem
+num_th_docs = quo
+
+
 tag_buf = []
 for tag in scriptLines('list-tags'):
     if not db.vers.exists(tag):
@@ -339,16 +365,14 @@ print(project + ' - found ' + str(len(tag_buf)) + ' new tags')
 id_version_thread = UpdateIdVersion(tag_buf)
 
 # Define defs threads
-defs_thread_0 = UpdateDefs(0, 2)
-defs_thread_1 = UpdateDefs(1, 2)
+for i in range(num_th_defs):
+    threads_list.append(UpdateDefs(i, num_th_defs))
 # Define refs threads
-refs_thread_0 = UpdateRefs(0, 4)
-refs_thread_1 = UpdateRefs(1, 4)
-refs_thread_2 = UpdateRefs(2, 4)
-refs_thread_3 = UpdateRefs(3, 4)
+for i in range(num_th_refs):
+    threads_list.append(UpdateRefs(i, num_th_refs))
 # Define docs threads
-docs_thread_0 = UpdateDocs(0, 2)
-docs_thread_1 = UpdateDocs(1, 2)
+for i in range(num_th_docs):
+    threads_list.append(UpdateDocs(i, num_th_docs))
 
 # Start to process tags
 id_version_thread.start()
@@ -358,22 +382,10 @@ with tag_ready:
     tag_ready.wait()
 
 # Start remaining threads
-defs_thread_0.start()
-defs_thread_1.start()
-refs_thread_0.start()
-refs_thread_1.start()
-refs_thread_2.start()
-refs_thread_3.start()
-docs_thread_0.start()
-docs_thread_1.start()
+for i in range(len(threads_list)):
+    threads_list[i].start()
 
 # Make sure all threads finished
 id_version_thread.join()
-defs_thread_0.join()
-defs_thread_1.join()
-refs_thread_0.join()
-refs_thread_1.join()
-refs_thread_2.join()
-refs_thread_3.join()
-docs_thread_0.join()
-docs_thread_1.join()
+for i in range(len(threads_list)):
+    threads_list[i].join()
