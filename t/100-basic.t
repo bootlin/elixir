@@ -100,6 +100,14 @@ run_produces_ok('ident query (existent, #131)',
     ],
     MUST_SUCCEED);
 
+run_produces_ok('ident query (existent, #150)',
+    [$query_py, qw(v5.4 ident memset C)],
+    [qr{^Symbol Definitions:}, qr{^Symbol References:},
+        qr{issue150\.S.+\b7\b.+\bfunction\b},                       # def
+        qr{i2c-core-acpi\.c.+\b121\b}                               # refs
+    ],
+    MUST_SUCCEED);
+
 # Spot-check some files
 
 run_produces_ok('file query (nonexistent)',
