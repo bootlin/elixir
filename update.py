@@ -332,8 +332,8 @@ def progress(msg, current):
 # Main
 
 # Check number of threads arg
-if len(sys.argv) >= 2 and sys.argv[1].isdigit() :
-    cpu = int(sys.argv[1])
+if len(argv) >= 2 and argv[1].isdigit() :
+    cpu = int(argv[1])
 
     if cpu < 3 :
         cpu = 3
