@@ -108,6 +108,20 @@ run_produces_ok('ident query (existent, #150)',
     ],
     MUST_SUCCEED);
 
+run_produces_ok('ident query (ENTRY that should not be detected, #150)',
+    [$query_py, qw(v5.4 ident), 'HYPERVISOR_##hypercall', 'C'],
+    [qr{^Symbol Definitions:}, qr{^Symbol References:},
+        { def => { not => qr{hypercall\.S} } },
+    ],
+    MUST_SUCCEED);
+
+run_produces_ok('ident query (ENTRY that should not be detected, #150)',
+    [$query_py, qw(v5.4 ident), '0xfffffffe', 'C'],
+    [qr{^Symbol Definitions:}, qr{^Symbol References:},
+        { def => { not => qr{bcm74xx_sprom\.c} } },
+    ],
+    MUST_SUCCEED);
+
 # Spot-check some files
 
 run_produces_ok('file query (nonexistent)',
