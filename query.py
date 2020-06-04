@@ -178,6 +178,18 @@ def query(cmd, *args):
 
         return lib.getFileFamily(filename)
 
+    elif cmd == 'dts-comp':
+        # Get state of dts_comp_support
+
+        return script('comp-dts')
+
+    elif cmd == 'dts-comp-exists':
+        # Check if a dts compatible string exists
+
+        ident = args[0]
+
+        return db.comps.exists(ident)
+
     elif cmd == 'ident':
 
         # Returns identifier search results
@@ -189,6 +201,45 @@ def query(cmd, *args):
         symbol_definitions = []
         symbol_references = []
         symbol_doccomments = []
+
+        # DT bindings compatible strings are handled differently
+        # They are defined in C files
+        # Used in DT files
+        # Documented in documentation files
+        if family == 'B':
+            if not db.comps.exists(ident):
+                return symbol_definitions, symbol_references, symbol_doccomments
+
+            files_this_version = db.vers.get(version).iter()
+            comps = db.comps.get(ident).iter(dummy=True)
+
+            comps_idx, comps_lines, comps_family = next(comps)
+            compsCBuf = [] # C/CPP/ASM files
+            compsDBuf = [] # DT files
+            compsBBuf = [] # DT bindings docs files
+
+            for file_idx, file_path in files_this_version:
+                while comps_idx < file_idx:
+                    comps_idx, comps_lines, comps_family = next(comps)
+                while comps_idx == file_idx:
+                    if comps_family == 'C':
+                        compsCBuf.append((file_path, comps_lines))
+                    elif comps_family == 'D':
+                        compsDBuf.append((file_path, comps_lines))
+                    elif comps_family == 'B':
+                        compsBBuf.append((file_path, comps_lines))
+
+            for path, type, cline in sorted(compsCBuf):
+                symbol_definitions.append(SymbolInstance(path, cline))
+
+            for path, dlines in sorted(compsDBuf):
+                symbol_references.append(SymbolInstance(path, dlines))
+
+            for path, bline in sorted(compsBBuf):
+                symbol_doccomments.append(SymbolInstance(path, bline))
+
+            return symbol_definitions, symbol_references, symbol_doccomments
+
 
         if not db.defs.exists(ident):
             return symbol_definitions, symbol_references, symbol_doccomments
