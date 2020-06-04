@@ -162,9 +162,15 @@ parse_defs_C()
     tmp=`mktemp -d`
     full_path=$tmp/$opt2
     git cat-file blob "$opt1" > "$full_path"
+
+    # Use ctags to parse most of the defs
     ctags -x --kinds-c=+p+x "$full_path" |
     grep -avE "^operator |CONFIG_" |
     awk '{print $1" "$2" "$3}'
+
+    # Parse function macros, e.g., in .S files
+    perl -ne '/^\s*ENTRY\((\w+)\)/ and print "$1 function $.\n"' "$full_path"
+
     rm "$full_path"
     rmdir $tmp
 }
