@@ -21,6 +21,7 @@
 from sys import argv
 import re
 import os
+from urllib import parse
 
 usage_message = ("USAGE: find_compatible_dts.py <file> <family>\n"
                  "file : The file you want to search in\n"
@@ -68,7 +69,8 @@ except IOError:
     exit(1)
 
 # Iterate though lines and search for idents
-for num, line in enumerate(f, 1):
+num = 1
+for line in f:
     if family == 'C':
         ret = parse_c(line)
     elif family == 'D':
@@ -78,8 +80,10 @@ for num, line in enumerate(f, 1):
 
     if ret != []:
         for i in range(len(ret)):
-            ident_list += str(ret[i]) + ' ' + str(num) + '\n'
+            ident_list += str(parse.quote(ret[i])) + ' ' + str(num) + '\n'
 
-# Print the list (except the last \n) and exit
-print(ident_list[:-1])
+    num += 1
+
+# Print the list and exit
+print(ident_list, end='')
 exit(0)

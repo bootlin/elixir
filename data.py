@@ -194,4 +194,5 @@ class DB:
         self.defs = BsdDB(dir + '/definitions.db', ro, DefList)
         self.refs = BsdDB(dir + '/references.db', ro, RefList)
         self.docs = BsdDB(dir + '/doccomments.db', ro, RefList)
+        self.comps = BsdDB(dir + '/compatibledts.db', ro, RefList)
             # Use a RefList in case there are multiple doc comments for an identifier
