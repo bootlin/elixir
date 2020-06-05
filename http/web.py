@@ -95,7 +95,7 @@ if m:
             location = '/'+project+'/'+version+'/'+family2+'/ident/'+ident2
         else:
             mode = 'ident'
-            if not(ident and search('^[A-Za-z0-9_-]*$', ident)):
+            if not(ident and search('^[A-Za-z0-9_%-]*$', ident)):
                 ident = ''
             url = family + '/ident/' + ident
     else:
@@ -142,7 +142,7 @@ data = {
     'url': url,
     'project': project,
     'projects': projects,
-    'ident': ident,
+    'ident': parse.unquote(ident),
     'family': search_family,
     'breadcrumb': '<a class="project" href="'+version+'/source">/</a>'
 }
@@ -279,7 +279,10 @@ if mode == 'source':
         # Apply filters
         for f in filters:
             c = f['case']
-            if (c == 'any' or (c == 'filename' and filename in f['match']) or (c == 'extension' and extension in f['match']) or (c == 'path' and fdir.startswith(f['match']))):
+            if (c == 'any' or
+                (c == 'filename' and filename in f['match']) or
+                (c == 'extension' and extension in f['match']) or
+                (c == 'path' and fdir.startswith(tuple(f['match'])))):
 
                 apply_filter = True
 
@@ -306,14 +309,18 @@ if mode == 'source':
 
         for f in filters:
             c = f['case']
-            if (c == 'any' or (c == 'filename' and filename in f['match']) or (c == 'extension' and extension in f['match'])):
+            if (c == 'any' or
+                (c == 'filename' and filename in f['match']) or
+                (c == 'extension' and extension in f['match']) or
+                (c == 'path' and fdir.startswith(tuple(f['match'])))):
+
                 result = sub(f ['postrex'], f ['postfunc'], result)
 
         print('<div class="lxrcode">' + result + '</div>')
 
 
 elif mode == 'ident':
-    data['title'] = ident+' identifier - '+title_suffix
+    data['title'] = parse.unquote(ident)+' identifier - '+title_suffix
 
     symbol_definitions, symbol_references, symbol_doccomments = query('ident', tag, ident, family)
 
