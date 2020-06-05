@@ -24,7 +24,9 @@ import data
 import os
 from collections import OrderedDict
 
-db = data.DB(lib.getDataDir(), readonly=True)
+dts_comp_support = int(script('dts-comp'))
+
+db = data.DB(lib.getDataDir(), readonly=True, dtscomp=dts_comp_support)
 
 from io import BytesIO
 
@@ -181,14 +183,16 @@ def query(cmd, *args):
     elif cmd == 'dts-comp':
         # Get state of dts_comp_support
 
-        return script('comp-dts')
+        return dts_comp_support
 
     elif cmd == 'dts-comp-exists':
         # Check if a dts compatible string exists
 
         ident = args[0]
-
-        return db.comps.exists(ident)
+        if dts_comp_support:
+            return db.comps.exists(ident)
+        else:
+            return False
 
     elif cmd == 'ident':
 
@@ -207,7 +211,7 @@ def query(cmd, *args):
         # Used in DT files
         # Documented in documentation files
         if family == 'B':
-            if not db.comps.exists(ident):
+            if not dts_comp_support or not db.comps.exists(ident):
                 return symbol_definitions, symbol_references, symbol_doccomments
 
             files_this_version = db.vers.get(version).iter()

@@ -32,7 +32,9 @@ from threading import Thread, Lock, Event, Condition
 
 verbose = False
 
-db = data.DB(lib.getDataDir(), readonly=False)
+dts_comp_support = int(script('dts-comp'))
+
+db = data.DB(lib.getDataDir(), readonly=False, dtscomp=dts_comp_support)
 
 # Number of cpu threads (+1 for version indexing)
 cpu = 8
@@ -445,7 +447,7 @@ num_th_docs = quo
 
 # If DT bindings support is enabled, use $quo threads for that
 # Otherwise add them to the remaining threads
-if int(script('dts-comp')):
+if dts_comp_support:
     num_th_comps = quo
 else :
     num_th_comps = 0
