@@ -128,6 +128,8 @@ import sys
 sys.path = [ sys.path[0] + '/..' ] + sys.path
 from query import query
 
+dts_comp_support = query('dts-comp')
+
 if version_decoded == 'latest':
     tag = query('latest')
 else:
@@ -259,7 +261,7 @@ if mode == 'source':
         import pygments.lexers
         import pygments.formatters
 
-        fname = os.path.basename(path)
+        fdir, fname = os.path.split(path)
         filename, extension = os.path.splitext(fname)
         extension = extension[1:].lower()
         family = query('family', fname)
@@ -277,7 +279,7 @@ if mode == 'source':
         # Apply filters
         for f in filters:
             c = f['case']
-            if (c == 'any' or (c == 'filename' and filename in f['match']) or (c == 'extension' and extension in f['match'])):
+            if (c == 'any' or (c == 'filename' and filename in f['match']) or (c == 'extension' and extension in f['match']) or (c == 'path' and fdir.startswith(f['match']))):
 
                 apply_filter = True
 

@@ -29,3 +29,4 @@ def decode_number(string):
 filters = []
 exec(open('ident.py').read())
 exec(open('cppinc.py').read())
+exec(open('dtscomp.py').read())
