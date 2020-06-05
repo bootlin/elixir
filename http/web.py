@@ -325,14 +325,17 @@ elif mode == 'ident':
     symbol_definitions, symbol_references, symbol_doccomments = query('ident', tag, ident, family)
 
     print('<div class="lxrident">')
-    if len(symbol_definitions):
-        print('<h2>Defined in '+str(len(symbol_definitions))+' files:</h2>')
-        print('<ul>')
-        for symbol_definition in symbol_definitions:
-            print('<li><a href="{v}/source/{f}#L{n}"><strong>{f}</strong>, line {n} <em>(as a {t})</em></a>'.format(
-                v=version, f=symbol_definition.path, n=symbol_definition.line, t=symbol_definition.type
-            ))
-        print('</ul>')
+    if len(symbol_definitions) or len(symbol_references):
+        if len(symbol_definitions):
+            print('<h2>Defined in '+str(len(symbol_definitions))+' files:</h2>')
+            print('<ul>')
+            for symbol_definition in symbol_definitions:
+                print('<li><a href="{v}/source/{f}#L{n}"><strong>{f}</strong>, line {n} <em>(as a {t})</em></a>'.format(
+                    v=version, f=symbol_definition.path, n=symbol_definition.line, t=symbol_definition.type
+                ))
+            print('</ul>')
+        else:
+            print('<h2>No definitions found in the database</h2>')
 
         if len(symbol_doccomments):
             print('<h2>Documented in '+str(len(symbol_doccomments))+' files:</h2>')
@@ -343,33 +346,35 @@ elif mode == 'ident':
                 ))
             print('</ul>')
 
-
-        print('<h2>Referenced in '+str(len(symbol_references))+' files:</h2>')
-        print('<ul>')
-        for symbol_reference in symbol_references:
-            ln = symbol_reference.line.split(',')
-            if len(ln) == 1:
-                n = ln[0]
-                print('<li><a href="{v}/source/{f}#L{n}"><strong>{f}</strong>, line {n}</a>'.format(
-                    v=version, f=symbol_reference.path, n=n
-                ))
-            else:
-                if len(symbol_references) > 100:    # Concise display
-                    n = len(ln)
-                    print('<li><a href="{v}/source/{f}"><strong>{f}</strong>, <em>{n} times</em></a>'.format(
+        if len(symbol_references):
+            print('<h2>Referenced in '+str(len(symbol_references))+' files:</h2>')
+            print('<ul>')
+            for symbol_reference in symbol_references:
+                ln = symbol_reference.line.split(',')
+                if len(ln) == 1:
+                    n = ln[0]
+                    print('<li><a href="{v}/source/{f}#L{n}"><strong>{f}</strong>, line {n}</a>'.format(
                         v=version, f=symbol_reference.path, n=n
                     ))
-                else:    # Verbose display
-                    print('<li><a href="{v}/source/{f}#L{n}"><strong>{f}</strong></a>'.format(
-                        v=version, f=symbol_reference.path, n=ln[0]
-                    ))
-                    print('<ul>')
-                    for n in ln:
-                        print('<li><a href="{v}/source/{f}#L{n}">line {n}</a>'.format(
+                else:
+                    if len(symbol_references) > 100:    # Concise display
+                        n = len(ln)
+                        print('<li><a href="{v}/source/{f}"><strong>{f}</strong>, <em>{n} times</em></a>'.format(
                             v=version, f=symbol_reference.path, n=n
                         ))
-                    print('</ul>')
-        print('</ul>')
+                    else:    # Verbose display
+                        print('<li><a href="{v}/source/{f}#L{n}"><strong>{f}</strong></a>'.format(
+                            v=version, f=symbol_reference.path, n=ln[0]
+                        ))
+                        print('<ul>')
+                        for n in ln:
+                            print('<li><a href="{v}/source/{f}#L{n}">line {n}</a>'.format(
+                                v=version, f=symbol_reference.path, n=n
+                            ))
+                        print('</ul>')
+            print('</ul>')
+        else:
+            print('<h2>No references found in the database</h2>')
     else:
         if ident != '':
             print('<h2>Identifier not used</h2>')
