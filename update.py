@@ -377,17 +377,24 @@ class UpdateComps(Thread):
             if family in [None, 'K']: continue
 
             lines = scriptLines('parse-comps', hash, filename, family)
-            with comps_lock:
-                for l in lines:
-                    ident, line = l.split(b' ')
-                    line = int(line.decode())
+            comps = {}
+            for l in lines:
+                ident, line = l.split(b' ')
+                line = line.decode()
 
+                if ident in comps:
+                    comps[ident] += ',' + str(line)
+                else:
+                    comps[ident] = str(line)
+
+            with comps_lock:
+                for ident, lines in comps.items():
                     if db.comps.exists(ident):
                         obj = db.comps.get(ident)
                     else:
                         obj = data.RefList()
 
-                    obj.append(idx, str(line), family)
+                    obj.append(idx, lines, family)
                     if verbose:
                         print(f"comps: {ident} in #{idx} @ {line}")
                     db.comps.put(ident, obj)
