@@ -233,8 +233,10 @@ def query(cmd, *args):
                     elif comps_family == 'B':
                         compsBBuf.append((file_path, comps_lines))
 
-            for path, type, cline in sorted(compsCBuf):
-                symbol_definitions.append(SymbolInstance(path, cline))
+                    comps_idx, comps_lines, comps_family = next(comps)
+
+            for path, cline in sorted(compsCBuf):
+                symbol_definitions.append(SymbolInstance(path, cline, 'compatible'))
 
             for path, dlines in sorted(compsDBuf):
                 symbol_references.append(SymbolInstance(path, dlines))
