@@ -87,16 +87,38 @@ run_produces_ok('ident query (nonexistent)',
 run_produces_ok('ident query (existent)',
     [$query_py, qw(v5.4 ident i2c_acpi_notify C)],
     [qr{^Symbol Definitions:}, qr{^Symbol References:},
-        qr{drivers/i2c/i2c-core-acpi\.c.+\b402\b.+\bfunction\b},    # def
-        qr{drivers/i2c/i2c-core-acpi\.c.+\b402,439}                 # refs
+        { def => qr{drivers/i2c/i2c-core-acpi\.c.+\b402\b.+\bfunction\b} },
+        { ref => qr{drivers/i2c/i2c-core-acpi\.c.+\b402,439} },
     ],
     MUST_SUCCEED);
 
 run_produces_ok('ident query (existent, #131)',
     [$query_py, qw(v5.4 ident class C)],
     [qr{^Symbol Definitions:}, qr{^Symbol References:},
-        qr{issue131\.h.+\b9\b.+\bstruct\b},                         # def
-        qr{issue131\.h.+\b13}                                       # refs
+        { def => qr{issue131\.h.+\b9\b.+\bstruct\b} },
+        { ref => qr{issue131\.h.+\b13}  },
+    ],
+    MUST_SUCCEED);
+
+run_produces_ok('ident query (existent, #150)',
+    [$query_py, qw(v5.4 ident memset C)],
+    [qr{^Symbol Definitions:}, qr{^Symbol References:},
+        { def => qr{issue150\.S.+\b7\b.+\bfunction\b} },
+        { ref => qr{i2c-core-acpi\.c.+\b121\b} }
+    ],
+    MUST_SUCCEED);
+
+run_produces_ok('ident query (ENTRY that should not be detected, #150)',
+    [$query_py, qw(v5.4 ident), 'HYPERVISOR_##hypercall', 'C'],
+    [qr{^Symbol Definitions:}, qr{^Symbol References:},
+        { def => { not => qr{hypercall\.S} } },
+    ],
+    MUST_SUCCEED);
+
+run_produces_ok('ident query (ENTRY that should not be detected, #150)',
+    [$query_py, qw(v5.4 ident), '0xfffffffe', 'C'],
+    [qr{^Symbol Definitions:}, qr{^Symbol References:},
+        { def => { not => qr{bcm74xx_sprom\.c} } },
     ],
     MUST_SUCCEED);
 
