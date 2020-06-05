@@ -136,7 +136,7 @@ class UpdateIdVersion(Thread):
             obj.append(idx, path)
 
             # Store DT bindings documentation files to parse them later
-            if path[:33] == 'Documentation/devicetree/bindings':
+            if path[:33] == b'Documentation/devicetree/bindings':
                 bindings_idxes.append(idx)
 
             if verbose:
@@ -396,7 +396,7 @@ class UpdateComps(Thread):
         global hash_file_lock, comps_lock, tags_comps, bindings_idxes
 
         for idx in idxes:
-            if (idx % 1000 == 0): progress('comps: ' + str(idx) + ' 2/2', tags_comp)
+            if (idx % 1000 == 0): progress('comps: ' + str(idx) + ' 2/2', tags_comps)
 
             if not idx in bindings_idxes: # Parse only bindings doc files
                 continue
