@@ -1,5 +1,8 @@
 # Elixir definitions for U-Boot
 
+# Enable DT bindings compatible strings support
+dts_comp_support=1
+
 list_tags_h()
 {
     echo "$tags" |

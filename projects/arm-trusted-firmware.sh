@@ -1,6 +1,9 @@
 # Elixir definitions for Arm Trusted Firmware
 # https://github.com/ARM-software/arm-trusted-firmware
 
+# Enable DT bindings compatible strings support
+dts_comp_support=1
+
 list_tags_h()
 {
     echo "$tags" |
