@@ -22,6 +22,7 @@ from sys import argv
 import re
 import os
 from urllib import parse
+import query
 
 usage_message = ("USAGE: find_compatible_dts.py <file> <family>\n"
                  "file : The file you want to search in\n"
@@ -63,14 +64,14 @@ if not family in ['C', 'D', 'B']:
 
 # Make sure file exists
 try:
-    f = open(filename, 'r')
+    f = open(filename, 'rb')
 except IOError:
     print("ERROR: File doesn't exist !\n" + usage_message)
     exit(1)
 
 # Iterate though lines and search for idents
-num = 1
-for line in f:
+for num, line in enumerate(f, 1):
+    line = query.decode(line)
     if family == 'C':
         ret = parse_c(line)
     elif family == 'D':
