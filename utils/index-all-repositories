@@ -57,7 +57,7 @@ index() {
     cd $LXR_REPO_DIR
     git fetch --all
     cd $ELIXIR_INSTALL
-    ./update.py
+    ./update.py $ELIXIR_THREADS
 }
 
 if [ "$ELIXIR_ROOT" = "" ]

@@ -39,5 +39,5 @@ for p in linux u-boot busybox zephyr musl barebox uclibc-ng arm-trusted-firmware
     git fetch --all --tags
 
     cd $ELIXIR_INSTALL
-    ./update.py
+    ./update.py $ELIXIR_THREADS
 done

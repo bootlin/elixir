@@ -195,7 +195,7 @@ cd /usr/local/elixir/
 == Create Database
 
 ----
-./update.py
+./update.py <number of threads (default 8 | min 3)>
 ----
 
 ____
@@ -334,6 +334,9 @@ as a front-end to reduce the load on the server running the Elixir code.
 To keep your Elixir databases up to date and index new versions that are released,
 we're proposing to use a script like `utils/update-elixir-data` which is called
 through a daily cron job.
+
+You can set `$ELIXIR_THREADS` if you want to change the number of threads used by
+update.py for indexing.
 
 == Keeping git repository disk usage under control
 
@@ -481,7 +484,7 @@ If needed, customize the `get_latest()` function.
 You are now ready to generate Elixir's database for your
 new project:
 
- ./update.py
+ ./update.py <number of threads (default 8 | min 3)>
 
 You can then check that Elixir works through your http server.
 

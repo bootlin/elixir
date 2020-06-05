@@ -3,7 +3,8 @@
 #  This file is part of Elixir, a source code cross-referencer.
 #
 #  Copyright (C) 2017--2020 Mikaël Bouillot <mikael.bouillot@bootlin.com>
-#  and contributors
+#                           Maxime Chretien <maxime.chretien@bootlin.com>
+#                           and contributors
 #
 #  Elixir is free software: you can redistribute it and/or modify
 #  it under the terms of the GNU Affero General Public License as published by
@@ -33,14 +34,27 @@ verbose = False
 
 db = data.DB(lib.getDataDir(), readonly=False)
 
+#Number of cpu threads (+1 for version indexing)
+cpu = 8
+threads_list = []
+
 hash_file_lock = Lock() #Lock for db.hash and db.file
 defs_lock = Lock() #Lock for db.defs
+refs_lock = Lock() #Lock for db.refs
+docs_lock = Lock() #Lock for db.docs
 tag_ready = Condition() #Waiting for new tags
 
 new_idxes = [] # (new idxes, Event idxes ready, Event defs ready)
 
 tags_done = False #True if all tags have been added to new_idxes
 
+#Progress variables
+tags_defs = 0
+tags_defs_lock = Lock()
+tags_refs = 0
+tags_refs_lock = Lock()
+tags_docs = 0
+tags_docs_lock = Lock()
 
 class UpdateIdVersion(Thread):
     def __init__(self, tag_buf):
@@ -120,35 +134,38 @@ class UpdateIdVersion(Thread):
 
 
 class UpdateDefs(Thread):
-    def __init__(self):
+    def __init__(self, start, inc):
         Thread.__init__(self, name="UpdateDefsElixir")
+        self.index = start
+        self.inc = inc # Equivalient to the number of defs threads
 
     def run(self):
-        global new_idxes, tags_done, tag_ready
+        global new_idxes, tags_done, tag_ready, tags_defs, tags_defs_lock
 
-        self.index = 0
-
-        while(not (tags_done and self.index == len(new_idxes))):
-            if(self.index == len(new_idxes)):
-                #Wait for new tags
+        while(not (tags_done and self.index >= len(new_idxes))):
+            if(self.index >= len(new_idxes)):
+                # Wait for new tags
                 with tag_ready:
                     tag_ready.wait()
                 continue
 
-            new_idxes[self.index][1].wait() #Make sure the tag is ready
+            new_idxes[self.index][1].wait() # Make sure the tag is ready
+
+            with tags_defs_lock:
+                tags_defs += 1
 
             self.update_definitions(new_idxes[self.index][0])
 
-            new_idxes[self.index][2].set() #Tell that UpdateDefs processed the tag
+            new_idxes[self.index][2].set() # Tell that UpdateDefs processed the tag
 
-            self.index += 1
+            self.index += self.inc
 
 
     def update_definitions(self, idxes):
-        global hash_file_lock, defs_lock
+        global hash_file_lock, defs_lock, tags_defs
 
         for idx in idxes:
-            if (idx % 1000 == 0): progress('defs: ' + str(idx), self.index+1)
+            if (idx % 1000 == 0): progress('defs: ' + str(idx), tags_defs)
 
             with hash_file_lock:
                 hash = db.hash.get(idx)
@@ -158,53 +175,56 @@ class UpdateDefs(Thread):
             if family == None: continue
 
             lines = scriptLines('parse-defs', hash, filename, family)
-            for l in lines:
-                ident, type, line = l.split(b' ')
-                type = type.decode()
-                line = int(line.decode())
 
-                with defs_lock:
+            with defs_lock:
+                for l in lines:
+                    ident, type, line = l.split(b' ')
+                    type = type.decode()
+                    line = int(line.decode())
+
                     if db.defs.exists(ident):
                         obj = db.defs.get(ident)
                     else:
                         obj = data.DefList()
 
-                obj.add_family(family)
-                obj.append(idx, type, line, family)
-                if verbose:
-                    print(f"def {type} {ident} in #{idx} @ {line}")
-                with defs_lock:
+                    obj.add_family(family)
+                    obj.append(idx, type, line, family)
+                    if verbose:
+                        print(f"def {type} {ident} in #{idx} @ {line}")
                     db.defs.put(ident, obj)
 
 
 class UpdateRefs(Thread):
-    def __init__(self):
+    def __init__(self, start, inc):
         Thread.__init__(self, name="UpdateRefsElixir")
+        self.index = start
+        self.inc = inc # Equivalient to the number of refs threads
 
     def run(self):
-        global new_idxes, tags_done
+        global new_idxes, tags_done, tags_refs, tags_refs_lock
 
-        self.index = 0
-
-        while(not (tags_done and self.index == len(new_idxes))):
-            if(self.index == len(new_idxes)):
-                #Wait for new tags
+        while(not (tags_done and self.index >= len(new_idxes))):
+            if(self.index >= len(new_idxes)):
+                # Wait for new tags
                 with tag_ready:
                     tag_ready.wait()
                 continue
 
-            new_idxes[self.index][1].wait() #Make sure the tag is ready
-            new_idxes[self.index][2].wait() #Make sure UpdateDefs processed the tag
+            new_idxes[self.index][1].wait() # Make sure the tag is ready
+            new_idxes[self.index][2].wait() # Make sure UpdateDefs processed the tag
+
+            with tags_refs_lock:
+                tags_refs += 1
 
             self.update_references(new_idxes[self.index][0])
 
-            self.index += 1
+            self.index += self.inc
 
     def update_references(self, idxes):
-        global hash_file_lock, defs_lock
+        global hash_file_lock, defs_lock, refs_lock, tags_refs
 
         for idx in idxes:
-            if (idx % 1000 == 0): progress('refs: ' + str(idx), self.index+1)
+            if (idx % 1000 == 0): progress('refs: ' + str(idx), tags_refs)
 
             with hash_file_lock:
                 hash = db.hash.get(idx)
@@ -222,60 +242,64 @@ class UpdateRefs(Thread):
             even = True
             line_num = 1
             idents = {}
-            for tok in tokens:
-                even = not even
-                if even:
-                    tok = prefix + tok
+            with defs_lock:
+                for tok in tokens:
+                    even = not even
+                    if even:
+                        tok = prefix + tok
 
-                    with defs_lock:
                         if db.defs.exists(tok) and lib.isIdent(tok):
                             if tok in idents:
                                 idents[tok] += ',' + str(line_num)
                             else:
                                 idents[tok] = str(line_num)
 
-                else:
-                    line_num += tok.count(b'\1')
+                    else:
+                        line_num += tok.count(b'\1')
 
-            for ident, lines in idents.items():
-                if db.refs.exists(ident):
-                    obj = db.refs.get(ident)
-                else:
-                    obj = data.RefList()
+            with refs_lock:
+                for ident, lines in idents.items():
+                    if db.refs.exists(ident):
+                        obj = db.refs.get(ident)
+                    else:
+                        obj = data.RefList()
 
-                obj.append(idx, lines, family)
-                if verbose:
-                    print(f"ref: {ident} in #{idx} @ {lines}")
-                db.refs.put(ident, obj)
+                    obj.append(idx, lines, family)
+                    if verbose:
+                        print(f"ref: {ident} in #{idx} @ {lines}")
+                    db.refs.put(ident, obj)
 
 
 class UpdateDocs(Thread):
-    def __init__(self):
+    def __init__(self, start, inc):
         Thread.__init__(self, name="UpdateDocsElixir")
+        self.index = start
+        self.inc = inc # Equivalient to the number of docs threads
 
     def run(self):
-        global new_idxes, tags_done
+        global new_idxes, tags_done, tags_docs, tags_docs_lock
 
-        self.index = 0
-
-        while(not (tags_done and self.index == len(new_idxes))):
-            if(self.index == len(new_idxes)):
-                #Wait for new tags
+        while(not (tags_done and self.index >= len(new_idxes))):
+            if(self.index >= len(new_idxes)):
+                # Wait for new tags
                 with tag_ready:
                     tag_ready.wait()
                 continue
 
-            new_idxes[self.index][1].wait() #Make sure the tag is ready
+            new_idxes[self.index][1].wait() # Make sure the tag is ready
+
+            with tags_docs_lock:
+                tags_docs += 1
 
             self.update_doc_comments(new_idxes[self.index][0])
 
-            self.index += 1
+            self.index += self.inc
 
     def update_doc_comments(self, idxes):
-        global hash_file_lock
+        global hash_file_lock, docs_lock, tags_docs
 
         for idx in idxes:
-            if (idx % 1000 == 0): progress('docs: ' + str(idx), self.index+1)
+            if (idx % 1000 == 0): progress('docs: ' + str(idx), tags_docs)
 
             with hash_file_lock:
                 hash = db.hash.get(idx)
@@ -285,19 +309,20 @@ class UpdateDocs(Thread):
             if family == None: continue
 
             lines = scriptLines('parse-docs', hash, filename)
-            for l in lines:
-                ident, line = l.split(b' ')
-                line = int(line.decode())
+            with docs_lock:
+                for l in lines:
+                    ident, line = l.split(b' ')
+                    line = int(line.decode())
 
-                if db.docs.exists(ident):
-                    obj = db.docs.get(ident)
-                else:
-                    obj = data.RefList()
+                    if db.docs.exists(ident):
+                        obj = db.docs.get(ident)
+                    else:
+                        obj = data.RefList()
 
-                obj.append(idx, str(line), family)
-                if verbose:
-                    print(f"doc: {ident} in #{idx} @ {line}")
-                db.docs.put(ident, obj)
+                    obj.append(idx, str(line), family)
+                    if verbose:
+                        print(f"doc: {ident} in #{idx} @ {line}")
+                    db.docs.put(ident, obj)
 
 
 def progress(msg, current):
@@ -305,6 +330,28 @@ def progress(msg, current):
 
 
 # Main
+
+# Check number of threads arg
+if len(argv) >= 2 and argv[1].isdigit() :
+    cpu = int(argv[1])
+
+    if cpu < 3 :
+        cpu = 3
+
+# Distribute threads among functions using the following rules :
+# There are more refs threads than others
+# There are more (or equal) defs threads than docs threads
+# Example : if cpu=6 : refs=3, defs=2, docs=1
+#           if cpu=7 : refs=3, defs=2, docs=2
+#           if cpu=8 : refs=4, defs=2, docs=2
+#           if cpu=11: refs=5, defs=3, docs=3
+quo, rem = divmod(cpu, 2)
+num_th_refs = quo
+
+quo, rem = divmod(quo+rem, 2)
+num_th_defs = quo + rem
+num_th_docs = quo
+
 
 tag_buf = []
 for tag in scriptLines('list-tags'):
@@ -317,24 +364,29 @@ project = lib.currentProject()
 print(project + ' - found ' + str(len(tag_buf)) + ' new tags')
 
 id_version_thread = UpdateIdVersion(tag_buf)
-defs_thread = UpdateDefs()
-refs_thread = UpdateRefs()
-docs_thread = UpdateDocs()
 
-#Start to process tags
+# Define defs threads
+for i in range(num_th_defs):
+    threads_list.append(UpdateDefs(i, num_th_defs))
+# Define refs threads
+for i in range(num_th_refs):
+    threads_list.append(UpdateRefs(i, num_th_refs))
+# Define docs threads
+for i in range(num_th_docs):
+    threads_list.append(UpdateDocs(i, num_th_docs))
+
+# Start to process tags
 id_version_thread.start()
 
-#Wait until the first tag is ready
+# Wait until the first tag is ready
 with tag_ready:
     tag_ready.wait()
 
-#Start remaining threads
-defs_thread.start()
-refs_thread.start()
-docs_thread.start()
+# Start remaining threads
+for i in range(len(threads_list)):
+    threads_list[i].start()
 
-#Make sure all threads finished
+# Make sure all threads finished
 id_version_thread.join()
-defs_thread.join()
-refs_thread.join()
-docs_thread.join()
+for i in range(len(threads_list)):
+    threads_list[i].join()
