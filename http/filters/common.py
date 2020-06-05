@@ -27,6 +27,6 @@ def decode_number(string):
 
 
 filters = []
+exec(open('dtscomp.py').read())
 exec(open('ident.py').read())
 exec(open('cppinc.py').read())
-exec(open('dtscomp.py').read())

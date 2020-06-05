@@ -8,7 +8,7 @@ def keep_dtscompD(m):
 
     for string in strings:
         dtscompD.append(string)
-        match.replace(string, '__KEEPDTSCOMPD__' + encode_number(len(dtscompD)))
+        match = match.replace(string, '__KEEPDTSCOMPD__' + encode_number(len(dtscompD)))
 
     return match
 
@@ -20,7 +20,7 @@ def replace_dtscompD(m):
 dtscompD_filters = {
                 'case': 'extension',
                 'match': {'dts', 'dtsi'},
-                'prerex': '\s*compatible(.*?)',
+                'prerex': '\s*compatible(.*?)$',
                 'prefunc': keep_dtscompD,
                 'postrex': '__KEEPDTSCOMPD__([A-J]+)',
                 'postfunc': replace_dtscompD
