@@ -231,16 +231,14 @@ def query(cmd, *args):
                 while comps_docs_idx < file_idx:
                     comps_docs_idx, comps_docs_lines, comps_docs_family = next(comps_docs)
 
-                while comps_idx == file_idx:
+                if comps_idx == file_idx:
                     if comps_family == 'C':
                         compsCBuf.append((file_path, comps_lines))
                     elif comps_family == 'D':
                         compsDBuf.append((file_path, comps_lines))
-                    comps_idx, comps_lines, comps_family = next(comps)
 
-                while comps_docs_idx == file_idx:
+                if comps_docs_idx == file_idx:
                     compsBBuf.append((file_path, comps_docs_lines))
-                    comps_docs_idx, comps_docs_lines, comps_docs_family = next(comps_docs)
 
             for path, cline in sorted(compsCBuf):
                 symbol_definitions.append(SymbolInstance(path, cline, 'compatible'))
@@ -248,8 +246,8 @@ def query(cmd, *args):
             for path, dlines in sorted(compsDBuf):
                 symbol_references.append(SymbolInstance(path, dlines))
 
-            for path, bline in sorted(compsBBuf):
-                symbol_doccomments.append(SymbolInstance(path, bline))
+            for path, blines in sorted(compsBBuf):
+                symbol_doccomments.append(SymbolInstance(path, blines))
 
             return symbol_definitions, symbol_references, symbol_doccomments
 
