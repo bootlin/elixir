@@ -216,7 +216,11 @@ def query(cmd, *args):
 
             files_this_version = db.vers.get(version).iter()
             comps = db.comps.get(ident).iter(dummy=True)
-            comps_docs = db.comps_docs.get(ident).iter(dummy=True)
+
+            if db.comps_docs.exists(ident):
+                comps_docs = db.comps_docs.get(ident).iter(dummy=True)
+            else:
+                comps_docs = data.RefList().iter(dummy=True)
 
             comps_idx, comps_lines, comps_family = next(comps)
             comps_docs_idx, comps_docs_lines, comps_docs_family = next(comps_docs)
