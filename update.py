@@ -544,8 +544,8 @@ project = lib.currentProject()
 
 print(project + ' - found ' + str(len(tag_buf)) + ' new tags')
 
-ids_thread = UpdateIds(tag_buf)
-versions_thread = UpdateVersions(tag_buf)
+threads_list.append(UpdateIds(tag_buf))
+threads_list.append(UpdateVersions(tag_buf))
 
 # Define defs threads
 for i in range(num_th_defs):
@@ -565,19 +565,16 @@ for i in range(num_th_comps_docs):
 
 
 # Start to process tags
-ids_thread.start()
+threads_list[0].start()
 
 # Wait until the first tag is ready
 with tag_ready:
     tag_ready.wait()
 
 # Start remaining threads
-versions_thread.start()
-for i in range(len(threads_list)):
+for i in range(1, len(threads_list)):
     threads_list[i].start()
 
 # Make sure all threads finished
-ids_thread.join()
-versions_thread.join()
 for i in range(len(threads_list)):
     threads_list[i].join()
