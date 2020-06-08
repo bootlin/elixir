@@ -49,7 +49,7 @@ comps_lock = Lock() # Lock for db.comps
 comps_docs_lock = Lock() # Lock for db.comps_docs
 tag_ready = Condition() # Waiting for new tags
 
-new_idxes = [] # (new idxes, Event idxes ready, Event defs ready, Event comps ready)
+new_idxes = [] # (new idxes, Event idxes ready, Event defs ready, Event comps ready, Event vers ready)
 bindings_idxes = [] # DT bindings documentation files
 
 tags_done = False # True if all tags have been added to new_idxes
@@ -77,7 +77,7 @@ class UpdateIds(Thread):
 
         for tag in self.tag_buf:
 
-            new_idxes.append((self.update_blob_ids(tag), Event(), Event(), Event()))
+            new_idxes.append((self.update_blob_ids(tag), Event(), Event(), Event(), Event()))
 
             progress(tag.decode() + ': ' + str(len(new_idxes[self.index][0])) +
                         ' new blobs', self.index+1)
@@ -108,7 +108,7 @@ class UpdateIds(Thread):
         for blob in blobs:
             hash, filename = blob.split(b' ',maxsplit=1)
             with blobs_lock:
-                blob_exist = db.blob.exists(hash):
+                blob_exist = db.blob.exists(hash)
                 if not blob_exist:
                     db.blob.put(hash, idx)
 
@@ -140,11 +140,13 @@ class UpdateVersions(Thread):
                     tag_ready.wait()
                 continue
 
-            new_idxes[self.index][1].wait() # Make sure the tag is ready
+            new_idxes[index][1].wait() # Make sure the tag is ready
 
             self.update_versions(tag)
 
-            progress('vers: ' + tag.decode() + 'done', index+1)
+            new_idxes[index][4].set() # Tell that UpdateVersions processed the tag
+
+            progress('vers: ' + tag.decode() + ' done', index+1)
 
     def update_versions(self, tag):
         global blobs_lock
@@ -447,6 +449,7 @@ class UpdateCompsDocs(Thread):
 
             new_idxes[self.index][1].wait() # Make sure the tag is ready
             new_idxes[self.index][3].wait() # Make sure UpdateComps processed the tag
+            new_idxes[self.index][4].wait() # Make sure UpdateVersions processed the tag
 
             with tags_comps_docs_lock:
                 tags_comps_docs += 1
