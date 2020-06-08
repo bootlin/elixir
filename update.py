@@ -36,11 +36,12 @@ dts_comp_support = int(script('dts-comp'))
 
 db = data.DB(lib.getDataDir(), readonly=False, dtscomp=dts_comp_support)
 
-# Number of cpu threads (+1 for version indexing)
+# Number of cpu threads (+2 for version indexing)
 cpu = 8
 threads_list = []
 
 hash_file_lock = Lock() # Lock for db.hash and db.file
+blobs_lock = Lock() # Lock for db.blobs
 defs_lock = Lock() # Lock for db.defs
 refs_lock = Lock() # Lock for db.refs
 docs_lock = Lock() # Lock for db.docs
@@ -63,9 +64,9 @@ tags_docs_lock = Lock()
 tags_comps = 0
 tags_comps_lock = Lock()
 
-class UpdateIdVersion(Thread):
+class UpdateIds(Thread):
     def __init__(self, tag_buf):
-        Thread.__init__(self, name="UpdateIdVersionElixir")
+        Thread.__init__(self, name="UpdateIdsElixir")
         self.tag_buf = tag_buf
 
     def run(self):
@@ -79,8 +80,6 @@ class UpdateIdVersion(Thread):
             progress(tag.decode() + ': ' + str(len(new_idxes[self.index][0])) +
                         ' new blobs', self.index+1)
 
-            self.update_versions(tag)
-
             new_idxes[self.index][1].set() # Tell that the tag is ready
 
             self.index += 1
@@ -93,7 +92,7 @@ class UpdateIdVersion(Thread):
 
     def update_blob_ids(self, tag):
 
-        global hash_file_lock
+        global hash_file_lock, blobs_lock
 
         if db.vars.exists('numBlobs'):
             idx = db.vars.get('numBlobs')
@@ -106,9 +105,12 @@ class UpdateIdVersion(Thread):
         new_idxes = []
         for blob in blobs:
             hash, filename = blob.split(b' ',maxsplit=1)
-            if not db.blob.exists(hash):
-                db.blob.put(hash, idx)
+            with blobs_lock:
+                blob_exist = db.blob.exists(hash):
+                if not blob_exist:
+                    db.blob.put(hash, idx)
 
+            if not blob_exist:
                 with hash_file_lock:
                     db.hash.put(idx, hash)
                     db.file.put(idx, filename)
@@ -120,7 +122,30 @@ class UpdateIdVersion(Thread):
         db.vars.put('numBlobs', idx)
         return new_idxes
 
+
+class UpdateVersions(Thread):
+    def __init__(self, tag_buf):
+        Thread.__init__(self, name="UpdateVersionsElixir")
+        self.tag_buf = tag_buf
+
+    def run(self):
+        global new_idxes, tag_ready
+
+        for index, tag in enumerate(self.tag_buf, 0):
+            if(index >= len(new_idxes)):
+                # Wait for new tags
+                with tag_ready:
+                    tag_ready.wait()
+                continue
+
+            new_idxes[self.index][1].wait() # Make sure the tag is ready
+
+            self.update_versions(tag)
+
+            progress('vers: ' + tag.decode() + 'done', index+1)
+
     def update_versions(self, tag):
+        global blobs_lock
 
         # Get blob hashes and associated file paths
         blobs = scriptLines('list-blobs', '-p', tag)
@@ -128,7 +153,8 @@ class UpdateIdVersion(Thread):
 
         for blob in blobs:
             hash, path = blob.split(b' ', maxsplit=1)
-            idx = db.blob.get(hash)
+            with blobs_lock:
+                idx = db.blob.get(hash)
             buf.append((idx, path))
 
         buf = sorted(buf)
@@ -487,7 +513,8 @@ project = lib.currentProject()
 
 print(project + ' - found ' + str(len(tag_buf)) + ' new tags')
 
-id_version_thread = UpdateIdVersion(tag_buf)
+ids_thread = UpdateIds(tag_buf)
+versions_thread = UpdateVersions(tag_buf)
 
 # Define defs threads
 for i in range(num_th_defs):
@@ -503,17 +530,19 @@ for i in range(num_th_comps):
     threads_list.append(UpdateComps(i, num_th_comps))
 
 # Start to process tags
-id_version_thread.start()
+ids_thread.start()
 
 # Wait until the first tag is ready
 with tag_ready:
     tag_ready.wait()
 
 # Start remaining threads
+versions_thread.start()
 for i in range(len(threads_list)):
     threads_list[i].start()
 
 # Make sure all threads finished
-id_version_thread.join()
+ids_thread.join()
+versions_thread.join()
 for i in range(len(threads_list)):
     threads_list[i].join()
