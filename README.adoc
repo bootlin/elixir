@@ -195,7 +195,7 @@ cd /usr/local/elixir/
 == Create Database
 
 ----
-./update.py <number of threads (default 8 | min 3)>
+./update.py <number of threads (default 10 | min 5)>
 ----
 
 ____
@@ -484,7 +484,7 @@ If needed, customize the `get_latest()` function.
 You are now ready to generate Elixir's database for your
 new project:
 
- ./update.py <number of threads (default 8 | min 3)>
+ ./update.py <number of threads (default 10 | min 5)>
 
 You can then check that Elixir works through your http server.
 
