@@ -330,7 +330,7 @@ elif mode == 'ident':
             print('<h2>Defined in '+str(len(symbol_definitions))+' files:</h2>')
             print('<ul>')
             for symbol_definition in symbol_definitions:
-                ln = symbol_definition.line.split(',')
+                ln = str(symbol_definition.line).split(',')
                 if len(ln) == 1:
                     n = ln[0]
                     print('<li><a href="{v}/source/{f}#L{n}"><strong>{f}</strong>, line {n} <em>(as a {t})</em></a>'.format(
