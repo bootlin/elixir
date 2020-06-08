@@ -37,7 +37,7 @@ dts_comp_support = int(script('dts-comp'))
 db = data.DB(lib.getDataDir(), readonly=False, dtscomp=dts_comp_support)
 
 # Number of cpu threads (+2 for version indexing)
-cpu = 8
+cpu = 10
 threads_list = []
 
 hash_file_lock = Lock() # Lock for db.hash and db.file
@@ -49,7 +49,7 @@ comps_lock = Lock() # Lock for db.comps
 comps_docs_lock = Lock() # Lock for db.comps_docs
 tag_ready = Condition() # Waiting for new tags
 
-new_idxes = [] # (new idxes, Event idxes ready, Event defs ready)
+new_idxes = [] # (new idxes, Event idxes ready, Event defs ready, Event comps ready)
 bindings_idxes = [] # DT bindings documentation files
 
 tags_done = False # True if all tags have been added to new_idxes
@@ -63,6 +63,8 @@ tags_docs = 0
 tags_docs_lock = Lock()
 tags_comps = 0
 tags_comps_lock = Lock()
+tags_comps_docs = 0
+tags_comps_docs_lock = Lock()
 
 class UpdateIds(Thread):
     def __init__(self, tag_buf):
@@ -75,7 +77,7 @@ class UpdateIds(Thread):
 
         for tag in self.tag_buf:
 
-            new_idxes.append((self.update_blob_ids(tag), Event(), Event()))
+            new_idxes.append((self.update_blob_ids(tag), Event(), Event(), Event()))
 
             progress(tag.decode() + ': ' + str(len(new_idxes[self.index][0])) +
                         ' new blobs', self.index+1)
@@ -386,7 +388,7 @@ class UpdateComps(Thread):
 
             self.update_compatibles(new_idxes[self.index][0])
 
-            self.update_compatibles_bindings(new_idxes[self.index][0])
+            new_idxes[self.index][3].set() # Tell that UpdateComps processed the tag
 
             self.index += self.inc
 
@@ -426,11 +428,38 @@ class UpdateComps(Thread):
                         print(f"comps: {ident} in #{idx} @ {line}")
                     db.comps.put(ident, obj)
 
+
+class UpdateCompsDocs(Thread):
+    def __init__(self, start, inc):
+        Thread.__init__(self, name="UpdateCompsDocsElixir")
+        self.index = start
+        self.inc = inc # Equivalient to the number of comps_docs threads
+
+    def run(self):
+        global new_idxes, tags_done, tags_comps_docs, tags_comps_docs_lock
+
+        while(not (tags_done and self.index >= len(new_idxes))):
+            if(self.index >= len(new_idxes)):
+                # Wait for new tags
+                with tag_ready:
+                    tag_ready.wait()
+                continue
+
+            new_idxes[self.index][1].wait() # Make sure the tag is ready
+            new_idxes[self.index][3].wait() # Make sure UpdateComps processed the tag
+
+            with tags_comps_docs_lock:
+                tags_comps_docs += 1
+
+            self.update_compatibles_bindings(new_idxes[self.index][0])
+
+            self.index += self.inc
+
     def update_compatibles_bindings(self, idxes):
-        global hash_file_lock, comps_lock, tags_comps, bindings_idxes
+        global hash_file_lock, comps_lock, comps_docs_lock, tags_comps_docs, bindings_idxes
 
         for idx in idxes:
-            if (idx % 1000 == 0): progress('comps_docs: ' + str(idx), tags_comps)
+            if (idx % 1000 == 0): progress('comps_docs: ' + str(idx), tags_comps_docs)
 
             if not idx in bindings_idxes: # Parse only bindings doc files
                 continue
@@ -476,28 +505,30 @@ def progress(msg, current):
 if len(argv) >= 2 and argv[1].isdigit() :
     cpu = int(argv[1])
 
-    if cpu < 4 :
-        cpu = 4
+    if cpu < 5 :
+        cpu = 5
 
 # Distribute threads among functions using the following rules :
 # There are more (or equal) refs threads than others
 # There are more (or equal) defs threads than docs or comps threads
-# Example : if cpu=6 : defs=2, refs=2, docs=1, comps=1
-#           if cpu=7 : defs=2, refs=3, docs=1, comps=1
-#           if cpu=8 : defs=2, refs=2, docs=2, comps=2
-#           if cpu=11: defs=3, refs=4, docs=2, comps=2
-quo, rem = divmod(cpu, 4)
+# Example : if cpu=6 : defs=1, refs=2, docs=1, comps=1, comps_docs=1
+#           if cpu=7 : defs=2, refs=2, docs=1, comps=1, comps_docs=1
+#           if cpu=8 : defs=2, refs=3, docs=1, comps=1, comps_docs=1
+#           if cpu=11: defs=2, refs=3, docs=2, comps=2, comps_docs=2
+quo, rem = divmod(cpu, 5)
 num_th_refs = quo
 num_th_defs = quo
 num_th_docs = quo
 
-# If DT bindings support is enabled, use $quo threads for that
+# If DT bindings support is enabled, use $quo threads for each of the 2 threads
 # Otherwise add them to the remaining threads
 if dts_comp_support:
     num_th_comps = quo
+    num_th_comps_docs = quo
 else :
     num_th_comps = 0
-    rem += quo
+    num_th_comps_docs = 0
+    rem += 2*quo
 
 quo, rem = divmod(rem, 2)
 num_th_defs += quo
@@ -528,6 +559,10 @@ for i in range(num_th_docs):
 # Define comps threads
 for i in range(num_th_comps):
     threads_list.append(UpdateComps(i, num_th_comps))
+# Define comps_docs threads
+for i in range(num_th_comps_docs):
+    threads_list.append(UpdateCompsDocs(i, num_th_comps_docs))
+
 
 # Start to process tags
 ids_thread.start()
