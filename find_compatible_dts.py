@@ -79,11 +79,8 @@ for num, line in enumerate(f, 1):
     elif family == 'B':
         ret = parse_bindings(line)
 
-    if ret != []:
-        for i in range(len(ret)):
-            ident_list += str(parse.quote(ret[i])) + ' ' + str(num) + '\n'
-
-    num += 1
+    for i in range(len(ret)):
+        ident_list += str(parse.quote(ret[i])) + ' ' + str(num) + '\n'
 
 # Print the list and exit
 print(ident_list, end='')
