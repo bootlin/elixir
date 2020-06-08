@@ -341,9 +341,28 @@ elif mode == 'ident':
             print('<h2>Documented in '+str(len(symbol_doccomments))+' files:</h2>')
             print('<ul>')
             for symbol_doccomment in symbol_doccomments:
-                print('<li><a href="{v}/source/{f}#L{n}"><strong>{f}</strong>, line {n}</a></li>'.format(
-                    v=version, f=symbol_doccomment.path, n=symbol_doccomment.line
-                ))
+                ln = symbol_doccomment.line.split(',')
+                if len(ln) == 1:
+                    n = ln[0]
+                    print('<li><a href="{v}/source/{f}#L{n}"><strong>{f}</strong>, line {n}</a>'.format(
+                        v=version, f=symbol_doccomment.path, n=n
+                    ))
+                else:
+                    if len(symbol_doccomments) > 100:    # Concise display
+                        n = len(ln)
+                        print('<li><a href="{v}/source/{f}"><strong>{f}</strong>, <em>{n} times</em></a>'.format(
+                            v=version, f=symbol_doccomment.path, n=n
+                        ))
+                    else:    # Verbose display
+                        print('<li><a href="{v}/source/{f}#L{n}"><strong>{f}</strong></a>'.format(
+                            v=version, f=symbol_doccomment.path, n=ln[0]
+                        ))
+                        print('<ul>')
+                        for n in ln:
+                            print('<li><a href="{v}/source/{f}#L{n}">line {n}</a>'.format(
+                                v=version, f=symbol_doccomment.path, n=n
+                            ))
+                        print('</ul>')
             print('</ul>')
 
         if len(symbol_references):
