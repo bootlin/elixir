@@ -25,6 +25,7 @@ toc::[]
 = Requirements
 
 * Python >= 3.6
+* Git >= 1.9
 * The Jinja2 and Pygments (>= 2.2) Python libraries
 * Berkeley DB (and its Python binding)
 * Universal Ctags
@@ -195,7 +196,7 @@ cd /usr/local/elixir/
 == Create Database
 
 ----
-./update.py <number of threads (default 8 | min 3)>
+./update.py <number of threads (default 10 | min 5)>
 ----
 
 ____
@@ -336,7 +337,7 @@ we're proposing to use a script like `utils/update-elixir-data` which is called
 through a daily cron job.
 
 You can set `$ELIXIR_THREADS` if you want to change the number of threads used by
-update.py for indexing.
+update.py for indexing (default is 10 and minimum is 5).
 
 == Keeping git repository disk usage under control
 
@@ -438,7 +439,7 @@ Depending on how you want to show the available versions on the Elixir pages,
 you may have to apply substitutions to each tag string, for example to add
 a `v` prefix if missing, for consistency with how other project versions are
 shown. You may also decide to ignore specific tags. All this can be done
-by redefining the default `list_tags()` function in a new `project/<projectname>.sh`
+by redefining the default `list_tags()` function in a new `projects/<projectname>.sh`
 file. Here's an example (`projects/zephyr.sh` file):
 
  list_tags()
@@ -481,10 +482,13 @@ the most recent versions:
 
 If needed, customize the `get_latest()` function.
 
+If you want to enable support for `compatible` properties in Devicetree files,
+add `dts_comp_support=1` at the beginning of `projects/<projectname>.sh`.
+
 You are now ready to generate Elixir's database for your
 new project:
 
- ./update.py <number of threads (default 8 | min 3)>
+ ./update.py <number of threads (default 10 | min 5)>
 
 You can then check that Elixir works through your http server.
 

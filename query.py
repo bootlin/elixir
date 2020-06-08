@@ -24,7 +24,9 @@ import data
 import os
 from collections import OrderedDict
 
-db = data.DB(lib.getDataDir(), readonly=True)
+dts_comp_support = int(script('dts-comp'))
+
+db = data.DB(lib.getDataDir(), readonly=True, dtscomp=dts_comp_support)
 
 from io import BytesIO
 
@@ -178,6 +180,20 @@ def query(cmd, *args):
 
         return lib.getFileFamily(filename)
 
+    elif cmd == 'dts-comp':
+        # Get state of dts_comp_support
+
+        return dts_comp_support
+
+    elif cmd == 'dts-comp-exists':
+        # Check if a dts compatible string exists
+
+        ident = args[0]
+        if dts_comp_support:
+            return db.comps.exists(ident)
+        else:
+            return False
+
     elif cmd == 'ident':
 
         # Returns identifier search results
@@ -189,6 +205,56 @@ def query(cmd, *args):
         symbol_definitions = []
         symbol_references = []
         symbol_doccomments = []
+
+        # DT bindings compatible strings are handled differently
+        # They are defined in C files
+        # Used in DT files
+        # Documented in documentation files
+        if family == 'B':
+            if not dts_comp_support or not db.comps.exists(ident):
+                return symbol_definitions, symbol_references, symbol_doccomments
+
+            files_this_version = db.vers.get(version).iter()
+            comps = db.comps.get(ident).iter(dummy=True)
+
+            if db.comps_docs.exists(ident):
+                comps_docs = db.comps_docs.get(ident).iter(dummy=True)
+            else:
+                comps_docs = data.RefList().iter(dummy=True)
+
+            comps_idx, comps_lines, comps_family = next(comps)
+            comps_docs_idx, comps_docs_lines, comps_docs_family = next(comps_docs)
+            compsCBuf = [] # C/CPP/ASM files
+            compsDBuf = [] # DT files
+            compsBBuf = [] # DT bindings docs files
+
+            for file_idx, file_path in files_this_version:
+                while comps_idx < file_idx:
+                    comps_idx, comps_lines, comps_family = next(comps)
+
+                while comps_docs_idx < file_idx:
+                    comps_docs_idx, comps_docs_lines, comps_docs_family = next(comps_docs)
+
+                if comps_idx == file_idx:
+                    if comps_family == 'C':
+                        compsCBuf.append((file_path, comps_lines))
+                    elif comps_family == 'D':
+                        compsDBuf.append((file_path, comps_lines))
+
+                if comps_docs_idx == file_idx:
+                    compsBBuf.append((file_path, comps_docs_lines))
+
+            for path, cline in sorted(compsCBuf):
+                symbol_definitions.append(SymbolInstance(path, cline, 'compatible'))
+
+            for path, dlines in sorted(compsDBuf):
+                symbol_references.append(SymbolInstance(path, dlines))
+
+            for path, blines in sorted(compsBBuf):
+                symbol_doccomments.append(SymbolInstance(path, blines))
+
+            return symbol_definitions, symbol_references, symbol_doccomments
+
 
         if not db.defs.exists(ident):
             return symbol_definitions, symbol_references, symbol_doccomments

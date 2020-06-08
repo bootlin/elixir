@@ -23,7 +23,7 @@
 # This is different from that blob's Git hash.
 
 from sys import argv
-from lib import scriptLines
+from lib import script, scriptLines
 import lib
 import data
 import os
@@ -32,33 +32,43 @@ from threading import Thread, Lock, Event, Condition
 
 verbose = False
 
-db = data.DB(lib.getDataDir(), readonly=False)
+dts_comp_support = int(script('dts-comp'))
 
-#Number of cpu threads (+1 for version indexing)
-cpu = 8
+db = data.DB(lib.getDataDir(), readonly=False, dtscomp=dts_comp_support)
+
+# Number of cpu threads (+2 for version indexing)
+cpu = 10
 threads_list = []
 
-hash_file_lock = Lock() #Lock for db.hash and db.file
-defs_lock = Lock() #Lock for db.defs
-refs_lock = Lock() #Lock for db.refs
-docs_lock = Lock() #Lock for db.docs
-tag_ready = Condition() #Waiting for new tags
+hash_file_lock = Lock() # Lock for db.hash and db.file
+blobs_lock = Lock() # Lock for db.blobs
+defs_lock = Lock() # Lock for db.defs
+refs_lock = Lock() # Lock for db.refs
+docs_lock = Lock() # Lock for db.docs
+comps_lock = Lock() # Lock for db.comps
+comps_docs_lock = Lock() # Lock for db.comps_docs
+tag_ready = Condition() # Waiting for new tags
 
-new_idxes = [] # (new idxes, Event idxes ready, Event defs ready)
+new_idxes = [] # (new idxes, Event idxes ready, Event defs ready, Event comps ready, Event vers ready)
+bindings_idxes = [] # DT bindings documentation files
 
-tags_done = False #True if all tags have been added to new_idxes
+tags_done = False # True if all tags have been added to new_idxes
 
-#Progress variables
+# Progress variables
 tags_defs = 0
 tags_defs_lock = Lock()
 tags_refs = 0
 tags_refs_lock = Lock()
 tags_docs = 0
 tags_docs_lock = Lock()
+tags_comps = 0
+tags_comps_lock = Lock()
+tags_comps_docs = 0
+tags_comps_docs_lock = Lock()
 
-class UpdateIdVersion(Thread):
+class UpdateIds(Thread):
     def __init__(self, tag_buf):
-        Thread.__init__(self, name="UpdateIdVersionElixir")
+        Thread.__init__(self, name="UpdateIdsElixir")
         self.tag_buf = tag_buf
 
     def run(self):
@@ -67,18 +77,16 @@ class UpdateIdVersion(Thread):
 
         for tag in self.tag_buf:
 
-            new_idxes.append((self.update_blob_ids(tag), Event(), Event()))
+            new_idxes.append((self.update_blob_ids(tag), Event(), Event(), Event(), Event()))
 
             progress(tag.decode() + ': ' + str(len(new_idxes[self.index][0])) +
                         ' new blobs', self.index+1)
 
-            self.update_versions(tag)
-
-            new_idxes[self.index][1].set() #Tell that the tag is ready
+            new_idxes[self.index][1].set() # Tell that the tag is ready
 
             self.index += 1
 
-            #Wake up waiting threads
+            # Wake up waiting threads
             with tag_ready:
                 tag_ready.notify_all()
 
@@ -86,7 +94,7 @@ class UpdateIdVersion(Thread):
 
     def update_blob_ids(self, tag):
 
-        global hash_file_lock
+        global hash_file_lock, blobs_lock
 
         if db.vars.exists('numBlobs'):
             idx = db.vars.get('numBlobs')
@@ -99,9 +107,12 @@ class UpdateIdVersion(Thread):
         new_idxes = []
         for blob in blobs:
             hash, filename = blob.split(b' ',maxsplit=1)
-            if not db.blob.exists(hash):
-                db.blob.put(hash, idx)
+            with blobs_lock:
+                blob_exist = db.blob.exists(hash)
+                if not blob_exist:
+                    db.blob.put(hash, idx)
 
+            if not blob_exist:
                 with hash_file_lock:
                     db.hash.put(idx, hash)
                     db.file.put(idx, filename)
@@ -113,7 +124,32 @@ class UpdateIdVersion(Thread):
         db.vars.put('numBlobs', idx)
         return new_idxes
 
+
+class UpdateVersions(Thread):
+    def __init__(self, tag_buf):
+        Thread.__init__(self, name="UpdateVersionsElixir")
+        self.tag_buf = tag_buf
+
+    def run(self):
+        global new_idxes, tag_ready
+
+        for index, tag in enumerate(self.tag_buf, 0):
+            if(index >= len(new_idxes)):
+                # Wait for new tags
+                with tag_ready:
+                    tag_ready.wait()
+                continue
+
+            new_idxes[index][1].wait() # Make sure the tag is ready
+
+            self.update_versions(tag)
+
+            new_idxes[index][4].set() # Tell that UpdateVersions processed the tag
+
+            progress('vers: ' + tag.decode() + ' done', index+1)
+
     def update_versions(self, tag):
+        global blobs_lock
 
         # Get blob hashes and associated file paths
         blobs = scriptLines('list-blobs', '-p', tag)
@@ -121,13 +157,19 @@ class UpdateIdVersion(Thread):
 
         for blob in blobs:
             hash, path = blob.split(b' ', maxsplit=1)
-            idx = db.blob.get(hash)
+            with blobs_lock:
+                idx = db.blob.get(hash)
             buf.append((idx, path))
 
         buf = sorted(buf)
         obj = PathList()
         for idx, path in buf:
             obj.append(idx, path)
+
+            # Store DT bindings documentation files to parse them later
+            if path[:33] == b'Documentation/devicetree/bindings':
+                bindings_idxes.append(idx)
+
             if verbose:
                 print(f"Tag {tag}: adding #{idx} {path}")
         db.vers.put(tag, obj, sync=True)
@@ -325,8 +367,139 @@ class UpdateDocs(Thread):
                     db.docs.put(ident, obj)
 
 
+class UpdateComps(Thread):
+    def __init__(self, start, inc):
+        Thread.__init__(self, name="UpdateCompsElixir")
+        self.index = start
+        self.inc = inc # Equivalient to the number of comps threads
+
+    def run(self):
+        global new_idxes, tags_done, tags_comps, tags_comps_lock
+
+        while(not (tags_done and self.index >= len(new_idxes))):
+            if(self.index >= len(new_idxes)):
+                # Wait for new tags
+                with tag_ready:
+                    tag_ready.wait()
+                continue
+
+            new_idxes[self.index][1].wait() # Make sure the tag is ready
+
+            with tags_comps_lock:
+                tags_comps += 1
+
+            self.update_compatibles(new_idxes[self.index][0])
+
+            new_idxes[self.index][3].set() # Tell that UpdateComps processed the tag
+
+            self.index += self.inc
+
+    def update_compatibles(self, idxes):
+        global hash_file_lock, comps_lock, tags_comps
+
+        for idx in idxes:
+            if (idx % 1000 == 0): progress('comps: ' + str(idx), tags_comps)
+
+            with hash_file_lock:
+                hash = db.hash.get(idx)
+                filename = db.file.get(idx)
+
+            family = lib.getFileFamily(filename)
+            if family in [None, 'K']: continue
+
+            lines = scriptLines('parse-comps', hash, filename, family)
+            comps = {}
+            for l in lines:
+                ident, line = l.split(b' ')
+                line = line.decode()
+
+                if ident in comps:
+                    comps[ident] += ',' + str(line)
+                else:
+                    comps[ident] = str(line)
+
+            with comps_lock:
+                for ident, lines in comps.items():
+                    if db.comps.exists(ident):
+                        obj = db.comps.get(ident)
+                    else:
+                        obj = data.RefList()
+
+                    obj.append(idx, lines, family)
+                    if verbose:
+                        print(f"comps: {ident} in #{idx} @ {line}")
+                    db.comps.put(ident, obj)
+
+
+class UpdateCompsDocs(Thread):
+    def __init__(self, start, inc):
+        Thread.__init__(self, name="UpdateCompsDocsElixir")
+        self.index = start
+        self.inc = inc # Equivalient to the number of comps_docs threads
+
+    def run(self):
+        global new_idxes, tags_done, tags_comps_docs, tags_comps_docs_lock
+
+        while(not (tags_done and self.index >= len(new_idxes))):
+            if(self.index >= len(new_idxes)):
+                # Wait for new tags
+                with tag_ready:
+                    tag_ready.wait()
+                continue
+
+            new_idxes[self.index][1].wait() # Make sure the tag is ready
+            new_idxes[self.index][3].wait() # Make sure UpdateComps processed the tag
+            new_idxes[self.index][4].wait() # Make sure UpdateVersions processed the tag
+
+            with tags_comps_docs_lock:
+                tags_comps_docs += 1
+
+            self.update_compatibles_bindings(new_idxes[self.index][0])
+
+            self.index += self.inc
+
+    def update_compatibles_bindings(self, idxes):
+        global hash_file_lock, comps_lock, comps_docs_lock, tags_comps_docs, bindings_idxes
+
+        for idx in idxes:
+            if (idx % 1000 == 0): progress('comps_docs: ' + str(idx), tags_comps_docs)
+
+            if not idx in bindings_idxes: # Parse only bindings doc files
+                continue
+
+            with hash_file_lock:
+                hash = db.hash.get(idx)
+                filename = db.file.get(idx)
+
+            family = 'B'
+            lines = scriptLines('parse-comps', hash, filename, family)
+            comps_docs = {}
+            with comps_lock:
+                for l in lines:
+                    ident, line = l.split(b' ')
+                    line = int(line.decode())
+
+                    if db.comps.exists(ident):
+                        if ident in comps_docs:
+                            comps_docs[ident] += ',' + str(line)
+                        else:
+                            comps_docs[ident] = str(line)
+
+            with comps_docs_lock:
+                for ident, lines in comps_docs.items():
+                    if db.comps_docs.exists(ident):
+                        obj = db.comps_docs.get(ident)
+                    else:
+                        obj = data.RefList()
+
+                    obj.append(idx, lines, family)
+                    if verbose:
+                        print(f"comps_docs: {ident} in #{idx} @ {line}")
+                    db.comps_docs.put(ident, obj)
+
+
 def progress(msg, current):
-    print('{} - {} ({:.0%})'.format(project, msg, current/num_tags))
+    print('{} - {} ({:.1%})'.format(project, msg, current/num_tags))
 
 
 # Main
@@ -335,23 +508,34 @@ def progress(msg, current):
 if len(argv) >= 2 and argv[1].isdigit() :
     cpu = int(argv[1])
 
-    if cpu < 3 :
-        cpu = 3
+    if cpu < 5 :
+        cpu = 5
 
 # Distribute threads among functions using the following rules :
-# There are more refs threads than others
-# There are more (or equal) defs threads than docs threads
-# Example : if cpu=6 : refs=3, defs=2, docs=1
-#           if cpu=7 : refs=3, defs=2, docs=2
-#           if cpu=8 : refs=4, defs=2, docs=2
-#           if cpu=11: refs=5, defs=3, docs=3
-quo, rem = divmod(cpu, 2)
+# There are more (or equal) refs threads than others
+# There are more (or equal) defs threads than docs or comps threads
+# Example : if cpu=6 : defs=1, refs=2, docs=1, comps=1, comps_docs=1
+#           if cpu=7 : defs=2, refs=2, docs=1, comps=1, comps_docs=1
+#           if cpu=8 : defs=2, refs=3, docs=1, comps=1, comps_docs=1
+#           if cpu=11: defs=2, refs=3, docs=2, comps=2, comps_docs=2
+quo, rem = divmod(cpu, 5)
 num_th_refs = quo
-
-quo, rem = divmod(quo+rem, 2)
-num_th_defs = quo + rem
+num_th_defs = quo
 num_th_docs = quo
 
+# If DT bindings support is enabled, use $quo threads for each of the 2 threads
+# Otherwise add them to the remaining threads
+if dts_comp_support:
+    num_th_comps = quo
+    num_th_comps_docs = quo
+else :
+    num_th_comps = 0
+    num_th_comps_docs = 0
+    rem += 2*quo
+
+quo, rem = divmod(rem, 2)
+num_th_defs += quo
+num_th_refs += quo + rem
 
 tag_buf = []
 for tag in scriptLines('list-tags'):
@@ -363,7 +547,8 @@ project = lib.currentProject()
 
 print(project + ' - found ' + str(len(tag_buf)) + ' new tags')
 
-id_version_thread = UpdateIdVersion(tag_buf)
+threads_list.append(UpdateIds(tag_buf))
+threads_list.append(UpdateVersions(tag_buf))
 
 # Define defs threads
 for i in range(num_th_defs):
@@ -374,19 +559,25 @@ for i in range(num_th_refs):
 # Define docs threads
 for i in range(num_th_docs):
     threads_list.append(UpdateDocs(i, num_th_docs))
+# Define comps threads
+for i in range(num_th_comps):
+    threads_list.append(UpdateComps(i, num_th_comps))
+# Define comps_docs threads
+for i in range(num_th_comps_docs):
+    threads_list.append(UpdateCompsDocs(i, num_th_comps_docs))
+
 
 # Start to process tags
-id_version_thread.start()
+threads_list[0].start()
 
 # Wait until the first tag is ready
 with tag_ready:
     tag_ready.wait()
 
 # Start remaining threads
-for i in range(len(threads_list)):
+for i in range(1, len(threads_list)):
     threads_list[i].start()
 
 # Make sure all threads finished
-id_version_thread.join()
 for i in range(len(threads_list)):
     threads_list[i].join()

@@ -1,5 +1,8 @@
 # Elixir definitions for Zephyr
 
+# Enable DT bindings compatible strings support
+dts_comp_support=1
+
 list_tags()
 {
     echo "$tags" |

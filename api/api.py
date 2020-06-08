@@ -21,6 +21,7 @@ import json
 import os
 
 import falcon
+from urllib import parse
 
 ELIXIR_DIR = os.path.dirname(os.path.realpath(__file__)) + '/..'
 
@@ -54,6 +55,9 @@ class IdentGetter:
             family = req.params['family']
         else:
             family = 'C'
+
+        if family == 'B': #DT compatible strings are quoted in the database
+            ident = parse.quote(ident)
 
         symbol_definitions, symbol_references, symbol_doccomments_UNUSED = query('ident', version, ident, family)
         resp.body = json.dumps(

@@ -95,7 +95,7 @@ if m:
             location = '/'+project+'/'+version+'/'+family2+'/ident/'+ident2
         else:
             mode = 'ident'
-            if not(ident and search('^[A-Za-z0-9_-]*$', ident)):
+            if not(ident and search('^[A-Za-z0-9_%-]*$', ident)):
                 ident = ''
             url = family + '/ident/' + ident
     else:
@@ -128,6 +128,8 @@ import sys
 sys.path = [ sys.path[0] + '/..' ] + sys.path
 from query import query
 
+dts_comp_support = query('dts-comp')
+
 if version_decoded == 'latest':
     tag = query('latest')
 else:
@@ -140,7 +142,7 @@ data = {
     'url': url,
     'project': project,
     'projects': projects,
-    'ident': ident,
+    'ident': parse.unquote(ident),
     'family': search_family,
     'breadcrumb': '<a class="project" href="'+version+'/source">/</a>'
 }
@@ -259,7 +261,7 @@ if mode == 'source':
         import pygments.lexers
         import pygments.formatters
 
-        fname = os.path.basename(path)
+        fdir, fname = os.path.split(path)
         filename, extension = os.path.splitext(fname)
         extension = extension[1:].lower()
         family = query('family', fname)
@@ -277,7 +279,10 @@ if mode == 'source':
         # Apply filters
         for f in filters:
             c = f['case']
-            if (c == 'any' or (c == 'filename' and filename in f['match']) or (c == 'extension' and extension in f['match'])):
+            if (c == 'any' or
+                (c == 'filename' and filename in f['match']) or
+                (c == 'extension' and extension in f['match']) or
+                (c == 'path' and fdir.startswith(tuple(f['match'])))):
 
                 apply_filter = True
 
@@ -304,63 +309,110 @@ if mode == 'source':
 
         for f in filters:
             c = f['case']
-            if (c == 'any' or (c == 'filename' and filename in f['match']) or (c == 'extension' and extension in f['match'])):
+            if (c == 'any' or
+                (c == 'filename' and filename in f['match']) or
+                (c == 'extension' and extension in f['match']) or
+                (c == 'path' and fdir.startswith(tuple(f['match'])))):
+
                 result = sub(f ['postrex'], f ['postfunc'], result)
 
         print('<div class="lxrcode">' + result + '</div>')
 
 
 elif mode == 'ident':
-    data['title'] = ident+' identifier - '+title_suffix
+    data['title'] = parse.unquote(ident)+' identifier - '+title_suffix
 
     symbol_definitions, symbol_references, symbol_doccomments = query('ident', tag, ident, family)
 
     print('<div class="lxrident">')
-    if len(symbol_definitions):
-        print('<h2>Defined in '+str(len(symbol_definitions))+' files:</h2>')
-        print('<ul>')
-        for symbol_definition in symbol_definitions:
-            print('<li><a href="{v}/source/{f}#L{n}"><strong>{f}</strong>, line {n} <em>(as a {t})</em></a>'.format(
-                v=version, f=symbol_definition.path, n=symbol_definition.line, t=symbol_definition.type
-            ))
-        print('</ul>')
+    if len(symbol_definitions) or len(symbol_references):
+        if len(symbol_definitions):
+            print('<h2>Defined in '+str(len(symbol_definitions))+' files:</h2>')
+            print('<ul>')
+            for symbol_definition in symbol_definitions:
+                ln = str(symbol_definition.line).split(',')
+                if len(ln) == 1:
+                    n = ln[0]
+                    print('<li><a href="{v}/source/{f}#L{n}"><strong>{f}</strong>, line {n} <em>(as a {t})</em></a>'.format(
+                        v=version, f=symbol_definition.path, n=n, t=symbol_definition.type
+                    ))
+                else:
+                    if len(symbol_doccomments) > 100:    # Concise display
+                        n = len(ln)
+                        print('<li><a href="{v}/source/{f}"><strong>{f}</strong>, <em>{n} times</em> <em>(as a {t})</em></a>'.format(
+                            v=version, f=symbol_definition.path, n=n, t=symbol_definition.type
+                        ))
+                    else:    # Verbose display
+                        print('<li><a href="{v}/source/{f}#L{n}"><strong>{f}</strong> <em>(as a {t})</em></a>'.format(
+                            v=version, f=symbol_definition.path, n=ln[0], t=symbol_definition.type
+                        ))
+                        print('<ul>')
+                        for n in ln:
+                            print('<li><a href="{v}/source/{f}#L{n}">line {n}</a>'.format(
+                                v=version, f=symbol_definition.path, n=n
+                            ))
+                        print('</ul>')
+            print('</ul>')
+        else:
+            print('<h2>No definitions found in the database</h2>')
 
         if len(symbol_doccomments):
             print('<h2>Documented in '+str(len(symbol_doccomments))+' files:</h2>')
             print('<ul>')
             for symbol_doccomment in symbol_doccomments:
-                print('<li><a href="{v}/source/{f}#L{n}"><strong>{f}</strong>, line {n}</a></li>'.format(
-                    v=version, f=symbol_doccomment.path, n=symbol_doccomment.line
-                ))
+                ln = symbol_doccomment.line.split(',')
+                if len(ln) == 1:
+                    n = ln[0]
+                    print('<li><a href="{v}/source/{f}#L{n}"><strong>{f}</strong>, line {n}</a>'.format(
+                        v=version, f=symbol_doccomment.path, n=n
+                    ))
+                else:
+                    if len(symbol_doccomments) > 100:    # Concise display
+                        n = len(ln)
+                        print('<li><a href="{v}/source/{f}"><strong>{f}</strong>, <em>{n} times</em></a>'.format(
+                            v=version, f=symbol_doccomment.path, n=n
+                        ))
+                    else:    # Verbose display
+                        print('<li><a href="{v}/source/{f}#L{n}"><strong>{f}</strong></a>'.format(
+                            v=version, f=symbol_doccomment.path, n=ln[0]
+                        ))
+                        print('<ul>')
+                        for n in ln:
+                            print('<li><a href="{v}/source/{f}#L{n}">line {n}</a>'.format(
+                                v=version, f=symbol_doccomment.path, n=n
+                            ))
+                        print('</ul>')
             print('</ul>')
 
-
-        print('<h2>Referenced in '+str(len(symbol_references))+' files:</h2>')
-        print('<ul>')
-        for symbol_reference in symbol_references:
-            ln = symbol_reference.line.split(',')
-            if len(ln) == 1:
-                n = ln[0]
-                print('<li><a href="{v}/source/{f}#L{n}"><strong>{f}</strong>, line {n}</a>'.format(
-                    v=version, f=symbol_reference.path, n=n
-                ))
-            else:
-                if len(symbol_references) > 100:    # Concise display
-                    n = len(ln)
-                    print('<li><a href="{v}/source/{f}"><strong>{f}</strong>, <em>{n} times</em></a>'.format(
+        if len(symbol_references):
+            print('<h2>Referenced in '+str(len(symbol_references))+' files:</h2>')
+            print('<ul>')
+            for symbol_reference in symbol_references:
+                ln = symbol_reference.line.split(',')
+                if len(ln) == 1:
+                    n = ln[0]
+                    print('<li><a href="{v}/source/{f}#L{n}"><strong>{f}</strong>, line {n}</a>'.format(
                         v=version, f=symbol_reference.path, n=n
                     ))
-                else:    # Verbose display
-                    print('<li><a href="{v}/source/{f}#L{n}"><strong>{f}</strong></a>'.format(
-                        v=version, f=symbol_reference.path, n=ln[0]
-                    ))
-                    print('<ul>')
-                    for n in ln:
-                        print('<li><a href="{v}/source/{f}#L{n}">line {n}</a>'.format(
+                else:
+                    if len(symbol_references) > 100:    # Concise display
+                        n = len(ln)
+                        print('<li><a href="{v}/source/{f}"><strong>{f}</strong>, <em>{n} times</em></a>'.format(
                             v=version, f=symbol_reference.path, n=n
                         ))
-                    print('</ul>')
-        print('</ul>')
+                    else:    # Verbose display
+                        print('<li><a href="{v}/source/{f}#L{n}"><strong>{f}</strong></a>'.format(
+                            v=version, f=symbol_reference.path, n=ln[0]
+                        ))
+                        print('<ul>')
+                        for n in ln:
+                            print('<li><a href="{v}/source/{f}#L{n}">line {n}</a>'.format(
+                                v=version, f=symbol_reference.path, n=n
+                            ))
+                        print('</ul>')
+            print('</ul>')
+        else:
+            print('<h2>No references found in the database</h2>')
     else:
         if ident != '':
             print('<h2>Identifier not used</h2>')

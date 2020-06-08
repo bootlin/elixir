@@ -30,6 +30,7 @@ script_path=`realpath "$0"`
 cd `dirname "$script_path"`
 script_dir=`pwd`
 cd "$cur_dir"
+dts_comp_support=0 # DT bindings compatible strings support (disable by default)
 
 version_dir()
 {
@@ -207,6 +208,21 @@ parse_docs()
     rm -rf "$tmpfile"
 }
 
+parse_comps()
+{
+    tmpfile=`mktemp`
+
+    git cat-file blob "$opt1" > "$tmpfile"
+    "$script_dir/find_compatible_dts.py" "$tmpfile" "$opt3" || exit "$?"
+
+    rm -rf "$tmpfile"
+}
+
+dts_comp()
+{
+    echo $dts_comp_support
+}
+
 project=$(basename `dirname $LXR_REPO_DIR`)
 
 plugin=$script_dir/projects/$project.sh
@@ -278,6 +294,14 @@ case $cmd in
 
     parse-docs)
         parse_docs
+        ;;
+
+    parse-comps)
+        parse_comps
+        ;;
+
+    dts-comp)
+        dts_comp
         ;;
 
     help)

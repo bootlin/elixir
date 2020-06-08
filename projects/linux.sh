@@ -1,5 +1,8 @@
 # Elixir definitions for Linux
 
+# Enable DT bindings compatible strings support
+dts_comp_support=1
+
 get_tags()
 {
     git tag |
