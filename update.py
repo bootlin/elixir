@@ -45,6 +45,7 @@ defs_lock = Lock() # Lock for db.defs
 refs_lock = Lock() # Lock for db.refs
 docs_lock = Lock() # Lock for db.docs
 comps_lock = Lock() # Lock for db.comps
+comps_docs_lock = Lock() # Lock for db.comps_docs
 tag_ready = Condition() # Waiting for new tags
 
 new_idxes = [] # (new idxes, Event idxes ready, Event defs ready)
@@ -367,7 +368,7 @@ class UpdateComps(Thread):
         global hash_file_lock, comps_lock, tags_comps
 
         for idx in idxes:
-            if (idx % 1000 == 0): progress('comps: ' + str(idx) + ' 1/2', tags_comps)
+            if (idx % 1000 == 0): progress('comps: ' + str(idx), tags_comps)
 
             with hash_file_lock:
                 hash = db.hash.get(idx)
@@ -403,7 +404,7 @@ class UpdateComps(Thread):
         global hash_file_lock, comps_lock, tags_comps, bindings_idxes
 
         for idx in idxes:
-            if (idx % 1000 == 0): progress('comps: ' + str(idx) + ' 2/2', tags_comps)
+            if (idx % 1000 == 0): progress('comps_docs: ' + str(idx), tags_comps)
 
             if not idx in bindings_idxes: # Parse only bindings doc files
                 continue
@@ -414,17 +415,29 @@ class UpdateComps(Thread):
 
             family = 'B'
             lines = scriptLines('parse-comps', hash, filename, family)
+            comps_docs = {}
             with comps_lock:
                 for l in lines:
                     ident, line = l.split(b' ')
                     line = int(line.decode())
 
                     if db.comps.exists(ident):
-                        obj = db.comps.get(ident)
-                        obj.append(idx, str(line), family)
-                        if verbose:
-                            print(f"comps: {ident} in #{idx} @ {line}")
-                        db.comps.put(ident, obj)
+                        if ident in comps_docs:
+                            comps_docs[ident] += ',' + str(line)
+                        else:
+                            comps_docs[ident] = str(line)
+
+            with comps_docs_lock:
+                for ident, lines in comps_docs.items():
+                    if db.comps_docs.exists(ident):
+                        obj = db.comps_docs.get(ident)
+                    else:
+                        obj = data.RefList()
+
+                    obj.append(idx, lines, family)
+                    if verbose:
+                        print(f"comps_docs: {ident} in #{idx} @ {line}")
+                    db.comps_docs.put(ident, obj)
 
 
 def progress(msg, current):

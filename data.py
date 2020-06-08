@@ -196,4 +196,5 @@ class DB:
         self.docs = BsdDB(dir + '/doccomments.db', ro, RefList)
         if dtscomp:
             self.comps = BsdDB(dir + '/compatibledts.db', ro, RefList)
+            self.comps_docs = BsdDB(dir + '/compatibledts_docs.db', ro, RefList)
             # Use a RefList in case there are multiple doc comments for an identifier

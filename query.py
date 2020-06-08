@@ -216,8 +216,10 @@ def query(cmd, *args):
 
             files_this_version = db.vers.get(version).iter()
             comps = db.comps.get(ident).iter(dummy=True)
+            comps_docs = db.comps_docs.get(ident).iter(dummy=True)
 
             comps_idx, comps_lines, comps_family = next(comps)
+            comps_docs_idx, comps_docs_lines, comps_docs_family = next(comps_docs)
             compsCBuf = [] # C/CPP/ASM files
             compsDBuf = [] # DT files
             compsBBuf = [] # DT bindings docs files
@@ -225,15 +227,20 @@ def query(cmd, *args):
             for file_idx, file_path in files_this_version:
                 while comps_idx < file_idx:
                     comps_idx, comps_lines, comps_family = next(comps)
+
+                while comps_docs_idx < file_idx:
+                    comps_docs_idx, comps_docs_lines, comps_docs_family = next(comps_docs)
+
                 while comps_idx == file_idx:
                     if comps_family == 'C':
                         compsCBuf.append((file_path, comps_lines))
                     elif comps_family == 'D':
                         compsDBuf.append((file_path, comps_lines))
-                    elif comps_family == 'B':
-                        compsBBuf.append((file_path, comps_lines))
-
                     comps_idx, comps_lines, comps_family = next(comps)
+
+                while comps_docs_idx == file_idx:
+                    compsBBuf.append((file_path, comps_docs_lines))
+                    comps_docs_idx, comps_docs_lines, comps_docs_family = next(comps_docs)
 
             for path, cline in sorted(compsCBuf):
                 symbol_definitions.append(SymbolInstance(path, cline, 'compatible'))
