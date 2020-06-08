@@ -330,9 +330,28 @@ elif mode == 'ident':
             print('<h2>Defined in '+str(len(symbol_definitions))+' files:</h2>')
             print('<ul>')
             for symbol_definition in symbol_definitions:
-                print('<li><a href="{v}/source/{f}#L{n}"><strong>{f}</strong>, line {n} <em>(as a {t})</em></a>'.format(
-                    v=version, f=symbol_definition.path, n=symbol_definition.line, t=symbol_definition.type
-                ))
+                ln = symbol_definition.line.split(',')
+                if len(ln) == 1:
+                    n = ln[0]
+                    print('<li><a href="{v}/source/{f}#L{n}"><strong>{f}</strong>, line {n} <em>(as a {t})</em></a>'.format(
+                        v=version, f=symbol_definition.path, n=n, t=symbol_definition.type
+                    ))
+                else:
+                    if len(symbol_doccomments) > 100:    # Concise display
+                        n = len(ln)
+                        print('<li><a href="{v}/source/{f}"><strong>{f}</strong>, <em>{n} times</em> <em>(as a {t})</em></a>'.format(
+                            v=version, f=symbol_definition.path, n=n, t=symbol_definition.type
+                        ))
+                    else:    # Verbose display
+                        print('<li><a href="{v}/source/{f}#L{n}"><strong>{f}</strong> <em>(as a {t})</em></a>'.format(
+                            v=version, f=symbol_definition.path, n=ln[0], t=symbol_definition.type
+                        ))
+                        print('<ul>')
+                        for n in ln:
+                            print('<li><a href="{v}/source/{f}#L{n}">line {n}</a>'.format(
+                                v=version, f=symbol_definition.path, n=n
+                            ))
+                        print('</ul>')
             print('</ul>')
         else:
             print('<h2>No definitions found in the database</h2>')
