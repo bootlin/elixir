@@ -55,7 +55,7 @@ index() {
     # The above takes so much time on the first run that it's worth running a new update
 
     cd $LXR_REPO_DIR
-    git fetch --all
+    git fetch --all --tags
     cd $ELIXIR_INSTALL
     ./update.py $ELIXIR_THREADS
 }
