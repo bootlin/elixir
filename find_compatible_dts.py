@@ -2,8 +2,8 @@
 
 #  This file is part of Elixir, a source code cross-referencer.
 #
-#  Copyright (C) 2017--2020  Maxime Chretien
-#  <maxime.chretien@bootlin.com> and contributors
+#  Copyright (C) 2017--2020  Maxime Chretien <maxime.chretien@bootlin.com>
+#                            and contributors
 #
 #  Elixir is free software: you can redistribute it and/or modify
 #  it under the terms of the GNU Affero General Public License as published by
