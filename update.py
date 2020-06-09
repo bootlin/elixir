@@ -545,7 +545,10 @@ for tag in scriptLines('list-tags'):
 num_tags = len(tag_buf)
 project = lib.currentProject()
 
-print(project + ' - found ' + str(len(tag_buf)) + ' new tags')
+print(project + ' - found ' + str(num_tags) + ' new tags')
+
+if not num_tags:
+    exit(0)
 
 threads_list.append(UpdateIds(tag_buf))
 threads_list.append(UpdateVersions(tag_buf))
