@@ -32,20 +32,27 @@ usage_message = ("USAGE: find_compatible_dts.py <file> <family>\n"
 
 ident_list = ""
 
+# Compile regexes
+regex_c = re.compile("\s*{*\s*\.compatible\s*=\s*\"(.+?)\"")
+regex_dts1 = re.compile("\s*compatible")
+regex_dts2 = re.compile("\"(.+?)\"")
+regex_bindings = re.compile("([\w-]+,?[\w-]+)")
+
+
 def parse_c(content):
-    return re.findall("\s*{*\s*\.compatible\s*=\s*\"(.+?)\"", content)
+    return regex_c.findall(content)
 
 def parse_dts(content):
     ret = []
-    if re.match("\s*compatible", content) != None:
-        ret = re.findall("\"(.+?)\"", content)
+    if regex_dts1.match(content) != None:
+        ret = regex_dts2.findall(content)
     return ret
 
 def parse_bindings(content):
     # There are a lot of wrong results
     # but we don't apply that to a lot of files
     # so it should be fine
-    return re.findall("([\w-]+,?[\w-]+)", content)
+    return regex_bindings.findall(content)
 
 
 # Main
