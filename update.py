@@ -414,8 +414,7 @@ class UpdateComps(Thread):
             lines = compatibles_parser.run(scriptLines('get-blob', hash), family)
             comps = {}
             for l in lines:
-                ident, line = l.split(b' ')
-                line = line.decode()
+                ident, line = l.split(' ')
 
                 if ident in comps:
                     comps[ident] += ',' + str(line)
@@ -480,8 +479,7 @@ class UpdateCompsDocs(Thread):
             comps_docs = {}
             with comps_lock:
                 for l in lines:
-                    ident, line = l.split(b' ')
-                    line = int(line.decode())
+                    ident, line = l.split(' ')
 
                     if db.comps.exists(ident):
                         if ident in comps_docs:
