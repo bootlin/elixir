@@ -187,6 +187,35 @@ def query(cmd, *args):
         else:
             return False
 
+    elif cmd == 'keys':
+        # Return all keys of a given database
+        # /!\ This can take a while /!\
+
+        name = args[0]
+
+        if name == 'vars':
+            return db.vars.get_keys()
+        elif name == 'blob':
+            return db.blob.get_keys()
+        elif name == 'hash':
+            return db.hash.get_keys()
+        elif name == 'file':
+            return db.file.get_keys()
+        elif name == 'vers':
+            return db.vers.get_keys()
+        elif name == 'defs':
+            return db.defs.get_keys()
+        elif name == 'refs':
+            return db.refs.get_keys()
+        elif name == 'docs':
+            return db.docs.get_keys()
+        elif name == 'comps' and dts_comp_support:
+            return db.comps.get_keys()
+        elif name == 'comps_docs' and dts_comp_support:
+            return db.comps_docs.get_keys()
+        else:
+            return []
+
     elif cmd == 'ident':
 
         # Returns identifier search results
