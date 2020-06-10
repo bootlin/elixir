@@ -46,7 +46,7 @@ class FindCompatibleDTS:
         return self.regex_bindings.findall(content)
 
     def run(self, file_lines, family):
-        ident_list = ""
+        ident_list = []
 
         # Iterate though lines and search for idents
         for num, line in enumerate(file_lines, 1):
@@ -59,7 +59,7 @@ class FindCompatibleDTS:
                 ret = self.parse_bindings(line)
 
             for i in range(len(ret)):
-                ident_list += str(parse.quote(ret[i])) + ' ' + str(num) + '\n'
+                ident_list.append(str(parse.quote(ret[i])) + ' ' + str(num))
 
         return ident_list
 
