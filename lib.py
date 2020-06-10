@@ -52,6 +52,14 @@ def unescape(bstr):
         bstr = bstr.replace(a, b)
     return bstr
 
+def decode(byte_object):
+    # decode('ascii') fails on special chars
+    # FIXME: major hack until we handle everything as bytestrings
+    try:
+        return byte_object.decode('utf-8')
+    except UnicodeDecodeError:
+        return byte_object.decode('iso-8859-1')
+
 # List of tokens which we don't want to consider as identifiers
 # Typically for very frequent variable names and things redefined by #define
 # TODO: allow to have per project blacklists

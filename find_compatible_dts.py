@@ -20,7 +20,7 @@
 
 import re
 from urllib import parse
-from query import decode
+from lib import decode
 
 class FindCompatibleDTS:
     def __init__(self):
@@ -50,7 +50,7 @@ class FindCompatibleDTS:
 
         # Iterate though lines and search for idents
         for num, line in enumerate(file_lines, 1):
-            line = query.decode(line)
+            line = decode(line)
             if family == 'C':
                 ret = self.parse_c(line)
             elif family == 'D':

@@ -18,7 +18,7 @@
 #  You should have received a copy of the GNU Affero General Public License
 #  along with Elixir.  If not, see <http://www.gnu.org/licenses/>.
 
-from lib import script, scriptLines
+from lib import script, scriptLines, decode
 import lib
 import data
 import os
@@ -45,14 +45,6 @@ class SymbolInstance(object):
 
     def __str__(self):
         return self.__repr__()
-
-def decode(byte_object):
-    # decode('ascii') fails on special chars
-    # FIXME: major hack until we handle everything as bytestrings
-    try:
-        return byte_object.decode('utf-8')
-    except UnicodeDecodeError:
-        return byte_object.decode('iso-8859-1')
 
 def query(cmd, *args):
     if cmd == 'versions':
