@@ -269,7 +269,8 @@ AddHandler cgi-script .py
 
     RewriteEngine on
     RewriteRule "^/$" "/linux/latest/source" [R]
-    RewriteRule "^/(?!api).*/(source|ident|search)" "/web.py" [PT]
+    RewriteRule "^/(?!api|acp).*/(source|ident|search)" "/web.py" [PT]
+    RewriteRule "^/acp" "/autocomplete.py" [PT]
 </VirtualHost>
 ----
 

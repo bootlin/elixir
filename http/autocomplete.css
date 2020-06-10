@@ -1,0 +1,89 @@
+/*
+ * @license MIT
+ *
+ * Autocomplete.js v2.7.1
+ * Developed by Baptiste Donaux
+ * http://autocomplete-js.com
+ *
+ * (c) 2017, Baptiste Donaux
+ *
+ * Modified by Maxime Chretien <maxime.chretien@bootlin.com>
+ * for the needs of Elixir Cross Referencer
+ * https://github.com/bootlin/elixir
+ *
+ */
+
+input[data-autocomplete] {
+  border-color: #808080;
+  border-style: none none solid none;
+  border-width: 0px 0px 1px 0px;
+  margin: 0px;
+  padding: 5px;
+  width: 100%;
+}
+.autocomplete {
+  position: absolute;
+  transition: all 0.5s ease 0s;
+  max-height: 0;
+  overflow-y: hidden;
+  transition-duration: 0.3s;
+  transition-property: all;
+  transition-timing-function: cubic-bezier(0, 1, 0.5, 1);
+}
+.autocomplete:active,
+.autocomplete:focus,
+.autocomplete:hover {
+  background-color: #EEEEEE;
+  transition: all 0.5s ease 0s;
+}
+.autocomplete:empty {
+  display: none;
+}
+.autocomplete > ul {
+  list-style-type: none;
+  margin: 0;
+  padding: 0;
+}
+.autocomplete > ul > li {
+  cursor: pointer;
+  padding: 5px 0 5px 10px;
+  white-space: nowrap;
+}
+.autocomplete > ul > li.active,
+.autocomplete > ul > li:active,
+.autocomplete > ul > li:focus,
+.autocomplete > ul > li:hover {
+  background-color: #DDDDDD;
+  transition: all 0.5s ease 0s;
+}
+.autocomplete > ul > li.active a:active,
+.autocomplete > ul > li:active a:active,
+.autocomplete > ul > li:focus a:active,
+.autocomplete > ul > li:hover a:active,
+.autocomplete > ul > li.active a:focus,
+.autocomplete > ul > li:active a:focus,
+.autocomplete > ul > li:focus a:focus,
+.autocomplete > ul > li:hover a:focus,
+.autocomplete > ul > li.active a:hover,
+.autocomplete > ul > li:active a:hover,
+.autocomplete > ul > li:focus a:hover,
+.autocomplete > ul > li:hover a:hover {
+  text-decoration: none;
+}
+.autocomplete > ul > li.locked {
+  cursor: inherit;
+}
+.autocomplete.open {
+  display: block;
+  transition: all 0.5s ease 0s;
+  background-color: #EEEEEE;
+  max-height: 500px;
+  overflow-y: auto;
+  transition-duration: 0.3s;
+  transition-property: all;
+  transition-timing-function: cubic-bezier(0, 1, 0.5, 1);
+  z-index: 100;
+}
+.autocomplete.open:empty {
+  display: none;
+}
