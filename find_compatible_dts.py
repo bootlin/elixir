@@ -18,77 +18,48 @@
 #  You should have received a copy of the GNU Affero General Public License
 #  along with Elixir.  If not, see <http://www.gnu.org/licenses/>.
 
-from sys import argv
 import re
-import os
 from urllib import parse
-import query
+from query import decode
 
-usage_message = ("USAGE: find_compatible_dts.py <file> <family>\n"
-                 "file : The file you want to search in\n"
-                 "family : The type of file (C for .c/.cpp/.h/...\n"
-                 "                           D for .dts/.dtsi\n"
-                 "                           B for bindings docs files)")
+class FindCompatibleDTS:
+    def __init__(self):
+        # Compile regexes
+        self.regex_c = re.compile("\s*{*\s*\.compatible\s*=\s*\"(.+?)\"")
+        self.regex_dts1 = re.compile("\s*compatible")
+        self.regex_dts2 = re.compile("\"(.+?)\"")
+        self.regex_bindings = re.compile("([\w-]+,?[\w-]+)")
 
-ident_list = ""
+    def parse_c(self, content):
+        return self.regex_c.findall(content)
 
-# Compile regexes
-regex_c = re.compile("\s*{*\s*\.compatible\s*=\s*\"(.+?)\"")
-regex_dts1 = re.compile("\s*compatible")
-regex_dts2 = re.compile("\"(.+?)\"")
-regex_bindings = re.compile("([\w-]+,?[\w-]+)")
+    def parse_dts(self, content):
+        ret = []
+        if self.regex_dts1.match(content) != None:
+            ret = self.regex_dts2.findall(content)
+        return ret
 
+    def parse_bindings(self, content):
+        # There are a lot of wrong results
+        # but we don't apply that to a lot of files
+        # so it should be fine
+        return self.regex_bindings.findall(content)
 
-def parse_c(content):
-    return regex_c.findall(content)
+    def run(self, file_lines, family):
+        ident_list = ""
 
-def parse_dts(content):
-    ret = []
-    if regex_dts1.match(content) != None:
-        ret = regex_dts2.findall(content)
-    return ret
+        # Iterate though lines and search for idents
+        for num, line in enumerate(file_lines, 1):
+            line = query.decode(line)
+            if family == 'C':
+                ret = self.parse_c(line)
+            elif family == 'D':
+                ret = self.parse_dts(line)
+            elif family == 'B':
+                ret = self.parse_bindings(line)
 
-def parse_bindings(content):
-    # There are a lot of wrong results
-    # but we don't apply that to a lot of files
-    # so it should be fine
-    return regex_bindings.findall(content)
+            for i in range(len(ret)):
+                ident_list += str(parse.quote(ret[i])) + ' ' + str(num) + '\n'
 
+        return ident_list
 
-# Main
-# Test and get args
-if len(argv) < 3:
-    print("ERROR: Missing arguments !\n" + usage_message)
-    exit(1)
-
-filename = argv[1]
-family = argv[2]
-
-# Make sure it's an accepted family
-if not family in ['C', 'D', 'B']:
-    print("ERROR: Unknown family !\n" + usage_message)
-    exit(1)
-
-# Make sure file exists
-try:
-    f = open(filename, 'rb')
-except IOError:
-    print("ERROR: File doesn't exist !\n" + usage_message)
-    exit(1)
-
-# Iterate though lines and search for idents
-for num, line in enumerate(f, 1):
-    line = query.decode(line)
-    if family == 'C':
-        ret = parse_c(line)
-    elif family == 'D':
-        ret = parse_dts(line)
-    elif family == 'B':
-        ret = parse_bindings(line)
-
-    for i in range(len(ret)):
-        ident_list += str(parse.quote(ret[i])) + ' ' + str(num) + '\n'
-
-# Print the list and exit
-print(ident_list, end='')
-exit(0)

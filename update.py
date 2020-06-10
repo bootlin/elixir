@@ -23,16 +23,20 @@
 # This is different from that blob's Git hash.
 
 from sys import argv
-from lib import script, scriptLines
-import lib
-import data
 import os
-from data import PathList
 from threading import Thread, Lock, Event, Condition
+
+import lib
+from lib import script, scriptLines
+import data
+from data import PathList
+from find_compatible_dts import FindCompatibleDTS
 
 verbose = False
 
 dts_comp_support = int(script('dts-comp'))
+
+compatibles_parser = FindCompatibleDTS()
 
 db = data.DB(lib.getDataDir(), readonly=False, dtscomp=dts_comp_support)
 
@@ -407,7 +411,7 @@ class UpdateComps(Thread):
             family = lib.getFileFamily(filename)
             if family in [None, 'K']: continue
 
-            lines = scriptLines('parse-comps', hash, filename, family)
+            lines = compatibles_parser.run(scriptLines('get-blob', hash), family)
             comps = {}
             for l in lines:
                 ident, line = l.split(b' ')
@@ -472,7 +476,7 @@ class UpdateCompsDocs(Thread):
                 filename = db.file.get(idx)
 
             family = 'B'
-            lines = scriptLines('parse-comps', hash, filename, family)
+            lines = compatibles_parser.run(scriptLines('get-blob', hash), family)
             comps_docs = {}
             with comps_lock:
                 for l in lines:

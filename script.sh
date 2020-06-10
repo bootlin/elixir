@@ -208,16 +208,6 @@ parse_docs()
     rm -rf "$tmpfile"
 }
 
-parse_comps()
-{
-    tmpfile=`mktemp`
-
-    git cat-file blob "$opt1" > "$tmpfile"
-    "$script_dir/find_compatible_dts.py" "$tmpfile" "$opt3" || exit "$?"
-
-    rm -rf "$tmpfile"
-}
-
 dts_comp()
 {
     echo $dts_comp_support
@@ -294,10 +284,6 @@ case $cmd in
 
     parse-docs)
         parse_docs
-        ;;
-
-    parse-comps)
-        parse_comps
         ;;
 
     dts-comp)
