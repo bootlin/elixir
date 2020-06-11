@@ -23,6 +23,7 @@ import lib
 import data
 import os
 from collections import OrderedDict
+from urllib import parse
 
 dts_comp_support = int(script('dts-comp'))
 
