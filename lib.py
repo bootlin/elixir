@@ -169,9 +169,9 @@ blacklist = (
     )
 
 def isIdent(bstr):
-    if len(bstr) < 2:
-        return False
-    elif bstr in blacklist:
+    if len(bstr) < 2 or
+        bstr in blacklist or
+        bstr.startswith(b'__anon'):
         return False
     else:
         return True
