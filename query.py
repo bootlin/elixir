@@ -155,8 +155,8 @@ def query(cmd, *args):
             for tok in tokens:
                 even = not even
                 tok2 = prefix + tok
-                if (even and db.defs.exists(tok2) and lib.isIdent(tok2)
-                    and lib.compatibleFamily(db.defs.get(tok2).get_families(), family)):
+                if (even and db.defs.exists(tok2) and
+                    lib.compatibleFamily(db.defs.get(tok2).get_families(), family)):
                     tok = b'\033[31m' + tok2 + b'\033[0m'
                 else:
                     tok = lib.unescape(tok)
