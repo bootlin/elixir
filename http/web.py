@@ -95,7 +95,7 @@ if m:
             location = '/'+project+'/'+version+'/'+family2+'/ident/'+ident2
         else:
             mode = 'ident'
-            if not(ident and search('^[A-Za-z0-9_%-]*$', ident)):
+            if not(ident and search('^[A-Za-z0-9_\$\.%-]*$', ident)):
                 ident = ''
             url = family + '/ident/' + ident
     else:
