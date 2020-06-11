@@ -165,6 +165,9 @@ class BsdDB:
         p = self.ctype(p)
         return p
 
+    def get_keys(self):
+        return self.db.keys()
+
     def put(self, key, val, sync=False):
         key = autoBytes(key)
         val = autoBytes(val)
