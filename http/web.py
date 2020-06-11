@@ -135,6 +135,8 @@ if version_decoded == 'latest':
 else:
     tag = version_decoded
 
+ident = parse.unquote(ident)
+
 data = {
     'baseurl': '/' + project + '/',
     'tag': tag,
@@ -142,7 +144,7 @@ data = {
     'url': url,
     'project': project,
     'projects': projects,
-    'ident': parse.unquote(ident),
+    'ident': ident,
     'family': search_family,
     'breadcrumb': '<a class="project" href="'+version+'/source">/</a>'
 }
@@ -320,7 +322,7 @@ if mode == 'source':
 
 
 elif mode == 'ident':
-    data['title'] = parse.unquote(ident)+' identifier - '+title_suffix
+    data['title'] = ident+' identifier - '+title_suffix
 
     symbol_definitions, symbol_references, symbol_doccomments = query('ident', tag, ident, family)
 

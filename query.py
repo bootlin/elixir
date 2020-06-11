@@ -203,6 +203,9 @@ def query(cmd, *args):
         # Used in DT files
         # Documented in documentation files
         if family == 'B':
+
+            ident = parse.quote(ident)
+
             if not dts_comp_support or not db.comps.exists(ident):
                 return symbol_definitions, symbol_references, symbol_doccomments
 
