@@ -341,8 +341,8 @@ elif mode == 'ident':
                 else:
                     if len(symbol_definitions) > 100:    # Concise display
                         n = len(ln)
-                        print('<li><a href="{v}/source/{f}"><strong>{f}</strong>, <em>{n} times</em> <em>(as a {t})</em></a>'.format(
-                            v=version, f=symbol_definition.path, n=n, t=symbol_definition.type
+                        print('<li><a href="{v}/source/{f}#L{l}"><strong>{f}</strong>, <em>{n} times</em> <em>(as a {t})</em></a>'.format(
+                            v=version, f=symbol_definition.path, n=n, t=symbol_definition.type, l=ln[0]
                         ))
                     else:    # Verbose display
                         print('<li><a href="{v}/source/{f}#L{n}"><strong>{f}</strong> <em>(as a {t})</em></a>'.format(
@@ -371,8 +371,8 @@ elif mode == 'ident':
                 else:
                     if len(symbol_doccomments) > 100:    # Concise display
                         n = len(ln)
-                        print('<li><a href="{v}/source/{f}"><strong>{f}</strong>, <em>{n} times</em></a>'.format(
-                            v=version, f=symbol_doccomment.path, n=n
+                        print('<li><a href="{v}/source/{f}#L{l}"><strong>{f}</strong>, <em>{n} times</em></a>'.format(
+                            v=version, f=symbol_doccomment.path, n=n, l=ln[0]
                         ))
                     else:    # Verbose display
                         print('<li><a href="{v}/source/{f}#L{n}"><strong>{f}</strong></a>'.format(
@@ -399,8 +399,8 @@ elif mode == 'ident':
                 else:
                     if len(symbol_references) > 100:    # Concise display
                         n = len(ln)
-                        print('<li><a href="{v}/source/{f}"><strong>{f}</strong>, <em>{n} times</em></a>'.format(
-                            v=version, f=symbol_reference.path, n=n
+                        print('<li><a href="{v}/source/{f}#L{l}"><strong>{f}</strong>, <em>{n} times</em></a>'.format(
+                            v=version, f=symbol_reference.path, n=n, l=ln[0]
                         ))
                     else:    # Verbose display
                         print('<li><a href="{v}/source/{f}#L{n}"><strong>{f}</strong></a>'.format(
