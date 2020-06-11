@@ -76,6 +76,7 @@ class DefList:
         if self.data != b'':
             p = ',' + p
         self.data += p.encode()
+        self.add_family(family)
 
     def pack(self):
         return self.data + b'#' + self.families

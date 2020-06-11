@@ -233,7 +233,6 @@ class UpdateDefs(Thread):
                     else:
                         obj = data.DefList()
 
-                    obj.add_family(family)
                     obj.append(idx, type, line, family)
                     if verbose:
                         print(f"def {type} {ident} in #{idx} @ {line}")
