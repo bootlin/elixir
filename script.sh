@@ -165,7 +165,7 @@ parse_defs_C()
     git cat-file blob "$opt1" > "$full_path"
 
     # Use ctags to parse most of the defs
-    ctags -x --kinds-c=+p+x "$full_path" |
+    ctags -x --kinds-c=+p+x --extras='-{anonymous}' "$full_path" |
     grep -avE "^operator |CONFIG_" |
     awk '{print $1" "$2" "$3}'
 
