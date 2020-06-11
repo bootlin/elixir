@@ -293,7 +293,8 @@ Here's a sample configuration for lighthttpd:
 ----
 server.document-root = server_root + "/elixir/http"
 url.redirect = ( "^/$" => "/linux/latest/source" )
-url.rewrite  = ( "^/.*/(source|ident|search)" =>  "/web.py/$1")
+url.rewrite  = ( "^/(?!api|acp).*/(source|ident|search)" =>  "/web.py/$1")
+url.rewrite  = ( "^/acp" =>  "/autocomplete.py")
 setenv.add-environment = ( "PYTHONIOENCODING" => "utf-8",
     "LXR_PROJ_DIR" => "/path/to/elixir-data" )
 ----
