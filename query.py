@@ -194,131 +194,142 @@ def query(cmd, *args):
         ident = args[1]
         family = args[2]
 
-        symbol_definitions = []
-        symbol_references = []
-        symbol_doccomments = []
-
         # DT bindings compatible strings are handled differently
-        # They are defined in C files
-        # Used in DT files
-        # Documented in documentation files
         if family == 'B':
-
-            ident = parse.quote(ident)
-
-            if not dts_comp_support or not db.comps.exists(ident):
-                return symbol_definitions, symbol_references, symbol_doccomments
-
-            files_this_version = db.vers.get(version).iter()
-            comps = db.comps.get(ident).iter(dummy=True)
-
-            if db.comps_docs.exists(ident):
-                comps_docs = db.comps_docs.get(ident).iter(dummy=True)
-            else:
-                comps_docs = data.RefList().iter(dummy=True)
-
-            comps_idx, comps_lines, comps_family = next(comps)
-            comps_docs_idx, comps_docs_lines, comps_docs_family = next(comps_docs)
-            compsCBuf = [] # C/CPP/ASM files
-            compsDBuf = [] # DT files
-            compsBBuf = [] # DT bindings docs files
-
-            for file_idx, file_path in files_this_version:
-                while comps_idx < file_idx:
-                    comps_idx, comps_lines, comps_family = next(comps)
-
-                while comps_docs_idx < file_idx:
-                    comps_docs_idx, comps_docs_lines, comps_docs_family = next(comps_docs)
-
-                if comps_idx == file_idx:
-                    if comps_family == 'C':
-                        compsCBuf.append((file_path, comps_lines))
-                    elif comps_family == 'D':
-                        compsDBuf.append((file_path, comps_lines))
-
-                if comps_docs_idx == file_idx:
-                    compsBBuf.append((file_path, comps_docs_lines))
-
-            for path, cline in sorted(compsCBuf):
-                symbol_definitions.append(SymbolInstance(path, cline, 'compatible'))
-
-            for path, dlines in sorted(compsDBuf):
-                symbol_references.append(SymbolInstance(path, dlines))
-
-            for path, blines in sorted(compsBBuf):
-                symbol_doccomments.append(SymbolInstance(path, blines))
-
-            return symbol_definitions, symbol_references, symbol_doccomments
-
-
-        if not db.defs.exists(ident):
-            return symbol_definitions, symbol_references, symbol_doccomments
-
-        if not db.vers.exists(version):
-            return symbol_definitions, symbol_references, symbol_doccomments
-
-        files_this_version = db.vers.get(version).iter()
-        defs_this_ident = db.defs.get(ident).iter(dummy=True)
-        # FIXME: see why we can have a discrepancy between defs_this_ident and refs
-        if db.refs.exists(ident):
-            refs = db.refs.get(ident).iter(dummy=True)
+            return get_idents_comps(version, ident)
         else:
-            refs = data.RefList().iter(dummy=True)
-
-        if db.docs.exists(ident):
-            docs = db.docs.get(ident).iter(dummy=True)
-        else:
-            docs = data.RefList().iter(dummy=True)
-
-        # vers, defs, refs, and docs are all populated by update.py in order of
-        # idx, and there is a one-to-one mapping between blob hashes and idx
-        # values.  Therefore, we can sequentially step through the defs, refs,
-        # and docs for each file in a version.
-
-        def_idx, def_type, def_line, def_family = next(defs_this_ident)
-        ref_idx, ref_lines, ref_family = next(refs)
-        doc_idx, doc_line, doc_family = next(docs)
-
-        dBuf = []
-        rBuf = []
-        docBuf = []
-
-        for file_idx, file_path in files_this_version:
-            # Advance defs, refs, and docs to the current file
-            while def_idx < file_idx:
-                def_idx, def_type, def_line, def_family = next(defs_this_ident)
-            while ref_idx < file_idx:
-                ref_idx, ref_lines, ref_family = next(refs)
-            while doc_idx < file_idx:
-                doc_idx, doc_line, doc_family = next(docs)
-
-            # Copy information about this identifier into dBuf, rBuf, and docBuf.
-            while def_idx == file_idx:
-                if def_family == family or family == 'A':
-                    dBuf.append((file_path, def_type, def_line))
-                def_idx, def_type, def_line, def_family = next(defs_this_ident)
-
-            if ref_idx == file_idx:
-                if lib.compatibleFamily(family, ref_family) or family == 'A':
-                    rBuf.append((file_path, ref_lines))
-
-            if doc_idx == file_idx: # TODO should this be a `while`?
-                docBuf.append((file_path, doc_line))
-
-
-        for path, type, dline in sorted(dBuf):
-            symbol_definitions.append(SymbolInstance(path, dline, type))
-
-        for path, rlines in sorted(rBuf):
-            symbol_references.append(SymbolInstance(path, rlines))
-
-        for path, docline in sorted(docBuf):
-            symbol_doccomments.append(SymbolInstance(path, docline))
-
-        return symbol_definitions, symbol_references, symbol_doccomments
+            return get_idents_defs(version, ident, family)
 
     else:
         return('Unknown subcommand: ' + cmd + '\n')
+
+def get_idents_comps(version, ident):
+
+    # DT bindings compatible strings are handled differently
+    # They are defined in C files
+    # Used in DT files
+    # Documented in documentation files
+    symbol_c = []
+    symbol_dts = []
+    symbol_docs = []
+
+    ident = parse.quote(ident)
+
+    if not dts_comp_support or not db.comps.exists(ident):
+        return symbol_c, symbol_dts, symbol_docs
+
+    files_this_version = db.vers.get(version).iter()
+    comps = db.comps.get(ident).iter(dummy=True)
+
+    if db.comps_docs.exists(ident):
+        comps_docs = db.comps_docs.get(ident).iter(dummy=True)
+    else:
+        comps_docs = data.RefList().iter(dummy=True)
+
+    comps_idx, comps_lines, comps_family = next(comps)
+    comps_docs_idx, comps_docs_lines, comps_docs_family = next(comps_docs)
+    compsCBuf = [] # C/CPP/ASM files
+    compsDBuf = [] # DT files
+    compsBBuf = [] # DT bindings docs files
+
+    for file_idx, file_path in files_this_version:
+        while comps_idx < file_idx:
+            comps_idx, comps_lines, comps_family = next(comps)
+
+        while comps_docs_idx < file_idx:
+            comps_docs_idx, comps_docs_lines, comps_docs_family = next(comps_docs)
+
+        if comps_idx == file_idx:
+            if comps_family == 'C':
+                compsCBuf.append((file_path, comps_lines))
+            elif comps_family == 'D':
+                compsDBuf.append((file_path, comps_lines))
+
+        if comps_docs_idx == file_idx:
+            compsBBuf.append((file_path, comps_docs_lines))
+
+    for path, cline in sorted(compsCBuf):
+        symbol_c.append(SymbolInstance(path, cline, 'compatible'))
+
+    for path, dlines in sorted(compsDBuf):
+        symbol_dts.append(SymbolInstance(path, dlines))
+
+    for path, blines in sorted(compsBBuf):
+        symbol_docs.append(SymbolInstance(path, blines))
+
+    return symbol_c, symbol_dts, symbol_docs
+
+def get_idents_defs(version, ident, family):
+
+    symbol_definitions = []
+    symbol_references = []
+    symbol_doccomments = []
+
+    if not db.defs.exists(ident):
+        return symbol_definitions, symbol_references, symbol_doccomments
+
+    if not db.vers.exists(version):
+        return symbol_definitions, symbol_references, symbol_doccomments
+
+    files_this_version = db.vers.get(version).iter()
+    defs_this_ident = db.defs.get(ident).iter(dummy=True)
+    # FIXME: see why we can have a discrepancy between defs_this_ident and refs
+    if db.refs.exists(ident):
+        refs = db.refs.get(ident).iter(dummy=True)
+    else:
+        refs = data.RefList().iter(dummy=True)
+
+    if db.docs.exists(ident):
+        docs = db.docs.get(ident).iter(dummy=True)
+    else:
+        docs = data.RefList().iter(dummy=True)
+
+    # vers, defs, refs, and docs are all populated by update.py in order of
+    # idx, and there is a one-to-one mapping between blob hashes and idx
+    # values.  Therefore, we can sequentially step through the defs, refs,
+    # and docs for each file in a version.
+
+    def_idx, def_type, def_line, def_family = next(defs_this_ident)
+    ref_idx, ref_lines, ref_family = next(refs)
+    doc_idx, doc_line, doc_family = next(docs)
+
+    dBuf = []
+    rBuf = []
+    docBuf = []
+
+    for file_idx, file_path in files_this_version:
+        # Advance defs, refs, and docs to the current file
+        while def_idx < file_idx:
+            def_idx, def_type, def_line, def_family = next(defs_this_ident)
+        while ref_idx < file_idx:
+            ref_idx, ref_lines, ref_family = next(refs)
+        while doc_idx < file_idx:
+            doc_idx, doc_line, doc_family = next(docs)
+
+        # Copy information about this identifier into dBuf, rBuf, and docBuf.
+        while def_idx == file_idx:
+            if def_family == family or family == 'A':
+                dBuf.append((file_path, def_type, def_line))
+            def_idx, def_type, def_line, def_family = next(defs_this_ident)
+
+        if ref_idx == file_idx:
+            if lib.compatibleFamily(family, ref_family) or family == 'A':
+                rBuf.append((file_path, ref_lines))
+
+        if doc_idx == file_idx: # TODO should this be a `while`?
+            docBuf.append((file_path, doc_line))
+
+
+    for path, type, dline in sorted(dBuf):
+        symbol_definitions.append(SymbolInstance(path, dline, type))
+
+    for path, rlines in sorted(rBuf):
+        symbol_references.append(SymbolInstance(path, rlines))
+
+    for path, docline in sorted(docBuf):
+        symbol_doccomments.append(SymbolInstance(path, docline))
+
+    return symbol_definitions, symbol_references, symbol_doccomments
 
 def cmd_ident(version, ident, family, **kwargs):
     symbol_definitions, symbol_references, symbol_doccomments = query("ident", version, ident, family)
