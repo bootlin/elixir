@@ -165,7 +165,8 @@ blacklist = (
     b'return',
     b'int',
     b'long',
-    b'char'
+    b'char',
+    b'__'
     )
 
 def isIdent(bstr):
