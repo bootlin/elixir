@@ -172,7 +172,7 @@ blacklist = (
 def isIdent(bstr):
     if len(bstr) < 2 or
         bstr in blacklist or
-        bstr.startswith(b'__anon'):
+        bstr.startswith((b'__anon', b'~')):
         return False
     else:
         return True
