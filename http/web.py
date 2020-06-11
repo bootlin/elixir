@@ -337,7 +337,7 @@ elif mode == 'ident':
                         v=version, f=symbol_definition.path, n=n, t=symbol_definition.type
                     ))
                 else:
-                    if len(symbol_doccomments) > 100:    # Concise display
+                    if len(symbol_definitions) > 100:    # Concise display
                         n = len(ln)
                         print('<li><a href="{v}/source/{f}"><strong>{f}</strong>, <em>{n} times</em> <em>(as a {t})</em></a>'.format(
                             v=version, f=symbol_definition.path, n=n, t=symbol_definition.type
