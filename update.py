@@ -230,10 +230,11 @@ class UpdateDefs(Thread):
 
                     if db.defs.exists(ident):
                         obj = db.defs.get(ident)
-                    else:
+                    elif lib.isIdent(ident):
                         obj = data.DefList()
+                    else:
+                        continue
 
-                    obj.add_family(family)
                     obj.append(idx, type, line, family)
                     if verbose:
                         print(f"def {type} {ident} in #{idx} @ {line}")
@@ -294,7 +295,7 @@ class UpdateRefs(Thread):
                     if even:
                         tok = prefix + tok
 
-                        if db.defs.exists(tok) and lib.isIdent(tok):
+                        if db.defs.exists(tok):
                             if tok in idents:
                                 idents[tok] += ',' + str(line_num)
                             else:

@@ -95,7 +95,7 @@ if m:
             location = '/'+project+'/'+version+'/'+family2+'/ident/'+ident2
         else:
             mode = 'ident'
-            if not(ident and search('^[A-Za-z0-9_%-]*$', ident)):
+            if not(ident and search('^[A-Za-z0-9_\$\.%-]*$', ident)):
                 ident = ''
             url = family + '/ident/' + ident
     else:
@@ -135,6 +135,8 @@ if version_decoded == 'latest':
 else:
     tag = version_decoded
 
+ident = parse.unquote(ident)
+
 data = {
     'baseurl': '/' + project + '/',
     'tag': tag,
@@ -142,7 +144,7 @@ data = {
     'url': url,
     'project': project,
     'projects': projects,
-    'ident': parse.unquote(ident),
+    'ident': ident,
     'family': search_family,
     'breadcrumb': '<a class="project" href="'+version+'/source">/</a>'
 }
@@ -320,7 +322,7 @@ if mode == 'source':
 
 
 elif mode == 'ident':
-    data['title'] = parse.unquote(ident)+' identifier - '+title_suffix
+    data['title'] = ident+' identifier - '+title_suffix
 
     symbol_definitions, symbol_references, symbol_doccomments = query('ident', tag, ident, family)
 
@@ -337,7 +339,7 @@ elif mode == 'ident':
                         v=version, f=symbol_definition.path, n=n, t=symbol_definition.type
                     ))
                 else:
-                    if len(symbol_doccomments) > 100:    # Concise display
+                    if len(symbol_definitions) > 100:    # Concise display
                         n = len(ln)
                         print('<li><a href="{v}/source/{f}"><strong>{f}</strong>, <em>{n} times</em> <em>(as a {t})</em></a>'.format(
                             v=version, f=symbol_definition.path, n=n, t=symbol_definition.type

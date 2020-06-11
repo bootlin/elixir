@@ -165,13 +165,14 @@ blacklist = (
     b'return',
     b'int',
     b'long',
-    b'char'
+    b'char',
+    b'__'
     )
 
 def isIdent(bstr):
-    if len(bstr) < 2:
-        return False
-    elif bstr in blacklist:
+    if (len(bstr) < 2 or
+        bstr in blacklist or
+        bstr.startswith((b'__anon', b'~'))):
         return False
     else:
         return True
