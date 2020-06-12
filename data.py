@@ -27,6 +27,7 @@ import os.path
 import errno
 
 deflist_regex = re.compile(b'(\d*)(\w)(\d*)(\w),?')
+deflist_macro_regex = re.compile('\dM\d+(\w)')
 
 ##################################################################################
 
@@ -93,6 +94,9 @@ class DefList:
 
     def get_families(self):
         return self.families.decode().split(',')
+
+    def get_macros(self):
+        return deflist_macro_regex.findall(self.data.decode()) or ''
 
 class PathList:
     '''Stores associations between a blob ID and a file path.

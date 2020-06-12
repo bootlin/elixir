@@ -157,7 +157,8 @@ def query(cmd, *args):
                 even = not even
                 tok2 = prefix + tok
                 if (even and db.defs.exists(tok2) and
-                    lib.compatibleFamily(db.defs.get(tok2).get_families(), family)):
+                    (lib.compatibleFamily(db.defs.get(tok2).get_families(), family) or
+                    lib.compatibleMacro(db.defs.get(tok2).get_macros(), family))):
                     tok = b'\033[31m' + tok2 + b'\033[0m'
                 else:
                     tok = lib.unescape(tok)
@@ -302,7 +303,9 @@ def get_idents_defs(version, ident, family):
         return symbol_definitions, symbol_references, symbol_doccomments
 
     files_this_version = db.vers.get(version).iter()
-    defs_this_ident = db.defs.get(ident).iter(dummy=True)
+    this_ident = db.defs.get(ident)
+    defs_this_ident = this_ident.iter(dummy=True)
+    macros_this_ident = this_ident.get_macros()
     # FIXME: see why we can have a discrepancy between defs_this_ident and refs
     if db.refs.exists(ident):
         refs = db.refs.get(ident).iter(dummy=True)
@@ -338,7 +341,8 @@ def get_idents_defs(version, ident, family):
 
         # Copy information about this identifier into dBuf, rBuf, and docBuf.
         while def_idx == file_idx:
-            if def_family == family or family == 'A':
+            if (def_family == family or family == 'A'
+                or lib.compatibleMacro(macros_this_ident, family)):
                 dBuf.append((file_path, def_type, def_line))
             def_idx, def_type, def_line, def_family = next(defs_this_ident)
 

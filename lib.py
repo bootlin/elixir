@@ -210,10 +210,12 @@ def getFileFamily(filename):
     else :
         return None
 
+# 1 char values are file families
+# 2 chars values with a M are macros families
 compatibility_list = {
     'C' : ['C', 'K'],
     'K' : ['K'],
-    'D' : ['D']
+    'D' : ['D', 'CM']
 }
 
 # Check if families are compatible
@@ -221,3 +223,13 @@ compatibility_list = {
 # Second argument is the key for chossing the right array in the compatibility list
 def compatibleFamily(file_family, requested_family):
     return any(item in file_family for item in compatibility_list[requested_family])
+
+# Check if a macro is compatible with the requested family
+# First argument can be a list of different families
+# Second argument is the key for chossing the right array in the compatibility list
+def compatibleMacro(macro_family, requested_family):
+    result = False
+    for item in macro_family:
+        item += 'M'
+        result = result or item in compatibility_list[requested_family]
+    return result
