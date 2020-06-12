@@ -59,11 +59,12 @@ class IdentGetter:
         if family == 'B': #DT compatible strings are quoted in the database
             ident = parse.quote(ident)
 
-        symbol_definitions, symbol_references, symbol_doccomments_UNUSED = query('ident', version, ident, family)
+        symbol_definitions, symbol_references, symbol_doccomments = query('ident', version, ident, family)
         resp.body = json.dumps(
             {
                 'definitions': [sym.__dict__ for sym in symbol_definitions],
-                'references': [sym.__dict__ for sym in symbol_references]
+                'references': [sym.__dict__ for sym in symbol_references],
+                'documentations': [sym.__dict__ for sym in symbol_doccomments]
             })
         resp.status = falcon.HTTP_200
 
