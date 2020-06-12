@@ -38,7 +38,7 @@ class APITest(testing.TestCase):
         result = self.simulate_get('/ident/testproj/SOME_NONEXISTENT_IDENTIFIER', query_string="version=latest&family=C")
 
         self.assertEqual(result.status_code, 200)
-        self.assertEqual(result.json, {'definitions': [], 'references':[]})
+        self.assertEqual(result.json, {'definitions': [], 'references':[], 'documentations': []})
 
     def test_missing_version(self):
         # A get request without a version query string
@@ -65,7 +65,8 @@ class APITest(testing.TestCase):
                 [
                     {'path': 'drivers/i2c/i2c-core-of.c', 'line': '22,62,73', 'type': None},
                     {'path': 'include/linux/i2c.h', 'line': '941,968', 'type': None}
-                ]
+                ],
+                'documentations': []
             }
 
         self.assertEqual(result_for_specific_version.status_code, 200)
