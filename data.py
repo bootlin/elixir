@@ -26,6 +26,8 @@ import os
 import os.path
 import errno
 
+deflist_regex = re.compile(b'(\d*)(\w)(\d*)(\w),?')
+
 ##################################################################################
 
 defTypeR = {
@@ -41,7 +43,7 @@ defTypeR = {
     's': 'struct',
     't': 'typedef',
     'u': 'union',
-    'v': 'variable', 
+    'v': 'variable',
     'x': 'externvar'}
 
 defTypeD = {v: k for k, v in defTypeR.items()}
@@ -58,9 +60,10 @@ class DefList:
         self.data, self.families = data.split(b'#')
 
     def iter(self, dummy=False):
-        for p in self.data.split(b','):
-            p = re.search(b'(\d*)(\w)(\d*)(\w)', p)
-            id, type, line, family = p.groups()
+        # Get all element in a list of sublists and sort them
+        entries = deflist_regex.findall(self.data)
+        entries.sort(key=lambda x:int(x[0]))
+        for id, type, line, family in entries:
             id = int(id)
             type = defTypeR [type.decode()]
             line = int(line)
@@ -98,8 +101,7 @@ class PathList:
         self.data = data
 
     def iter(self, dummy=False):
-        for p in self.data.split(b'\n'):
-            if (p == b''): continue
+        for p in self.data.split(b'\n')[:-1]:
             id, path = p.split(b' ',maxsplit=1)
             id = int(id)
             path = path.decode()
@@ -108,8 +110,8 @@ class PathList:
             yield(maxId, None)
 
     def append(self, id, path):
-        p = str(id).encode() + b' ' + path
-        self.data = self.data + p + b'\n'
+        p = str(id).encode() + b' ' + path + b'\n'
+        self.data += p
 
     def pack(self):
         return self.data
@@ -121,17 +123,14 @@ class RefList:
         self.data = data
 
     def iter(self, dummy=False):
-        size = len(self.data)
-        s = BytesIO(self.data)
-        while s.tell() < size:
-            line = s.readline()
-            line = line [:-1]
-            b,c,d = line.split(b':')
+        # Split all elements in a list of sublists and sort them
+        entries = [x.split(b':') for x in self.data.split(b'\n')[:-1]]
+        entries.sort(key=lambda x:int(x[0]))
+        for b, c, d in entries:
             b = int(b.decode())
             c = c.decode()
             d = d.decode()
             yield(b, c, d)
-        s.close()
         if dummy:
             yield(maxId, None, None)
 
