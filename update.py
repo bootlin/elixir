@@ -58,16 +58,16 @@ bindings_idxes = [] # DT bindings documentation files
 
 tags_done = False # True if all tags have been added to new_idxes
 
-# Progress variables
-tags_defs = 0
+# Progress variables [tags, finished threads]
+tags_defs = [0, 0]
 tags_defs_lock = Lock()
-tags_refs = 0
+tags_refs = [0, 0]
 tags_refs_lock = Lock()
-tags_docs = 0
+tags_docs = [0, 0]
 tags_docs_lock = Lock()
-tags_comps = 0
+tags_comps = [0, 0]
 tags_comps_lock = Lock()
-tags_comps_docs = 0
+tags_comps_docs = [0, 0]
 tags_comps_docs_lock = Lock()
 
 class UpdateIds(Thread):
@@ -83,7 +83,7 @@ class UpdateIds(Thread):
 
             new_idxes.append((self.update_blob_ids(tag), Event(), Event(), Event(), Event()))
 
-            progress(tag.decode() + ': ' + str(len(new_idxes[self.index][0])) +
+            progress('ids: ' +  tag.decode() + ': ' + str(len(new_idxes[self.index][0])) +
                         ' new blobs', self.index+1)
 
             new_idxes[self.index][1].set() # Tell that the tag is ready
@@ -95,6 +95,7 @@ class UpdateIds(Thread):
                 tag_ready.notify_all()
 
         tags_done = True
+        progress('ids: Thread finished', self.index)
 
     def update_blob_ids(self, tag):
 
@@ -137,12 +138,16 @@ class UpdateVersions(Thread):
     def run(self):
         global new_idxes, tag_ready
 
-        for index, tag in enumerate(self.tag_buf, 0):
+        index = 0
+
+        while index < len(self.tag_buf):
             if(index >= len(new_idxes)):
                 # Wait for new tags
                 with tag_ready:
                     tag_ready.wait()
                 continue
+
+            tag = self.tag_buf[index]
 
             new_idxes[index][1].wait() # Make sure the tag is ready
 
@@ -151,6 +156,10 @@ class UpdateVersions(Thread):
             new_idxes[index][4].set() # Tell that UpdateVersions processed the tag
 
             progress('vers: ' + tag.decode() + ' done', index+1)
+
+            index += 1
+
+        progress('vers: Thread finished', index)
 
     def update_versions(self, tag):
         global blobs_lock
@@ -198,7 +207,7 @@ class UpdateDefs(Thread):
             new_idxes[self.index][1].wait() # Make sure the tag is ready
 
             with tags_defs_lock:
-                tags_defs += 1
+                tags_defs[0] += 1
 
             self.update_definitions(new_idxes[self.index][0])
 
@@ -206,12 +215,16 @@ class UpdateDefs(Thread):
 
             self.index += self.inc
 
+        with tags_defs_lock:
+            tags_defs[1] += 1
+            progress('defs: Thread ' + str(tags_defs[1]) + '/' + str(self.inc) + ' finished', tags_defs[0])
+
 
     def update_definitions(self, idxes):
         global hash_file_lock, defs_lock, tags_defs
 
         for idx in idxes:
-            if (idx % 1000 == 0): progress('defs: ' + str(idx), tags_defs)
+            if (idx % 1000 == 0): progress('defs: ' + str(idx), tags_defs[0])
 
             with hash_file_lock:
                 hash = db.hash.get(idx)
@@ -261,17 +274,21 @@ class UpdateRefs(Thread):
             new_idxes[self.index][2].wait() # Make sure UpdateDefs processed the tag
 
             with tags_refs_lock:
-                tags_refs += 1
+                tags_refs[0] += 1
 
             self.update_references(new_idxes[self.index][0])
 
             self.index += self.inc
 
+        with tags_refs_lock:
+            tags_refs[1] += 1
+            progress('refs: Thread ' + str(tags_refs[1]) + '/' + str(self.inc) + ' finished', tags_refs[0])
+
     def update_references(self, idxes):
         global hash_file_lock, defs_lock, refs_lock, tags_refs
 
         for idx in idxes:
-            if (idx % 1000 == 0): progress('refs: ' + str(idx), tags_refs)
+            if (idx % 1000 == 0): progress('refs: ' + str(idx), tags_refs[0])
 
             with hash_file_lock:
                 hash = db.hash.get(idx)
@@ -336,17 +353,21 @@ class UpdateDocs(Thread):
             new_idxes[self.index][1].wait() # Make sure the tag is ready
 
             with tags_docs_lock:
-                tags_docs += 1
+                tags_docs[0] += 1
 
             self.update_doc_comments(new_idxes[self.index][0])
 
             self.index += self.inc
 
+        with tags_docs_lock:
+            tags_docs[1] += 1
+            progress('docs: Thread ' + str(tags_docs[1]) + '/' + str(self.inc) + ' finished', tags_docs[0])
+
     def update_doc_comments(self, idxes):
         global hash_file_lock, docs_lock, tags_docs
 
         for idx in idxes:
-            if (idx % 1000 == 0): progress('docs: ' + str(idx), tags_docs)
+            if (idx % 1000 == 0): progress('docs: ' + str(idx), tags_docs[0])
 
             with hash_file_lock:
                 hash = db.hash.get(idx)
@@ -391,7 +412,7 @@ class UpdateComps(Thread):
             new_idxes[self.index][1].wait() # Make sure the tag is ready
 
             with tags_comps_lock:
-                tags_comps += 1
+                tags_comps[0] += 1
 
             self.update_compatibles(new_idxes[self.index][0])
 
@@ -399,11 +420,15 @@ class UpdateComps(Thread):
 
             self.index += self.inc
 
+        with tags_comps_lock:
+            tags_comps[1] += 1
+            progress('comps: Thread ' + str(tags_comps[1]) + '/' + str(self.inc) + ' finished', tags_comps[0])
+
     def update_compatibles(self, idxes):
         global hash_file_lock, comps_lock, tags_comps
 
         for idx in idxes:
-            if (idx % 1000 == 0): progress('comps: ' + str(idx), tags_comps)
+            if (idx % 1000 == 0): progress('comps: ' + str(idx), tags_comps[0])
 
             with hash_file_lock:
                 hash = db.hash.get(idx)
@@ -456,17 +481,21 @@ class UpdateCompsDocs(Thread):
             new_idxes[self.index][4].wait() # Make sure UpdateVersions processed the tag
 
             with tags_comps_docs_lock:
-                tags_comps_docs += 1
+                tags_comps_docs[0] += 1
 
             self.update_compatibles_bindings(new_idxes[self.index][0])
 
             self.index += self.inc
 
+        with tags_comps_docs_lock:
+            tags_comps_docs[1] += 1
+            progress('comps_docs: Thread ' + str(tags_comps_docs[1]) + '/' + str(self.inc) + ' finished', tags_comps_docs[0])
+
     def update_compatibles_bindings(self, idxes):
         global hash_file_lock, comps_lock, comps_docs_lock, tags_comps_docs, bindings_idxes
 
         for idx in idxes:
-            if (idx % 1000 == 0): progress('comps_docs: ' + str(idx), tags_comps_docs)
+            if (idx % 1000 == 0): progress('comps_docs: ' + str(idx), tags_comps_docs[0])
 
             if not idx in bindings_idxes: # Parse only bindings doc files
                 continue
