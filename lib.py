@@ -207,6 +207,8 @@ def getFileFamily(filename):
         # Some files are named like Kconfig-nommu so we only check the first 7 letters
         # We also exclude documentation files that can be named kconfig
         return 'K' # Kconfig files
+    elif name.lower()[:8] in ['makefile'] and not ext.lower() in ['.rst']:
+        return 'M' # Makefiles
     else :
         return None
 
@@ -215,7 +217,8 @@ def getFileFamily(filename):
 compatibility_list = {
     'C' : ['C', 'K'],
     'K' : ['K'],
-    'D' : ['D', 'CM']
+    'D' : ['D', 'CM'],
+    'M' : ['K']
 }
 
 # Check if families are compatible
