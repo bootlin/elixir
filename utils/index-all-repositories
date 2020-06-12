@@ -91,3 +91,4 @@ index u-boot https://gitlab.denx.de/u-boot/u-boot.git &
 index uclibc-ng git://uclibc-ng.org/git/uclibc-ng &
 index zephyr https://github.com/zephyrproject-rtos/zephyr &
 index toybox https://github.com/landley/toybox.git &
+index grub https://git.savannah.gnu.org/git/grub.git &
