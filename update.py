@@ -231,7 +231,7 @@ class UpdateDefs(Thread):
                 filename = db.file.get(idx)
 
             family = lib.getFileFamily(filename);
-            if family == None: continue
+            if family in [None, 'M']: continue
 
             lines = scriptLines('parse-defs', hash, filename, family)
 
@@ -312,7 +312,9 @@ class UpdateRefs(Thread):
                     if even:
                         tok = prefix + tok
 
-                        if db.defs.exists(tok):
+                        if (db.defs.exists(tok) and
+                            (family != 'M' or tok.startswith(b'CONFIG_'))):
+                            # We only index CONFIG_??? in makefiles
                             if tok in idents:
                                 idents[tok] += ',' + str(line_num)
                             else:
@@ -374,7 +376,7 @@ class UpdateDocs(Thread):
                 filename = db.file.get(idx)
 
             family = lib.getFileFamily(filename)
-            if family == None: continue
+            if family in [None, 'M']: continue
 
             lines = scriptLines('parse-docs', hash, filename)
             with docs_lock:
@@ -435,7 +437,7 @@ class UpdateComps(Thread):
                 filename = db.file.get(idx)
 
             family = lib.getFileFamily(filename)
-            if family in [None, 'K']: continue
+            if family in [None, 'K', 'M']: continue
 
             lines = compatibles_parser.run(scriptLines('get-blob', hash), family)
             comps = {}

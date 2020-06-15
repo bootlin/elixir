@@ -11,7 +11,7 @@ def replace_makefileo(m):
     w = makefileo[decode_number(m.group(1)) - 1]
 
     dir_name = os.path.dirname(path)
-    
+
     if dir_name != '/':
         dir_name += '/'
 
@@ -20,7 +20,7 @@ def replace_makefileo(m):
 makefileo_filters = {
                 'case': 'filename',
                 'match': {'Makefile'},
-                'prerex': '(?<=\s)([-\w/]+)\.o(?!\w)',
+                'prerex': '(?<=\s)([-\w/]+)\.o(?!\w)(?! :?=)',
                 'prefunc': keep_makefileo,
                 'postrex': '__KEEPMAKEFILEO__([A-J]+)\.o',
                 'postfunc': replace_makefileo
