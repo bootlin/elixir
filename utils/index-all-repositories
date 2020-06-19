@@ -26,7 +26,7 @@ index() {
     master=$2
     remote=$3
     remote2=$4
-    echo "Processing project $project..."
+    echo "$project: first indexing pass..."
 
     export LXR_DATA_DIR=$ELIXIR_ROOT/$project/data
     export LXR_REPO_DIR=$ELIXIR_ROOT/$project/repo
@@ -52,10 +52,13 @@ index() {
     cd $ELIXIR_INSTALL
     ./update.py $ELIXIR_THREADS
 
-    # The above takes so much time on the first run that it's worth running a new update
+    # The above can take so much time on the first run that it's worth running a new update
 
+    echo "$project: updating the repository after the first indexing pass..."
     cd $LXR_REPO_DIR
     git fetch --all --tags
+
+    echo "$project: 2nd indexing pass..."
     cd $ELIXIR_INSTALL
     ./update.py $ELIXIR_THREADS
 }
