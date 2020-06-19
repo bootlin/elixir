@@ -39,18 +39,18 @@ index() {
     then
         cd $LXR_REPO_DIR
         git remote add other $remote
-        git fetch other
+        git fetch --tags other
     fi
 
     if [ "$remote2" != "" ]
     then
         cd $LXR_REPO_DIR
         git remote add other2 $remote2
-        git fetch other2
+        git fetch --tags other2
     fi
 
     cd $ELIXIR_INSTALL
-    ./update.py
+    ./update.py $ELIXIR_THREADS
 
     # The above takes so much time on the first run that it's worth running a new update
 
