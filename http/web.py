@@ -284,7 +284,8 @@ if mode == 'source':
             if (c == 'any' or
                 (c == 'filename' and filename in f['match']) or
                 (c == 'extension' and extension in f['match']) or
-                (c == 'path' and fdir.startswith(tuple(f['match'])))):
+                (c == 'path' and fdir.startswith(tuple(f['match']))) or
+                (c == 'filename_extension' and filename.endswith(tuple(f['match'])))):
 
                 apply_filter = True
 
@@ -314,7 +315,8 @@ if mode == 'source':
             if (c == 'any' or
                 (c == 'filename' and filename in f['match']) or
                 (c == 'extension' and extension in f['match']) or
-                (c == 'path' and fdir.startswith(tuple(f['match'])))):
+                (c == 'path' and fdir.startswith(tuple(f['match']))) or
+                (c == 'filename_extension' and filename.endswith(tuple(f['match'])))):
 
                 result = sub(f ['postrex'], f ['postfunc'], result)
 
