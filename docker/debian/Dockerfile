@@ -15,6 +15,7 @@ RUN \
   apt-get update && \
   apt-get -y install \
     python3 \
+    python3-pip \
     python3-jinja2 \
     python3-bsddb3 \
     python3-falcon \
@@ -23,7 +24,9 @@ RUN \
     git \
     apache2 \
     libapache2-mod-wsgi-py3 \
-    libjansson4
+    libjansson4 \
+    libyaml-0-2 \
+    wget
 
 RUN \
   wget https://bootlin.com/pub/elixir/universal-ctags_0+git20200526-0ubuntu1_amd64.deb
