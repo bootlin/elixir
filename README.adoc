@@ -72,7 +72,7 @@ For RedHat/CentOS
 ____
 
 ----
-yum install python36-jinja2 python36-pygments python36-bsddb3 python3-falcon global-ctags git httpd
+yum install python36-pip python36-pytest python36-jinja2 python36-bsddb3 python36-falcon git httpd perl perl-autodie jansson libyaml rh-python36-mod_wsgi
 ----
 
 ____
@@ -80,7 +80,7 @@ For Debian
 ____
 
 ----
-sudo apt install python3 python3-jinja2 python3-pygments python3-bsddb3 python3-falcon python3-pytest universal-ctags perl git apache2 libapache2-mod-wsgi-py3 libjansson4
+sudo apt install python3 python3-jinja2 python3-bsddb3 python3-falcon python3-pytest universal-ctags perl git apache2 libapache2-mod-wsgi-py3 libjansson4
 ----
 
 To enable the REST API, follow the installation instructions on https://github.com/GrahamDumpleton/mod_wsgi[`mod_wsgi`]
@@ -116,11 +116,14 @@ The changes have been sent upstream and should appear in future distributions.
 
 In the meantime, you can either rebuild this package from its source on
  https://github.com/universal-ctags/ctags[GitHub], or download this
-https://bootlin.com/pub/elixir/universal-ctags_0+git20200526-0ubuntu1_amd64.deb[binary package]
+https://bootlin.com/pub/elixir/universal-ctags_0+git20200526-0ubuntu1_amd64.deb[deb binary package]
+or https://bootlin.com/pub/elixir/universal-ctags-0+git~20e934e3-1.6.x86_64.rpm[rpm binary package]
 and install it as follows:
 
 ----
 sudo dpkg -i universal-ctags_0+git20200526-0ubuntu1_amd64.deb
+or
+sudo rpm -iv universal-ctags-0+git~20e934e3-1.6.x86_64.rpm
 ----
 
 Then tell `apt` to hold this package and block future updates of the normal package:
