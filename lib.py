@@ -196,6 +196,12 @@ def getDataDir():
 def currentProject():
     return os.path.basename(os.path.dirname(getDataDir()))
 
+# List all families supported by Elixir
+families = ['A', 'B', 'C', 'D', 'K', 'M']
+
+def validFamily(family):
+    return family in families
+
 def getFileFamily(filename):
     name, ext = os.path.splitext(filename)
 
