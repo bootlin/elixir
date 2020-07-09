@@ -54,7 +54,7 @@ if m:
     project = m.group(1)
     version = m.group(2)
     version_decoded = parse.unquote(version)
-    family = m.group(3)
+    family = str(m.group(3)).upper()
     cmd = m.group(4)
     arg = m.group(5)
 
