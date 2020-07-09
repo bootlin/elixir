@@ -34,6 +34,10 @@ import os
 import re
 from re import search, sub
 
+import sys
+sys.path = [ sys.path[0] + '/..' ] + sys.path
+from lib import validFamily
+
 # Create /tmp/elixir-errors if not existing yet (could happen after a reboot)
 errdir = '/tmp/elixir-errors'
 
@@ -58,7 +62,7 @@ if m:
     cmd = m.group(4)
     arg = m.group(5)
 
-    if not lib.validFamily(family):
+    if not validFamily(family):
         family = 'C'
 
     search_family = 'A'
@@ -88,7 +92,10 @@ if m:
         ident = arg[1:]
         form = cgi.FieldStorage()
         ident2 = form.getvalue('i')
-        family2 = form.getvalue('f')
+        family2 = str(form.getvalue('f')).upper()
+        if not validFamily(family2):
+            family2 = 'C'
+
         if ident == '' and ident2:
             status = 302
             ident2 = parse.quote(ident2.strip())
@@ -124,8 +131,6 @@ for (dirpath, dirnames, filenames) in os.walk(basedir):
     break
 projects.sort()
 
-import sys
-sys.path = [ sys.path[0] + '/..' ] + sys.path
 from query import query
 
 dts_comp_support = query('dts-comp')
