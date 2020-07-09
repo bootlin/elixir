@@ -58,7 +58,7 @@ if m:
     cmd = m.group(4)
     arg = m.group(5)
 
-    if family == None:
+    if not lib.validFamily(family):
         family = 'C'
 
     search_family = 'A'
