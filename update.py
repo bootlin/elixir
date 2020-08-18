@@ -230,7 +230,7 @@ class UpdateDefs(Thread):
                 hash = db.hash.get(idx)
                 filename = db.file.get(idx)
 
-            family = lib.getFileFamily(filename);
+            family = lib.getFileFamily(filename)
             if family in [None, 'M']: continue
 
             lines = scriptLines('parse-defs', hash, filename, family)
