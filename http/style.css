@@ -732,9 +732,7 @@ h2 {
 .highlight a {
   color: inherit;
   font-weight: 700;
-  background-color: #f4f6ff;
-  -webkit-box-shadow: 0 0 0 1px #f4f6ff;
-          box-shadow: 0 0 0 1px #f4f6ff;
+  background: linear-gradient(to bottom, #0000 10%, #f4f6ff 10%, #f4f6ff 90%, #0000 90%);
   border-radius: 0.2em;
 }
 .highlight a:hover {
