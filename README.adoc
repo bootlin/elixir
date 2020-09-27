@@ -167,7 +167,7 @@ And then run `source /etc/profile`.
 First clone the master tree released by Linus Torvalds:
 
 ----
-cd /pathy/elixir-data/linux
+cd /path/elixir-data/linux
 git clone https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git repo
 ----
 
