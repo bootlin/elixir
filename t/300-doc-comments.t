@@ -76,4 +76,91 @@ run_produces_ok('ident query (existent, function, documented in C file, #102)',
     ],
     MUST_SUCCEED);
 
+# Non-functions
+
+run_produces_ok('ident query (existent, enum, documented in H file)',
+    [$tenv->query_py, qw(v5.4 ident memblock_flags C)],
+    [
+        qr{^Documented in:},
+        {doc => qr{\bmemblock\.h.+\b28\b}},
+    ],
+    MUST_SUCCEED);
+
+run_produces_ok('ident query (existent, enum, not documented)',
+    [$tenv->query_py, qw(v5.4 ident rseq_cpu_id_state C)],  # uapi/linux/rseq.h:16
+    [
+        qr{^Documented in:},
+        {doc => { not => qr{/} }}
+    ],
+    MUST_SUCCEED);
+
+run_produces_ok('ident query (existent, struct, documented in H file)',
+    [$tenv->query_py, qw(v5.4 ident memblock_region C)],
+    [
+        qr{^Documented in:},
+        {doc => qr{\bmemblock\.h.+\b42\b}},
+    ],
+    MUST_SUCCEED);
+
+run_produces_ok('ident query (existent, struct, not documented)',
+    [$tenv->query_py, qw(v5.4 ident epoll_event C)],    # eventpoll.h:77
+    [
+        qr{^Documented in:},
+        {doc => { not => qr{/} }}
+    ],
+    MUST_SUCCEED);
+
+run_produces_ok('ident query (existent, macro, documented in H file)',
+    [$tenv->query_py, qw(v5.4 ident for_each_mem_range C)],
+    [
+        qr{^Documented in:},
+        {doc => qr{\bmemblock\.h.+\b148\b}},
+    ],
+    MUST_SUCCEED);
+
+run_produces_ok('ident query (existent, macro, not documented)',
+    [$tenv->query_py, qw(v5.4 ident MEMBLOCK_LOW_LIMIT C)], # memblock.h:343
+    [
+        qr{^Documented in:},
+        {doc => { not => qr{/} }}
+    ],
+    MUST_SUCCEED);
+
+run_produces_ok('ident query (existent, macro, not documented)',
+    [$tenv->query_py, qw(v5.4 ident MEMBLOCK_LOW_LIMIT C)], # memblock.h:343
+    [
+        qr{^Documented in:},
+        {doc => { not => qr{/} }}
+    ],
+    MUST_SUCCEED);
+
+# Specific cases from #134
+
+# Like regmap_update_bits_base()
+run_produces_ok('ident query (existent, function, documented in C file, nonstandard doc comment, #134)',
+    [$tenv->query_py, qw(v5.4 ident issue134_function1 C)],
+    [
+        qr{^Documented in:},
+        {doc => qr{\bissue134\.c.+\b9\b}},
+    ],
+    MUST_SUCCEED);
+
+# Like wait_for_completion()
+run_produces_ok('ident query (existent, function, documented in C file, nonstandard doc comment, #134)',
+    [$tenv->query_py, qw(v5.4 ident issue134_function2 C)],
+    [
+        qr{^Documented in:},
+        {doc => qr{\bissue134\.c.+\b25\b}},
+    ],
+    MUST_SUCCEED);
+
+# Like v4l2_fwnode_endpoint_parse()
+run_produces_ok('ident query (existent, prototype, documented in C file), #134',
+    [$tenv->query_py, qw(v5.4 ident issue134_function3 C)],
+    [
+        qr{^Documented in:},
+        {doc => qr{\bissue134\.c.+\b38\b}},
+    ],
+    MUST_SUCCEED);
+
 done_testing;
