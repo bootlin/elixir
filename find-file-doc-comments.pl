@@ -45,10 +45,11 @@ sub main {
     my @ctags_parsed = map { [split] } @ctags;
 
     # Flip it around to index functions by line
-    my %function_lines;
+    my %definition_lines;
+    my %definition_types;
     for my $tag (@ctags_parsed) {
-        next unless $tag->[1] eq 'function';
-        $function_lines{$tag->[2]} = $tag->[0];
+        $definition_lines{$tag->[2]} = $tag->[0];
+        $definition_types{$tag->[0]} = $tag->[1] // '<none>';
     }
 
     if($VERBOSE) {
@@ -66,26 +67,44 @@ sub main {
     # Work backwards through the file and look for doc comments
     my %doc_comments;
 
-    my $doc_comment_opener = qr{^\s*\/\*\*(?:\s|$)};    # Start of doc comment
+    my $doc_comment_opener = qr{^\h*\/\*\*(?:\h|$)};    # Start of doc comment
+    my $comment_leader = qr{\h+\*\h+(?:(?:struct|enum|union|typedef)\h+)?};
 
     for(my $lineno = $#source_lines ; $lineno >= 1 ; --$lineno) {
-        next unless exists $function_lines{$lineno};
-        my $func_name = $function_lines{$lineno};
-        print "Checking for $func_name @ $lineno\n" if $VERBOSE;
+        next unless exists $definition_lines{$lineno};
+        my $definition_name = $definition_lines{$lineno};
+        print "Checking $definition_name @ $lineno\n" if $VERBOSE;
 
+        # Comment header: be liberal in what we accept.  For example, do not
+        # check the type of the definition/declaration against the type in
+        # the comment header.  I don't think this will be a problem.
         my $this_doc_comment_header =
-            qr{^\s+\*\s+\Q$func_name\E(?:\s|\(|$)};
+            qr{^$comment_leader\Q$definition_name\E(?:\h|\(|:|$)};
         print "  Regex is -$this_doc_comment_header-\n" if $VERBOSE;
+
+        if($definition_types{$definition_name} eq 'macro') {
+            # Make sure we get back past the first line of a multiline macro
+            --$lineno while $lineno && $source_lines[$lineno] !~ /^#\h*define/;
+        }
+
+        # Assume cflags gave us the first line of the definition, or we got
+        # back to it manually.  Move to the first line that might be a doc comment.
         --$lineno;
-        print "  Line $lineno is: $source_lines[$lineno]\n" if $VERBOSE;
+
+        # TODO make sure we're not still in the definition.
+        # E.g., memblock.h:for_each_mem_range().  The defintion is reported
+        # on the second line of the #define, not the first line.
+
+        print "  Starting search for docs at line $lineno\n" if $VERBOSE;
+
 
         # Find the last line that could be a doc-comment header
         # for this function.
         while($lineno && $source_lines[$lineno] =~
             qr{
-                    ^\s*$               # Empty line
-                |   ^\s+\*\/            # End of comment
-                |   ^\s+\*(?:\s|$)      # Continuation of comment
+                    ^\h*$               # Empty line
+                |   ^\h+\*\/            # End of comment
+                |   ^\h+\*(?:\h|$)      # Continuation of comment
                 |   $this_doc_comment_header
             }x) {
             print "$source_lines[$lineno] passed\n" if $VERBOSE;
@@ -95,7 +114,7 @@ sub main {
                     # because we may have just skipped past $this_doc_comment_header
 
         # Is it actually a header for this function?
-        print "Checking $source_lines[$lineno] for header\n" if $VERBOSE;
+        print "Checking line $lineno for header\n" if $VERBOSE;
         next unless $source_lines[$lineno] =~ $this_doc_comment_header;
 
         # We have found a header.  Confirm it's a doc comment.
@@ -104,13 +123,13 @@ sub main {
         print "  * Match\n" if $VERBOSE;
 
         # We have found a doc comment for this function!  Record it.
-        push @{$doc_comments{$func_name}}, $lineno;
+        push @{$doc_comments{$definition_name}}, $lineno;
     }
 
     # Report the doc comments for each function
-    for my $funcname (keys %doc_comments) {
-        my $comment_lines = $doc_comments{$funcname};
-        print "$funcname $_\n" foreach @$comment_lines;
+    for my $definition_name (keys %doc_comments) {
+        my $comment_lines = $doc_comments{$definition_name};
+        print "$definition_name $_\n" foreach @$comment_lines;
     }
 
     return 0;
