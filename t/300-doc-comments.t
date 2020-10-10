@@ -170,4 +170,23 @@ run_produces_ok('No warnings on macro, #186',
     [ ],
     MUST_SUCCEED);  # warnings appear on stderr, failing the MUST_SUCCEED checks
 
+# #186 counterexamples
+run_produces_ok('ident query (existent, documented as function), #186 counterexample',
+    [$tenv->query_py, qw(v5.4 ident i186c_fn1 C)],
+    [
+        qr{^Documented in:},
+        {doc => qr{\bissue186-counterexamples\.c.+\b5\b}},
+    ],
+    MUST_SUCCEED);
+
+run_produces_ok('ident query (existent, documented as macro), #186 counterexample',
+    [$tenv->query_py, qw(v5.4 ident i186c_fn2 C)],
+    [
+        qr{^Documented in:},
+        {doc => qr{\bissue186-counterexamples\.c.+\b20\b}},
+    ],
+    MUST_SUCCEED);
+
+#########################################################################
+
 done_testing;
