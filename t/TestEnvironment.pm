@@ -53,7 +53,7 @@ use constant PROJECT => 'testproj';
 
 =head2 lxr_proj_dir
 
-C<$lxr_proj_dir> is the value to use in the C<LXR_DATA_DIR> environment
+C<$lxr_proj_dir> is the value to use in the C<LXR_PROJ_DIR> environment
 variable.
 
 =head2 lxr_data_dir
