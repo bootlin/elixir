@@ -38,22 +38,23 @@ sub main {
             grep -av "^operator " |
             awk '{print \$1" "\$2" "\$3}' };
     die "Could not get ctags: $!" if $!;
-    print "No ctags results" if $VERBOSE && !@ctags;
+    say "No ctags results" if $VERBOSE && !@ctags;
     return 0 unless @ctags;
 
     # Make a list of [name, type, line] arrays
     my @ctags_parsed = map { [split] } @ctags;
 
-    # Flip it around to index functions by line
+    # Flip it around to index functions and types by line.  Don't index anything
+    # by name, since there can be multiple names with different types/lines (#186).
     my %definition_lines;
     my %definition_types;
     for my $tag (@ctags_parsed) {
         $definition_lines{$tag->[2]} = $tag->[0];
-        $definition_types{$tag->[0]} = $tag->[1] // '<none>';
+        $definition_types{$tag->[2]} = $tag->[1] // '<none>';
     }
 
     if($VERBOSE) {
-        for my $tag (@ctags_parsed) {
+        for my $tag (sort { $a->[2] <=> $b->[2] } @ctags_parsed) {
             say $tag->[2], ': ', $tag->[0], ' is a(n) ', $tag->[1];
         }
     }
@@ -73,16 +74,17 @@ sub main {
     for(my $lineno = $#source_lines ; $lineno >= 1 ; --$lineno) {
         next unless exists $definition_lines{$lineno};
         my $definition_name = $definition_lines{$lineno};
-        print "Checking $definition_name @ $lineno\n" if $VERBOSE;
+        my $definition_type = $definition_types{$lineno};
+        say "\nChecking $definition_type $definition_name @ $lineno" if $VERBOSE;
 
         # Comment header: be liberal in what we accept.  For example, do not
         # check the type of the definition/declaration against the type in
         # the comment header.  I don't think this will be a problem.
         my $this_doc_comment_header =
             qr{^$comment_leader\Q$definition_name\E(?:\h|\(|:|$)};
-        print "  Regex is -$this_doc_comment_header-\n" if $VERBOSE;
+        say "  Regex is -$this_doc_comment_header-" if $VERBOSE;
 
-        if($definition_types{$definition_name} eq 'macro') {
+        if($definition_type eq 'macro') {
             # Make sure we get back past the first line of a multiline macro
             --$lineno while $lineno && $source_lines[$lineno] !~ /^#\h*define/;
         }
@@ -95,8 +97,7 @@ sub main {
         # E.g., memblock.h:for_each_mem_range().  The defintion is reported
         # on the second line of the #define, not the first line.
 
-        print "  Starting search for docs at line $lineno\n" if $VERBOSE;
-
+        say "  Starting search for docs at line $lineno" if $VERBOSE;
 
         # Find the last line that could be a doc-comment header
         # for this function.
@@ -107,20 +108,24 @@ sub main {
                 |   ^\h+\*(?:\h|$)      # Continuation of comment
                 |   $this_doc_comment_header
             }x) {
-            print "$source_lines[$lineno] passed\n" if $VERBOSE;
+            if($VERBOSE) {
+                my $line = $source_lines[$lineno];
+                chomp $line;
+                say "  skipped $lineno '$line'";
+            }
             --$lineno;
         }
         ++$lineno;  # Check the last line that matched,
                     # because we may have just skipped past $this_doc_comment_header
 
         # Is it actually a header for this function?
-        print "Checking line $lineno for header\n" if $VERBOSE;
+        say "  Checking line $lineno for header" if $VERBOSE;
         next unless $source_lines[$lineno] =~ $this_doc_comment_header;
 
         # We have found a header.  Confirm it's a doc comment.
         --$lineno;
         next unless $lineno > 0 && $source_lines[$lineno] =~ $doc_comment_opener;
-        print "  * Match\n" if $VERBOSE;
+        say "  * Match" if $VERBOSE;
 
         # We have found a doc comment for this function!  Record it.
         push @{$doc_comments{$definition_name}}, $lineno;
@@ -129,7 +134,7 @@ sub main {
     # Report the doc comments for each function
     for my $definition_name (keys %doc_comments) {
         my $comment_lines = $doc_comments{$definition_name};
-        print "$definition_name $_\n" foreach @$comment_lines;
+        say "$definition_name $_" foreach @$comment_lines;
     }
 
     return 0;

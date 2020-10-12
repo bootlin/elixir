@@ -27,6 +27,7 @@ use autodie;    # note: still need to check system() calls manually
 use FindBin '$Bin';
 use lib $Bin;
 
+use File::Spec;
 use Test::More;
 
 use TestEnvironment;
@@ -162,5 +163,30 @@ run_produces_ok('ident query (existent, prototype, documented in C file), #134',
         {doc => qr{\bissue134\.c.+\b38\b}},
     ],
     MUST_SUCCEED);
+
+# #186
+run_produces_ok('No warnings on macro, #186',
+    [$tenv->find_doc, File::Spec->catfile($tenv->lxr_repo_dir, 'issue186.c')],
+    [ ],
+    MUST_SUCCEED);  # warnings appear on stderr, failing the MUST_SUCCEED checks
+
+# #186 counterexamples
+run_produces_ok('ident query (existent, documented as function), #186 counterexample',
+    [$tenv->query_py, qw(v5.4 ident i186c_fn1 C)],
+    [
+        qr{^Documented in:},
+        {doc => qr{\bissue186-counterexamples\.c.+\b5\b}},
+    ],
+    MUST_SUCCEED);
+
+run_produces_ok('ident query (existent, documented as macro), #186 counterexample',
+    [$tenv->query_py, qw(v5.4 ident i186c_fn2 C)],
+    [
+        qr{^Documented in:},
+        {doc => qr{\bissue186-counterexamples\.c.+\b20\b}},
+    ],
+    MUST_SUCCEED);
+
+#########################################################################
 
 done_testing;
