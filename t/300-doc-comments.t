@@ -187,6 +187,12 @@ run_produces_ok('ident query (existent, documented as macro), #186 counterexampl
     ],
     MUST_SUCCEED);
 
+# #188
+run_produces_ok('No warnings on indented #define, #188',
+    [$tenv->find_doc, File::Spec->catfile($tenv->lxr_repo_dir, 'issue188.c')],
+    [ ],
+    MUST_SUCCEED);  # warnings appear on stderr, failing the MUST_SUCCEED checks
+
 #########################################################################
 
 done_testing;
