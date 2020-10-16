@@ -22,7 +22,7 @@
 
 use 5.010001;
 use strict;
-use warnings FATAL => qw(uninitialized);
+use warnings;
 use autodie;
 
 my $VERBOSE = $ENV{V};
@@ -31,10 +31,16 @@ exit main(@ARGV);
 
 sub main {
     die "Need a filename" unless @_;
-    say "Processing file $_[0]" if $VERBOSE;
+    my $filename = shift;
+    say "Processing file $filename" if $VERBOSE;
+
+    # Fatalize all warnings, and log which file triggered the warning.
+    local $SIG{__WARN__} = sub {
+        die "While processing $filename: $_[0]\n";
+    };
 
     # Do `script.sh parse-defs` on the file
-    my @ctags = qx{ ctags -x --c-kinds=+p-m --language-force=C "$_[0]" |
+    my @ctags = qx{ ctags -x --c-kinds=+p-m --language-force=C "$filename" |
             grep -av "^operator " |
             awk '{print \$1" "\$2" "\$3}' };
     die "Could not get ctags: $!" if $!;
@@ -60,7 +66,7 @@ sub main {
     }
 
     # Read the source file
-    open my $fh, '<', $_[0];
+    open my $fh, '<', $filename;
     my @source_lines = (undef, <$fh>);
         # undef => indices in @source_lines match ctags's 1-based linenos
     close $fh;
