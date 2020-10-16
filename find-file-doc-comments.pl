@@ -86,7 +86,7 @@ sub main {
 
         if($definition_type eq 'macro') {
             # Make sure we get back past the first line of a multiline macro
-            --$lineno while $lineno && $source_lines[$lineno] !~ /^#\h*define/;
+            --$lineno while $lineno && $source_lines[$lineno] !~ /^\h*#\h*define/;
         }
 
         # Assume cflags gave us the first line of the definition, or we got
