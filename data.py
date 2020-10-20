@@ -19,7 +19,6 @@
 #  along with Elixir.  If not, see <http://www.gnu.org/licenses/>.
 
 import bsddb3
-from io import BytesIO
 import re
 from lib import autoBytes
 import os
