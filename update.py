@@ -23,7 +23,6 @@
 # This is different from that blob's Git hash.
 
 from sys import argv
-import os
 from threading import Thread, Lock, Event, Condition
 
 import lib
