@@ -503,7 +503,6 @@ class UpdateCompsDocs(Thread):
 
             with hash_file_lock:
                 hash = db.hash.get(idx)
-                filename = db.file.get(idx)
 
             family = 'B'
             lines = compatibles_parser.run(scriptLines('get-blob', hash), family)
