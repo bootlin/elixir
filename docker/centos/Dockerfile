@@ -65,7 +65,7 @@ ENV LXR_DATA_DIR /srv/elixir-data/$PROJECT/data
 RUN \
   cd /usr/local/elixir/ && \
   ./script.sh list-tags && \
-  ./update.py
+  python3 -u ./update.py
 
 # apache elixir config, see elixir README
 # apache HttpProtolOptions workaround
