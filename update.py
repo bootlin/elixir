@@ -23,7 +23,6 @@
 # This is different from that blob's Git hash.
 
 from sys import argv
-import os
 from threading import Thread, Lock, Event, Condition
 
 import lib
@@ -504,7 +503,6 @@ class UpdateCompsDocs(Thread):
 
             with hash_file_lock:
                 hash = db.hash.get(idx)
-                filename = db.file.get(idx)
 
             family = 'B'
             lines = compatibles_parser.run(scriptLines('get-blob', hash), family)

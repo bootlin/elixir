@@ -19,7 +19,6 @@
 #  along with Elixir.  If not, see <http://www.gnu.org/licenses/>.
 
 import cgi
-import cgitb
 from urllib import parse
 import sys
 import os
