@@ -57,9 +57,9 @@ class APITest(testing.TestCase):
         expected_json = {
             'definitions':
             [
+                {'path': 'include/linux/i2c.h', 'line': 941, 'type': 'prototype'},
                 {'path': 'drivers/i2c/i2c-core-of.c', 'line': 22, 'type': 'function'},
-                {'path': 'include/linux/i2c.h', 'line': 968, 'type': 'function'},
-                {'path': 'include/linux/i2c.h', 'line': 941, 'type': 'prototype'}
+                {'path': 'include/linux/i2c.h', 'line': 968, 'type': 'function'}
             ],
             'references':
                 [
