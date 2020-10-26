@@ -353,8 +353,10 @@ def get_idents_defs(version, ident, family):
         if doc_idx == file_idx: # TODO should this be a `while`?
             docBuf.append((file_path, doc_line))
 
+    # Sort dBuf by path name before sorting by type in the loop
+    dBuf.sort()
 
-    for path, type, dline in sorted(dBuf):
+    for path, type, dline in sorted(dBuf, key=lambda d: d[1], reverse=True):
         symbol_definitions.append(SymbolInstance(path, dline, type))
 
     for path, rlines in sorted(rBuf):
