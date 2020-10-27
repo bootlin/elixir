@@ -90,9 +90,14 @@ sub main {
             qr{^$comment_leader\Q$definition_name\E(?:\h|\(|:|$)};
         say "  Regex is -$this_doc_comment_header-" if $VERBOSE;
 
+        # Make sure we get back past the first line of multiline definitions
         if($definition_type eq 'macro') {
-            # Make sure we get back past the first line of a multiline macro
             --$lineno while $lineno && $source_lines[$lineno] !~ /^\h*#\h*define/;
+        } elsif($definition_type eq 'function') {
+            # Try to handle the case of "int\nfoo()"
+            if($source_lines[$lineno] =~ /^\h*\Q$definition_name\E\b/) {
+                --$lineno while $lineno && $source_lines[$lineno] =~ /^[a-z_]/i;
+            }
         }
 
         # Assume cflags gave us the first line of the definition, or we got
@@ -135,7 +140,7 @@ sub main {
 
         # We have found a doc comment for this function!  Record it.
         push @{$doc_comments{$definition_name}}, $lineno;
-    }
+    } # foreach line in reverse order
 
     # Report the doc comments for each function
     for my $definition_name (keys %doc_comments) {
@@ -144,4 +149,4 @@ sub main {
     }
 
     return 0;
-}
+} #main
