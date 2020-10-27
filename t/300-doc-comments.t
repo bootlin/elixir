@@ -127,14 +127,6 @@ run_produces_ok('ident query (existent, macro, not documented)',
     ],
     MUST_SUCCEED);
 
-run_produces_ok('ident query (existent, macro, not documented)',
-    [$tenv->query_py, qw(v5.4 ident MEMBLOCK_LOW_LIMIT C)], # memblock.h:343
-    [
-        qr{^Documented in:},
-        {doc => { not => qr{/} }}
-    ],
-    MUST_SUCCEED);
-
 # Specific cases from #134
 
 # Like regmap_update_bits_base()
