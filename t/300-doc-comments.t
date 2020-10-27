@@ -193,6 +193,25 @@ run_produces_ok('No warnings on indented #define, #188',
     [ ],
     MUST_SUCCEED);  # warnings appear on stderr, failing the MUST_SUCCEED checks
 
+# #192
+
+# Like request_firmware()
+run_produces_ok('ident query (existent, function, documented in C file, type on preceding line, #192)',
+    [$tenv->query_py, qw(v5.4 ident issue192a C)],
+    [
+        qr{^Documented in:},
+        {doc => qr{\bissue192\.c.+\b5\b}},
+    ],
+    MUST_SUCCEED);
+
+run_produces_ok('ident query (existent, function, documented in C file, uppercase return type on preceding line, #192)',
+    [$tenv->query_py, qw(v5.4 ident issue192b C)],
+    [
+        qr{^Documented in:},
+        {doc => qr{\bissue192\.c.+\b15\b}},
+    ],
+    MUST_SUCCEED);
+
 #########################################################################
 
 done_testing;
