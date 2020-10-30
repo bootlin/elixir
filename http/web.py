@@ -336,9 +336,24 @@ elif mode == 'ident':
     print('<div class="lxrident">')
     if len(symbol_definitions) or len(symbol_references):
         if len(symbol_definitions):
-            print('<h2>Defined in '+str(len(symbol_definitions))+' files:</h2>')
-            print('<ul>')
+            previous_type = ''
+            types_count = {}
+
+            # Count occurences of each type before printing
             for symbol_definition in symbol_definitions:
+                if (symbol_definition.type in types_count):
+                        types_count[symbol_definition.type] += 1
+                else:
+                        types_count[symbol_definition.type] = 1
+
+            for symbol_definition in symbol_definitions:
+                if (symbol_definition.type != previous_type) :
+                    if (previous_type != ''):
+                        print('</ul>')
+                    print('<h2>Defined in '+str(types_count[symbol_definition.type])+' files as a '+symbol_definition.type+':</h2>')
+                    print('<ul>')
+                    previous_type = symbol_definition.type
+
                 ln = str(symbol_definition.line).split(',')
                 if len(ln) == 1:
                     n = ln[0]
