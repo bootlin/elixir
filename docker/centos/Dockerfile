@@ -35,9 +35,18 @@ RUN \
     perl-autodie \
     jansson \
     libyaml \
-    git \
-    wget
+    rh-git218 \
+    wget \
+    perl-Test-Most
     # httpd & perl is inherited from upstream openshift image
+
+RUN \
+  ln -s /usr/bin/pytest-3 /usr/bin/pytest
+
+RUN \
+  ln -s /opt/rh/rh-git218/root/usr/bin/* /usr/bin/ && \
+  ln -s /opt/rh/rh-git218/root/usr/share/perl5/vendor_perl/* /usr/share/perl5/vendor_perl/ && \
+  ln -s /opt/rh/httpd24/root/usr/lib64/lib* /usr/lib64/
 
 RUN \
   wget https://bootlin.com/pub/elixir/universal-ctags-0+git~20e934e3-1.6.x86_64.rpm
@@ -50,6 +59,10 @@ RUN \
 
 RUN \
   pip3 install Pygments-2.6.1.elixir-py3-none-any.whl
+
+RUN \
+  git config --global user.email 'elixir@dummy.com' && \
+  git config --global user.name 'elixir'
 
 RUN \
   git clone https://github.com/bootlin/elixir.git /usr/local/elixir/
