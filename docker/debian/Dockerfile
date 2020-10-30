@@ -29,6 +29,9 @@ RUN \
     wget
 
 RUN \
+  ln -s /usr/bin/pytest-3 /usr/bin/pytest
+
+RUN \
   wget https://bootlin.com/pub/elixir/universal-ctags_0+git20200526-0ubuntu1_amd64.deb
 
 RUN \
@@ -39,6 +42,10 @@ RUN \
 
 RUN \
   pip3 install Pygments-2.6.1.elixir-py3-none-any.whl
+
+RUN \
+  git config --global user.email 'elixir@dummy.com' && \
+  git config --global user.name 'elixir'
 
 RUN \
   git clone https://github.com/bootlin/elixir.git /usr/local/elixir/
