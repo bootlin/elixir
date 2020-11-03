@@ -89,6 +89,7 @@ index llvm https://github.com/llvm/llvm-project.git &
 index mesa https://gitlab.freedesktop.org/mesa/mesa.git &
 index musl git://git.musl-libc.org/musl &
 index ofono https://git.kernel.org/pub/scm/network/ofono/ofono.git &
+index optee https://github.com/OP-TEE/optee_os.git &
 index qemu https://git.qemu.org/git/qemu.git &
 index u-boot https://gitlab.denx.de/u-boot/u-boot.git &
 index uclibc-ng git://uclibc-ng.org/git/uclibc-ng &
