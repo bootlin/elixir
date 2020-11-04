@@ -13,3 +13,8 @@ list_tags()
     echo "$tags" |
     grep '^[0-9]\.'
 }
+
+get_latest()
+{
+    git tag | grep '^[0-9]\.' | grep -v '\-rc' | sort -V | tail -n 1
+}
