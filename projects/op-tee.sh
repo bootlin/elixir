@@ -7,3 +7,9 @@ list_tags_h()
     tac |
     sed -r 's/^([0-9]*)\.([0-9]*)(.*)$/v\1 \1.\2 v\1.\2\3/'
 }
+
+list_tags()
+{
+    echo "$tags" |
+    grep '^[0-9]\.'
+}
