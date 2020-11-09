@@ -18,7 +18,6 @@ RUN \
     python3-pip \
     python3-jinja2 \
     python3-bsddb3 \
-    python3-falcon \
     python3-pytest \
     perl \
     git \
@@ -27,6 +26,9 @@ RUN \
     libjansson4 \
     libyaml-0-2 \
     wget
+
+RUN \
+  pip3 install falcon
 
 RUN \
   ln -s /usr/bin/pytest-3 /usr/bin/pytest
