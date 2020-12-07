@@ -63,8 +63,7 @@ class APITest(testing.TestCase):
             ],
             'references':
                 [
-                    {'path': 'drivers/i2c/i2c-core-of.c', 'line': '22,62,73', 'type': None},
-                    {'path': 'include/linux/i2c.h', 'line': '941,968', 'type': None}
+                    {'path': 'drivers/i2c/i2c-core-of.c', 'line': '62,73', 'type': None}
                 ],
                 'documentations': []
             }
