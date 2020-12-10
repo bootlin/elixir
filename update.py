@@ -54,6 +54,8 @@ tag_ready = Condition() # Waiting for new tags
 
 new_idxes = [] # (new idxes, Event idxes ready, Event defs ready, Event comps ready, Event vers ready)
 bindings_idxes = [] # DT bindings documentation files
+idx_key_mod = 1000000
+defs_idxes = {} # Idents definitions stored with (idx*idx_key_mod + line) as the key.
 
 tags_done = False # True if all tags have been added to new_idxes
 
@@ -240,6 +242,8 @@ class UpdateDefs(Thread):
                     type = type.decode()
                     line = int(line.decode())
 
+                    defs_idxes[idx*idx_key_mod + line] = ident
+
                     if db.defs.exists(ident):
                         obj = db.defs.get(ident)
                     elif lib.isIdent(ident):
@@ -312,6 +316,8 @@ class UpdateRefs(Thread):
                         tok = prefix + tok
 
                         if (db.defs.exists(tok) and
+                            not ( (idx*idx_key_mod + line_num) in defs_idxes and
+                                defs_idxes[idx*idx_key_mod + line_num] == tok ) and
                             (family != 'M' or tok.startswith(b'CONFIG_'))):
                             # We only index CONFIG_??? in makefiles
                             if tok in idents:

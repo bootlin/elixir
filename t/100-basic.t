@@ -88,7 +88,7 @@ run_produces_ok('ident query (existent)',
     [$query_py, qw(v5.4 ident i2c_acpi_notify C)],
     [qr{^Symbol Definitions:}, qr{^Symbol References:},
         { def => qr{drivers/i2c/i2c-core-acpi\.c.+\b402\b.+\bfunction\b} },
-        { ref => qr{drivers/i2c/i2c-core-acpi\.c.+\b402,439} },
+        { ref => qr{drivers/i2c/i2c-core-acpi\.c.+\b439} },
     ],
     MUST_SUCCEED);
 
