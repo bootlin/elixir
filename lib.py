@@ -130,7 +130,6 @@ blacklist = (
     b'ops',
     b'out',
     b'p',
-    b'page',
     b'pdev',
     b'port',
     b'priv',
