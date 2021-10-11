@@ -692,6 +692,10 @@ h2 {
   min-height: 100%;
 }
 
+.lxrcode pre * {
+  vertical-align: top;
+}
+
 .lxrcode,
 .highlighttable,
 .linenodiv,
