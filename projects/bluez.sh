@@ -2,8 +2,7 @@
 list_tags()
 {
     echo "$tags" |
-    grep '^[0-9]' |
-    sed -e 's/^/v/'
+    grep '^[0-9]'
 }
 
 list_tags_h()
