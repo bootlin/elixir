@@ -9,6 +9,7 @@ list_tags_h()
 {
     echo "$tags" |
     grep '^[0-9]' |
+    sort -rV |
     sed -r 's/^([0-9]*)\.([0-9]*)$/v\1 v\1.\2 \1.\2/'
 }
 
