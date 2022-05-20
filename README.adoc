@@ -289,6 +289,37 @@ Finally, start the httpd server.
 systemctl start httpd
 ----
 
+
+== Configure SELinux policy
+
+When running systemd with SELinux enabled, httpd server can only visit limited directories.
+If your /path/elixir-data/ is not one of these allowed directories, you will be responded with 500 status code.
+
+To allow httpd server to visit /path/elixir-data/, run following codes:
+----
+chcon -R -t httpd_sys_rw_content_t /path/elixir-data/
+----
+
+To check if it takes effect, run the following codes:
+----
+ls -Z /path/elixir-data/
+----
+
+In case you want to check SELinux log releated with httpd, run the following codes:
+----
+audit2why -a | grep httpd | less
+----
+
+== Configure systemd log directory
+
+By default, the error log of elixir will be put in /tmp/elixir-errors.
+However, systemd enables PrivateTmp by default.
+And, the final error directory will be like /tmp/systemd-private-xxxxx-httpd.service-xxxx/tmp/elixir-errors.
+If you want to disable it, configure httpd.service with the following attribute:
+----
+PrivateTmp=false
+----
+
 == Configure lighthttpd
 
 Here's a sample configuration for lighthttpd:
