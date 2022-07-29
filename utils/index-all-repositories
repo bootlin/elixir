@@ -82,7 +82,7 @@ index arm-trusted-firmware https://github.com/ARM-software/arm-trusted-firmware 
 index barebox https://git.pengutronix.de/git/barebox &
 index busybox git://git.busybox.net/busybox &
 index coreboot https://review.coreboot.org/coreboot.git &
-index dpdk git://dpdk.org/dpdk &
+index dpdk git://dpdk.org/dpdk git://dpdk.org/dpdk-stable &
 index glibc git://sourceware.org/git/glibc.git &
 index linux git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git git://git.kernel.org/pub/scm/linux/kernel/git/stable/linux-stable.git https://github.com/bootlin/linux-history.git &
 index llvm https://github.com/llvm/llvm-project.git &
