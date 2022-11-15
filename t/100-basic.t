@@ -122,6 +122,13 @@ run_produces_ok('ident query (ENTRY that should not be detected, #150)',
     ],
     MUST_SUCCEED);
 
+run_produces_ok('ident query (existent, #228)',
+    [$query_py, qw(v5.4 ident sys_init_module C)],
+    [qr{^Symbol Definitions:}, qr{^Symbol References:},
+        { def => qr{syscall_define\.c.+\b1\b.+\bfunction\b} }
+    ],
+    MUST_SUCCEED);
+
 # Spot-check some files
 
 run_produces_ok('file query (nonexistent)',
