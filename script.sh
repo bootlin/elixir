@@ -171,6 +171,7 @@ parse_defs_C()
 
     # Parse function macros, e.g., in .S files
     perl -ne '/^\s*ENTRY\((\w+)\)/ and print "$1 function $.\n"' "$full_path"
+    perl -ne '/^SYSCALL_DEFINE[0-9]\(\s*(\w+)\W/ and print "sys_$1 function $.\n"' "$full_path"
 
     rm "$full_path"
     rmdir $tmp
