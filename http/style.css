@@ -676,6 +676,7 @@ h2 {
 }
 .size {
   opacity: 0.6;
+  min-height: 1.5em; /* line_height + 2 * padding = 1.2em + 2 * 0.15em */
 }
 
 
