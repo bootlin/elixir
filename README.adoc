@@ -26,7 +26,7 @@ toc::[]
 
 * Python >= 3.6
 * Git >= 1.9
-* The Jinja2 and Pygments (>= 2.2) Python libraries
+* The Jinja2 and Pygments (>= 2.7) Python libraries
 * Berkeley DB (and its Python binding)
 * Universal Ctags
 * Perl (for non-greedy regexes and automated testing)
@@ -68,11 +68,11 @@ A detailed diagram of the databases will be provided. Until then, just use the S
 == Install Dependences
 
 ____
-For RedHat/CentOS
+For RedHat/Fedora/AlmaLinux
 ____
 
 ----
-yum install python36-pip python36-pytest python36-jinja2 python36-bsddb3 python36-falcon git httpd perl perl-autodie jansson libyaml rh-python36-mod_wsgi
+sudo dnf install python36-pip python36-pytest python36-jinja2 python36-bsddb3 python36-falcon python3-pygments git httpd perl perl-autodie jansson libyaml rh-python36-mod_wsgi
 ----
 
 ____
@@ -80,7 +80,7 @@ For Debian
 ____
 
 ----
-sudo apt install python3 python3-jinja2 python3-bsddb3 python3-falcon python3-pytest universal-ctags perl git apache2 libapache2-mod-wsgi-py3 libjansson4
+sudo apt install python3-jinja2 python3-bsddb3 python3-falcon python3-pytest python3-pygments universal-ctags perl git apache2 libapache2-mod-wsgi-py3 libjansson4
 ----
 
 To enable the REST API, follow the installation instructions on https://github.com/GrahamDumpleton/mod_wsgi[`mod_wsgi`]
@@ -90,22 +90,6 @@ To know which packages to install, you can also read the Docker files in the `do
 to know what packages Elixir needs in your favorite distribution.
 
 == Special dependencies
-
-=== Device Tree and Kconfig Source syntax highlighting
-
-The service on https://elixir.bootlin.com relies on a modified version of https://pygments.org/[Pygments],
-to enable syntax highlighting on Device Tree Source (DTS) files and on all Kconfig files.
-
-The changes have been sent upstream and should appear in future distributions.
-
-In the meantime, you can either rebuild this package from its source on
-https://github.com/MaximeChretien/pygments/tree/dev[GitHub], or download this
-https://bootlin.com/pub/elixir/Pygments-2.6.1.elixir-py3-none-any.whl[binary module]
-and install it as follows:
-
-----
-sudo pip3 install Pygments-2.6.1.elixir-py3-none-any.whl
-----
 
 === Kconfig identifiers support
 
