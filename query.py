@@ -244,6 +244,7 @@ def get_idents_comps(version, ident):
     symbol_dts = []
     symbol_docs = []
 
+    # DT compatible strings are quoted in the database
     ident = parse.quote(ident)
 
     if not dts_comp_support or not db.comps.exists(ident):

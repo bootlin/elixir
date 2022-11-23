@@ -56,9 +56,6 @@ class IdentGetter:
         else:
             family = 'C'
 
-        if family == 'B': #DT compatible strings are quoted in the database
-            ident = parse.quote(ident)
-
         symbol_definitions, symbol_references, symbol_doccomments = query('ident', version, ident, family)
         resp.body = json.dumps(
             {
