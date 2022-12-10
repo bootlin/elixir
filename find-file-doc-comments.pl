@@ -32,6 +32,7 @@ exit main(@ARGV);
 sub main {
     die "Need a filename" unless @_;
     my $filename = shift;
+    die "Could not read $filename" unless -r $filename;
     say "Processing file $filename" if $VERBOSE;
 
     # Fatalize all warnings, and log which file triggered the warning.
