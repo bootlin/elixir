@@ -386,7 +386,7 @@ where all repositories are found.
 
 Docker files are provided in the `docker/` directory. To generate your own
 Docker image for indexing the sources of a project (for example for the Musl
-project which is much faster to index that Linux), download the `Dockerfile`
+project which is much faster to index than Linux), download the `Dockerfile`
 file for your target distribution and run:
 
  $ docker build -t elixir --build-arg GIT_REPO_URL=git://git.musl-libc.org/musl --build-arg PROJECT=musl .
