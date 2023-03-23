@@ -339,16 +339,16 @@ elif mode == 'ident':
             previous_type = ''
             types_count = {}
 
-            # Count occurences of each type before printing
+            # Count occurrences of each type before printing
             for symbol_definition in symbol_definitions:
-                if (symbol_definition.type in types_count):
+                if symbol_definition.type in types_count:
                         types_count[symbol_definition.type] += 1
                 else:
                         types_count[symbol_definition.type] = 1
 
             for symbol_definition in symbol_definitions:
-                if (symbol_definition.type != previous_type) :
-                    if (previous_type != ''):
+                if symbol_definition.type != previous_type:
+                    if previous_type != '':
                         print('</ul>')
                     print('<h2>Defined in '+str(types_count[symbol_definition.type])+' files as a '+symbol_definition.type+':</h2>')
                     print('<ul>')
