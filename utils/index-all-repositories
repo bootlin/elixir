@@ -32,8 +32,7 @@ index() {
     export LXR_REPO_DIR=$ELIXIR_ROOT/$project/repo
 
     mkdir -p $LXR_DATA_DIR
-    cd `dirname $LXR_REPO_DIR`
-    git clone --bare $master `filename $LXR_REPO_DIR`
+    git clone --bare $master $LXR_REPO_DIR
 
     if [ "$remote" != "" ]
     then
