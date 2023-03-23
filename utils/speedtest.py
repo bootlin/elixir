@@ -96,10 +96,10 @@ def get_file(path, version):
 
 
 #Read arguments
-if(len(sys.argv) > 1):
-    if(sys.argv[1] == '-v'):
+if len(sys.argv) > 1:
+    if sys.argv[1] == '-v':
         verbose = True
-    elif (sys.argv[1] == '-h'):
+    elif sys.argv[1] == '-h':
         print("LXR_PROJ_DIR needs to be set before launching this script\n" +
                 "Options :\n" +
                 "-v     Verbose mode (Show requests details)")
@@ -107,7 +107,7 @@ if(len(sys.argv) > 1):
 
 #Query init
 query = init_query(project)
-if(query == None):
+if query == None:
     exit()
 
 #Database test

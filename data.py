@@ -68,9 +68,9 @@ class DefList:
             type = defTypeR [type.decode()]
             line = int(line)
             family = family.decode()
-            yield(id, type, line, family)
+            yield id, type, line, family
         if dummy:
-            yield(maxId, None, None, None)
+            yield maxId, None, None, None
 
     def append(self, id, type, line, family):
         if type not in defTypeD:
@@ -108,9 +108,9 @@ class PathList:
             id, path = p.split(b' ',maxsplit=1)
             id = int(id)
             path = path.decode()
-            yield(id, path)
+            yield id, path
         if dummy:
-            yield(maxId, None)
+            yield maxId, None
 
     def append(self, id, path):
         p = str(id).encode() + b' ' + path + b'\n'
@@ -133,9 +133,9 @@ class RefList:
             b = int(b.decode())
             c = c.decode()
             d = d.decode()
-            yield(b, c, d)
+            yield b, c, d
         if dummy:
-            yield(maxId, None, None)
+            yield maxId, None, None
 
     def append(self, id, lines, family):
         p = str(id) + ':' + lines + ':' + family + '\n'

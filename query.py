@@ -106,7 +106,7 @@ def query(cmd, *args):
 
     elif cmd == 'exist':
 
-        # Returns True if the requested file exists, overwise returns False
+        # Returns True if the requested file exists, otherwise returns False
 
         version = args[0]
         path = args[1]
@@ -232,7 +232,7 @@ def query(cmd, *args):
             return get_idents_defs(version, ident, family)
 
     else:
-        return('Unknown subcommand: ' + cmd + '\n')
+        return 'Unknown subcommand: ' + cmd + '\n'
 
 def get_idents_comps(version, ident):
 
