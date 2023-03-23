@@ -89,33 +89,6 @@ and connect it to the apache installation as detailed in https://github.com/Grah
 To know which packages to install, you can also read the Docker files in the `docker/` directory
 to know what packages Elixir needs in your favorite distribution.
 
-== Special dependencies
-
-=== Kconfig identifiers support
-
-The service on https://elixir.bootlin.com relies on a modified version of https://ctags.io/[Universal-ctags],
-to enable indexing of Kconfig identifiers.
-
-The changes have been sent upstream and should appear in future distributions.
-
-In the meantime, you can either rebuild this package from its source on
- https://github.com/universal-ctags/ctags[GitHub], or download this
-https://bootlin.com/pub/elixir/universal-ctags_0+git20200526-0ubuntu1_amd64.deb[deb binary package]
-or https://bootlin.com/pub/elixir/universal-ctags-0+git~20e934e3-1.6.x86_64.rpm[rpm binary package]
-and install it as follows:
-
-----
-sudo dpkg -i universal-ctags_0+git20200526-0ubuntu1_amd64.deb
-or
-sudo rpm -iv universal-ctags-0+git~20e934e3-1.6.x86_64.rpm
-----
-
-Then tell `apt` to hold this package and block future updates of the normal package:
-
-----
-sudo apt-mark hold universal-ctags
-----
-
 == Download Elixir Project
 
 ----
