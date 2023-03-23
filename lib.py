@@ -228,13 +228,13 @@ compatibility_list = {
 
 # Check if families are compatible
 # First argument can be a list of different families
-# Second argument is the key for chossing the right array in the compatibility list
+# Second argument is the key for choosing the right array in the compatibility list
 def compatibleFamily(file_family, requested_family):
     return any(item in file_family for item in compatibility_list[requested_family])
 
 # Check if a macro is compatible with the requested family
 # First argument can be a list of different families
-# Second argument is the key for chossing the right array in the compatibility list
+# Second argument is the key for choosing the right array in the compatibility list
 def compatibleMacro(macro_family, requested_family):
     result = False
     for item in macro_family:

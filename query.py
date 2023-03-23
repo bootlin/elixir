@@ -60,11 +60,11 @@ def query(cmd, *args):
             num = len(taginfo)
             topmenu, submenu = 'FIXME', 'FIXME'
 
-            if (num == 1):
+            if num == 1:
                 tag, = taginfo
-            elif (num == 2):
+            elif num == 2:
                 submenu,tag = taginfo
-            elif (num ==3):
+            elif num ==3:
                 topmenu,submenu,tag = taginfo
 
             if db.vers.exists(tag):

@@ -142,7 +142,7 @@ class UpdateVersions(Thread):
         index = 0
 
         while index < len(self.tag_buf):
-            if(index >= len(new_idxes)):
+            if index >= len(new_idxes):
                 # Wait for new tags
                 with tag_ready:
                     tag_ready.wait()
@@ -193,13 +193,13 @@ class UpdateDefs(Thread):
     def __init__(self, start, inc):
         Thread.__init__(self, name="UpdateDefsElixir")
         self.index = start
-        self.inc = inc # Equivalient to the number of defs threads
+        self.inc = inc # Equivalent to the number of defs threads
 
     def run(self):
         global new_idxes, tags_done, tag_ready, tags_defs, tags_defs_lock
 
-        while(not (tags_done and self.index >= len(new_idxes))):
-            if(self.index >= len(new_idxes)):
+        while not (tags_done and self.index >= len(new_idxes)):
+            if self.index >= len(new_idxes):
                 # Wait for new tags
                 with tag_ready:
                     tag_ready.wait()
@@ -225,7 +225,7 @@ class UpdateDefs(Thread):
         global hash_file_lock, defs_lock, tags_defs
 
         for idx in idxes:
-            if (idx % 1000 == 0): progress('defs: ' + str(idx), tags_defs[0])
+            if idx % 1000 == 0: progress('defs: ' + str(idx), tags_defs[0])
 
             with hash_file_lock:
                 hash = db.hash.get(idx)
@@ -261,13 +261,13 @@ class UpdateRefs(Thread):
     def __init__(self, start, inc):
         Thread.__init__(self, name="UpdateRefsElixir")
         self.index = start
-        self.inc = inc # Equivalient to the number of refs threads
+        self.inc = inc # Equivalent to the number of refs threads
 
     def run(self):
         global new_idxes, tags_done, tags_refs, tags_refs_lock
 
-        while(not (tags_done and self.index >= len(new_idxes))):
-            if(self.index >= len(new_idxes)):
+        while not (tags_done and self.index >= len(new_idxes)):
+            if self.index >= len(new_idxes):
                 # Wait for new tags
                 with tag_ready:
                     tag_ready.wait()
@@ -291,7 +291,7 @@ class UpdateRefs(Thread):
         global hash_file_lock, defs_lock, refs_lock, tags_refs
 
         for idx in idxes:
-            if (idx % 1000 == 0): progress('refs: ' + str(idx), tags_refs[0])
+            if idx % 1000 == 0: progress('refs: ' + str(idx), tags_refs[0])
 
             with hash_file_lock:
                 hash = db.hash.get(idx)
@@ -345,13 +345,13 @@ class UpdateDocs(Thread):
     def __init__(self, start, inc):
         Thread.__init__(self, name="UpdateDocsElixir")
         self.index = start
-        self.inc = inc # Equivalient to the number of docs threads
+        self.inc = inc # Equivalent to the number of docs threads
 
     def run(self):
         global new_idxes, tags_done, tags_docs, tags_docs_lock
 
-        while(not (tags_done and self.index >= len(new_idxes))):
-            if(self.index >= len(new_idxes)):
+        while not (tags_done and self.index >= len(new_idxes)):
+            if self.index >= len(new_idxes):
                 # Wait for new tags
                 with tag_ready:
                     tag_ready.wait()
@@ -374,7 +374,7 @@ class UpdateDocs(Thread):
         global hash_file_lock, docs_lock, tags_docs
 
         for idx in idxes:
-            if (idx % 1000 == 0): progress('docs: ' + str(idx), tags_docs[0])
+            if idx % 1000 == 0: progress('docs: ' + str(idx), tags_docs[0])
 
             with hash_file_lock:
                 hash = db.hash.get(idx)
@@ -404,13 +404,13 @@ class UpdateComps(Thread):
     def __init__(self, start, inc):
         Thread.__init__(self, name="UpdateCompsElixir")
         self.index = start
-        self.inc = inc # Equivalient to the number of comps threads
+        self.inc = inc # Equivalent to the number of comps threads
 
     def run(self):
         global new_idxes, tags_done, tags_comps, tags_comps_lock
 
-        while(not (tags_done and self.index >= len(new_idxes))):
-            if(self.index >= len(new_idxes)):
+        while not (tags_done and self.index >= len(new_idxes)):
+            if self.index >= len(new_idxes):
                 # Wait for new tags
                 with tag_ready:
                     tag_ready.wait()
@@ -435,7 +435,7 @@ class UpdateComps(Thread):
         global hash_file_lock, comps_lock, tags_comps
 
         for idx in idxes:
-            if (idx % 1000 == 0): progress('comps: ' + str(idx), tags_comps[0])
+            if idx % 1000 == 0: progress('comps: ' + str(idx), tags_comps[0])
 
             with hash_file_lock:
                 hash = db.hash.get(idx)
@@ -471,13 +471,13 @@ class UpdateCompsDocs(Thread):
     def __init__(self, start, inc):
         Thread.__init__(self, name="UpdateCompsDocsElixir")
         self.index = start
-        self.inc = inc # Equivalient to the number of comps_docs threads
+        self.inc = inc # Equivalent to the number of comps_docs threads
 
     def run(self):
         global new_idxes, tags_done, tags_comps_docs, tags_comps_docs_lock
 
-        while(not (tags_done and self.index >= len(new_idxes))):
-            if(self.index >= len(new_idxes)):
+        while not (tags_done and self.index >= len(new_idxes)):
+            if self.index >= len(new_idxes):
                 # Wait for new tags
                 with tag_ready:
                     tag_ready.wait()
@@ -502,7 +502,7 @@ class UpdateCompsDocs(Thread):
         global hash_file_lock, comps_lock, comps_docs_lock, tags_comps_docs, bindings_idxes
 
         for idx in idxes:
-            if (idx % 1000 == 0): progress('comps_docs: ' + str(idx), tags_comps_docs[0])
+            if idx % 1000 == 0: progress('comps_docs: ' + str(idx), tags_comps_docs[0])
 
             if not idx in bindings_idxes: # Parse only bindings doc files
                 continue

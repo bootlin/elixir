@@ -65,7 +65,7 @@ A detailed diagram of the databases will be provided. Until then, just use the S
 
 = Manual Installation
 
-== Install Dependences
+== Install Dependencies
 
 ____
 For RedHat/Fedora/AlmaLinux
@@ -289,7 +289,7 @@ To check if it takes effect, run the following codes:
 ls -Z /path/elixir-data/
 ----
 
-In case you want to check SELinux log releated with httpd, run the following codes:
+In case you want to check SELinux log related with httpd, run the following codes:
 ----
 audit2why -a | grep httpd | less
 ----
