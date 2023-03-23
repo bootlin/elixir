@@ -76,23 +76,23 @@ then
     exit 1
 fi
 
-index amazon-freertos https://github.com/aws/amazon-freertos.git &
-index arm-trusted-firmware https://github.com/ARM-software/arm-trusted-firmware &
-index barebox https://git.pengutronix.de/git/barebox &
-index busybox https://git.busybox.net/busybox &
-index coreboot https://review.coreboot.org/coreboot.git &
-index dpdk https://dpdk.org/git/dpdk https://dpdk.org/git/dpdk-stable &
-index glibc https://sourceware.org/git/glibc.git &
-index linux https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git https://github.com/bootlin/linux-history.git &
-index llvm https://github.com/llvm/llvm-project.git &
-index mesa https://gitlab.freedesktop.org/mesa/mesa.git &
-index musl https://git.musl-libc.org/git/musl &
-index ofono https://git.kernel.org/pub/scm/network/ofono/ofono.git &
-index op-tee https://github.com/OP-TEE/optee_os.git &
-index qemu https://gitlab.com/qemu-project/qemu.git &
-index u-boot https://source.denx.de/u-boot/u-boot.git &
-index uclibc-ng https://cgit.uclibc-ng.org/cgi/cgit/uclibc-ng.git &
-index zephyr https://github.com/zephyrproject-rtos/zephyr &
-index toybox https://github.com/landley/toybox.git &
-index grub https://git.savannah.gnu.org/git/grub.git &
-index bluez https://git.kernel.org/pub/scm/bluetooth/bluez.git &
+index amazon-freertos https://github.com/aws/amazon-freertos.git
+index arm-trusted-firmware https://github.com/ARM-software/arm-trusted-firmware
+index barebox https://git.pengutronix.de/git/barebox
+index busybox https://git.busybox.net/busybox
+index coreboot https://review.coreboot.org/coreboot.git
+index dpdk https://dpdk.org/git/dpdk https://dpdk.org/git/dpdk-stable
+index glibc https://sourceware.org/git/glibc.git
+index llvm https://github.com/llvm/llvm-project.git
+index mesa https://gitlab.freedesktop.org/mesa/mesa.git
+index musl https://git.musl-libc.org/git/musl
+index ofono https://git.kernel.org/pub/scm/network/ofono/ofono.git
+index op-tee https://github.com/OP-TEE/optee_os.git
+index qemu https://gitlab.com/qemu-project/qemu.git
+index u-boot https://source.denx.de/u-boot/u-boot.git
+index uclibc-ng https://cgit.uclibc-ng.org/cgi/cgit/uclibc-ng.git
+index zephyr https://github.com/zephyrproject-rtos/zephyr
+index toybox https://github.com/landley/toybox.git
+index grub https://git.savannah.gnu.org/git/grub.git
+index bluez https://git.kernel.org/pub/scm/bluetooth/bluez.git
+index linux https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git https://github.com/bootlin/linux-history.git
