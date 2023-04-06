@@ -2,6 +2,9 @@
 __pycache__
 tags
 /.cache/
+.idea/
+env/
+venv/
 
 # Web-specific
 http/images
