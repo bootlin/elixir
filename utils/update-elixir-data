@@ -17,11 +17,8 @@
 #  You should have received a copy of the GNU Affero General Public License
 #  along with Elixir.  If not, see <http://www.gnu.org/licenses/>.
 
-root=$1
-
-if [ ! -e "$root" ]
-then
-    echo "ERROR: directory not found: $root"
+if [ -z "$LXR_PROJ_DIR" ]; then
+    echo "ERROR: LXR_PROJ_DIR environment variable not set"
     exit 1
 fi
 
@@ -30,10 +27,10 @@ if [ -z "$ELIXIR_INSTALL" ]; then
     exit 1
 fi
 
-for p in linux u-boot busybox zephyr musl barebox uclibc-ng arm-trusted-firmware amazon-freertos qemu glibc coreboot llvm mesa ofono op-tee dpdk toybox grub bluez; do
-    echo "Processing project $root/$p ..."
-    export LXR_DATA_DIR=$root/$p/data
-    export LXR_REPO_DIR=$root/$p/repo
+for dir_name in $LXR_PROJ_DIR/*; do
+    echo "Processing project $dir_name ..."
+    export LXR_DATA_DIR=$dir_name/data
+    export LXR_REPO_DIR=$dir_name/repo
 
     cd $LXR_REPO_DIR
     git fetch --all --tags
