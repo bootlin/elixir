@@ -63,6 +63,7 @@ index() {
 }
 
 export ELIXIR_INSTALL=$(dirname $(dirname $(readlink -f "$0")))
+. $ELIXIR_INSTALL/utils/common.sh
 
 if [ "$ELIXIR_ROOT" = "" ]
 then

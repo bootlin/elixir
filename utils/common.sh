@@ -1,8 +1,7 @@
-#!/bin/sh
-
+#!/bin/bash
 #  This file is part of Elixir, a source code cross-referencer.
 #
-#  Copyright (C) 2019--2020 Michael Opdenacker and contributors
+#  Copyright (C) 2019--2023 Michael Opdenacker and contributors
 #
 #  Elixir is free software: you can redistribute it and/or modify
 #  it under the terms of the GNU Affero General Public License as published by
@@ -17,22 +16,9 @@
 #  You should have received a copy of the GNU Affero General Public License
 #  along with Elixir.  If not, see <http://www.gnu.org/licenses/>.
 
-export ELIXIR_INSTALL=$(dirname $(dirname $(readlink -f "$0")))
-. $ELIXIR_INSTALL/utils/common.sh
-
-if [ -z "$LXR_PROJ_DIR" ]; then
-    echo "ERROR: LXR_PROJ_DIR environment variable not set"
-    exit 1
+if [ "$ELIXIR_THREADS" = "" ]
+then
+    # Set number of threads to the number of CPU cores
+    # available to the current process
+    export ELIXIR_THREADS=`nproc`
 fi
-
-for dir_name in $LXR_PROJ_DIR/*; do
-    echo "Processing project $dir_name ..."
-    export LXR_DATA_DIR=$dir_name/data
-    export LXR_REPO_DIR=$dir_name/repo
-
-    cd $LXR_REPO_DIR
-    git fetch --all --tags
-
-    cd $ELIXIR_INSTALL
-    ./update.py $ELIXIR_THREADS
-done
