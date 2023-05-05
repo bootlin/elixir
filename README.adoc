@@ -125,7 +125,7 @@ First clone the master tree released by Linus Torvalds:
 
 ----
 cd /path/elixir-data/linux
-git clone https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git repo
+git clone --bare https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git repo
 ----
 
 Then, you should also declare a `stable` remote branch corresponding to the `stable` tree, to get all release updates:

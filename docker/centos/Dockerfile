@@ -70,7 +70,7 @@ RUN \
 RUN \
   mkdir -p /srv/elixir-data/$PROJECT/repo && \
   mkdir -p /srv/elixir-data/$PROJECT/data && \
-  git clone "${GIT_REPO_URL}" /srv/elixir-data/$PROJECT/repo/
+  git clone --bare "${GIT_REPO_URL}" /srv/elixir-data/$PROJECT/repo/
 
 ENV LXR_REPO_DIR /srv/elixir-data/$PROJECT/repo
 ENV LXR_DATA_DIR /srv/elixir-data/$PROJECT/data
