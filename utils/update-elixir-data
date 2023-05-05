@@ -17,13 +17,10 @@
 #  You should have received a copy of the GNU Affero General Public License
 #  along with Elixir.  If not, see <http://www.gnu.org/licenses/>.
 
+export ELIXIR_INSTALL=$(dirname $(dirname $(readlink -f "$0")))
+
 if [ -z "$LXR_PROJ_DIR" ]; then
     echo "ERROR: LXR_PROJ_DIR environment variable not set"
-    exit 1
-fi
-
-if [ -z "$ELIXIR_INSTALL" ]; then
-    echo "ERROR: ELIXIR_INSTALL environment variable not set"
     exit 1
 fi
 

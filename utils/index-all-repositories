@@ -62,17 +62,12 @@ index() {
     ./update.py $ELIXIR_THREADS
 }
 
+export ELIXIR_INSTALL=$(dirname $(dirname $(readlink -f "$0")))
+
 if [ "$ELIXIR_ROOT" = "" ]
 then
     echo "Error: ELIXIR_ROOT environment variable not set"
     echo "It's where Elixir data are stored"
-    exit 1
-fi
-
-if [ "$ELIXIR_INSTALL" = "" ]
-then
-    echo "Error: ELIXIR_INSTALL environment variable not set"
-    echo "It's where Elixir code is stored"
     exit 1
 fi
 
