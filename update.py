@@ -39,6 +39,8 @@ compatibles_parser = FindCompatibleDTS()
 
 db = data.DB(lib.getDataDir(), readonly=False, dtscomp=dts_comp_support)
 
+# Number of cpu threads (+2 for version indexing)
+cpu = 10
 threads_list = []
 
 hash_file_lock = Lock() # Lock for db.hash and db.file
@@ -542,9 +544,36 @@ def progress(msg, current):
 
 # Check number of threads arg
 if len(argv) >= 2 and argv[1].isdigit() :
-    cpus = int(argv[1])
-else:
-    cpus = os.cpu_count()
+    cpu = int(argv[1])
+
+    if cpu < 5 :
+        cpu = 5
+
+# Distribute threads among functions using the following rules :
+# There are more (or equal) refs threads than others
+# There are more (or equal) defs threads than docs or comps threads
+# Example : if cpu=6 : defs=1, refs=2, docs=1, comps=1, comps_docs=1
+#           if cpu=7 : defs=2, refs=2, docs=1, comps=1, comps_docs=1
+#           if cpu=8 : defs=2, refs=3, docs=1, comps=1, comps_docs=1
+#           if cpu=11: defs=2, refs=3, docs=2, comps=2, comps_docs=2
+quo, rem = divmod(cpu, 5)
+num_th_refs = quo
+num_th_defs = quo
+num_th_docs = quo
+
+# If DT bindings support is enabled, use $quo threads for each of the 2 threads
+# Otherwise add them to the remaining threads
+if dts_comp_support:
+    num_th_comps = quo
+    num_th_comps_docs = quo
+else :
+    num_th_comps = 0
+    num_th_comps_docs = 0
+    rem += 2*quo
+
+quo, rem = divmod(rem, 2)
+num_th_defs += quo
+num_th_refs += quo + rem
 
 tag_buf = []
 for tag in scriptLines('list-tags'):
@@ -562,13 +591,22 @@ if not num_tags:
 threads_list.append(UpdateIds(tag_buf))
 threads_list.append(UpdateVersions(tag_buf))
 
-# Define threads
-for i in range(cpus):
-    threads_list.append(UpdateDefs(i, cpus))
-    threads_list.append(UpdateRefs(i, cpus))
-    threads_list.append(UpdateDocs(i, cpus))
-    threads_list.append(UpdateComps(i, cpus))
-    threads_list.append(UpdateCompsDocs(i, cpus))
+# Define defs threads
+for i in range(num_th_defs):
+    threads_list.append(UpdateDefs(i, num_th_defs))
+# Define refs threads
+for i in range(num_th_refs):
+    threads_list.append(UpdateRefs(i, num_th_refs))
+# Define docs threads
+for i in range(num_th_docs):
+    threads_list.append(UpdateDocs(i, num_th_docs))
+# Define comps threads
+for i in range(num_th_comps):
+    threads_list.append(UpdateComps(i, num_th_comps))
+# Define comps_docs threads
+for i in range(num_th_comps_docs):
+    threads_list.append(UpdateCompsDocs(i, num_th_comps_docs))
+
 
 # Start to process tags
 threads_list[0].start()
