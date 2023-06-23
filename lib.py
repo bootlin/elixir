@@ -196,7 +196,7 @@ def currentProject():
     return os.path.basename(os.path.dirname(getDataDir()))
 
 # List all families supported by Elixir
-families = ['A', 'B', 'C', 'D', 'K', 'M']
+families = ['A', 'B', 'C', 'D', 'E', 'K', 'M']
 
 def validFamily(family):
     return family in families
@@ -206,6 +206,8 @@ def getFileFamily(filename):
 
     if ext.lower() in ['.c', '.cc', '.cpp', '.c++', '.cxx', '.h', '.s'] :
         return 'C' # C file family and ASM
+    elif ext.lower() in ['.go', '.java', 'php', 'pl', '.py', '.rb', '.rs', '.sh'] :
+        return 'E' # Other than C family
     elif ext.lower() in ['.dts', '.dtsi'] :
         return 'D' # Devicetree files
     elif name.lower()[:7] in ['kconfig'] and not ext.lower() in ['.rst']:
@@ -221,6 +223,7 @@ def getFileFamily(filename):
 # 2 chars values with a M are macros families
 compatibility_list = {
     'C' : ['C', 'K'],
+    'E' : ['E'],
     'K' : ['K'],
     'D' : ['D', 'CM'],
     'M' : ['K']

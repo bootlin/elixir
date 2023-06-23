@@ -241,6 +241,7 @@ def get_idents_comps(version, ident):
     # Used in DT files
     # Documented in documentation files
     symbol_c = []
+    symbol_others = []
     symbol_dts = []
     symbol_docs = []
 
@@ -261,6 +262,7 @@ def get_idents_comps(version, ident):
     comps_idx, comps_lines, comps_family = next(comps)
     comps_docs_idx, comps_docs_lines, comps_docs_family = next(comps_docs)
     compsCBuf = [] # C/CPP/ASM files
+    compsEBuf = [] # Other than C files
     compsDBuf = [] # DT files
     compsBBuf = [] # DT bindings docs files
 
@@ -274,6 +276,8 @@ def get_idents_comps(version, ident):
         if comps_idx == file_idx:
             if comps_family == 'C':
                 compsCBuf.append((file_path, comps_lines))
+            elif comps_family == 'E':
+                compsEBuf.append((file_path, comps_lines))
             elif comps_family == 'D':
                 compsDBuf.append((file_path, comps_lines))
 
@@ -283,13 +287,16 @@ def get_idents_comps(version, ident):
     for path, cline in sorted(compsCBuf):
         symbol_c.append(SymbolInstance(path, cline, 'compatible'))
 
+    for path, eline in sorted(compsEBuf):
+        symbol_others.append(SymbolInstance(path, eline))
+
     for path, dlines in sorted(compsDBuf):
         symbol_dts.append(SymbolInstance(path, dlines))
 
     for path, blines in sorted(compsBBuf):
         symbol_docs.append(SymbolInstance(path, blines))
 
-    return symbol_c, symbol_dts, symbol_docs
+    return symbol_c, symbol_others, symbol_dts, symbol_docs
 
 def get_idents_defs(version, ident, family):
 

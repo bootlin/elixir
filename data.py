@@ -31,15 +31,22 @@ deflist_macro_regex = re.compile('\dM\d+(\w)')
 ##################################################################################
 
 defTypeR = {
+    'C': 'class',
     'c': 'config',
     'd': 'define',
     'e': 'enum',
     'E': 'enumerator',
     'f': 'function',
+    'g': 'field',
+    'h': 'func',
     'l': 'label',
     'M': 'macro',
     'm': 'member',
+    'N': 'module',
+    'n': 'method',
+    'P': 'package',
     'p': 'prototype',
+    'S': 'subroutine',
     's': 'struct',
     't': 'typedef',
     'u': 'union',
