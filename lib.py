@@ -206,7 +206,7 @@ def getFileFamily(filename):
 
     if ext.lower() in ['.c', '.cc', '.cpp', '.c++', '.cxx', '.h', '.s'] :
         return 'C' # C file family and ASM
-    elif ext.lower() in ['.go', '.java', 'php', 'pl', '.py', '.rb', '.rs', '.sh'] :
+    elif ext.lower() in ['.go', '.java', '.php', '.pl', '.py', '.rb', '.rs', '.sh'] :
         return 'E' # Other than C family
     elif ext.lower() in ['.dts', '.dtsi'] :
         return 'D' # Devicetree files
