@@ -46,7 +46,6 @@ defTypeR = {
     'n': 'method',
     'P': 'package',
     'p': 'prototype',
-    'r': 'sub',
     'S': 'subroutine',
     's': 'struct',
     't': 'typedef',
