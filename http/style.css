@@ -439,6 +439,43 @@ h2 {
   padding: 0;
 }
 
+/* reference popup */
+
+#reference-popup-wrapper {
+  position: absolute;
+  display: inline-block;
+}
+
+#reference-popup {
+  position: absolute;
+  visibility: hidden;
+  display: none;
+  border: 2px solid black;
+  background: white;
+  padding: 5px;
+  z-index: 10;
+  overflow-y: scroll;
+  min-height: 25vh;
+  min-width: 40vw;
+  max-height: 50vh;
+  max-width: 75vw;
+
+  @media only screen and (max-width: 769px) {
+    min-width: 100vw;
+  }
+}
+
+#reference-popup::-webkit-scrollbar-corner {
+  background: #666;
+}
+
+#reference-popup::-webkit-scrollbar-track {
+  background: #666;
+}
+
+#reference-popup::-webkit-scrollbar-thumb {
+  background: #ccc;
+}
 
 /* if javascript on/off */
 

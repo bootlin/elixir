@@ -8,7 +8,7 @@ def keep_idents(m):
 
 def replace_idents(m):
     i = idents[decode_number(m.group(2)) - 1]
-    return str(m.group(1) or '') + '<a href="'+version+'/'+family+'/ident/'+i+'">'+i+'</a>'
+    return str(m.group(1) or '') + '<a class="ident" href="'+version+'/'+family+'/ident/'+i+'">'+i+'</a>'
 
 ident_filters = {
                 'case': 'any',
