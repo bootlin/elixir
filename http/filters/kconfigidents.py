@@ -14,7 +14,7 @@ def replace_kconfigidents(m):
     if family == 'K':
         n = n[7:]
 
-    return str(m.group(1) or '') + '<a href="'+version+'/K/ident/'+i+'">'+n+'</a>'
+    return str(m.group(1) or '') + '<a class="ident" href="'+version+'/K/ident/'+i+'">'+n+'</a>'
 
 kconfigident_filters = {
                 'case': 'any',
