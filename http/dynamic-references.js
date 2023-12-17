@@ -135,8 +135,8 @@ function generateDocCommentsHTML(symbolDocComments, version) {
         result += '</ul>';
       }
     }
-    result += '</ul>';
   }
+  result += '</ul>';
   return result;
 }
 
