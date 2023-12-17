@@ -182,6 +182,8 @@ function hidePopup(referencePopup) {
 
 document.addEventListener("DOMContentLoaded", _ => {
   let referencePopup = document.getElementById("reference-popup");
+  let loadingPopup = document.getElementById("loading-popup");
+  var loadingTimer;
 
   document.body.querySelectorAll(".ident").forEach(el => {
     el.addEventListener("click", async ev => {
@@ -192,7 +194,14 @@ document.addEventListener("DOMContentLoaded", _ => {
       ev.preventDefault();
       let splitPath = ev.target.pathname.split("/");
       let [_, project, version, family, _i, ident] = splitPath;
+
+      clearTimeout(loadingTimer);
+      loadingTimer = setTimeout(() => {
+        showPopup(loadingPopup, ev.target);
+      }, 200);
       let result = await fetchIdent(project, ident, version, family);
+      hidePopup(loadingPopup);
+      clearTimeout(loadingTimer);
 
       referencePopup.innerHTML = generateReferencesHTML(result, version);
       showPopup(referencePopup, ev.target);
