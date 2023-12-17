@@ -477,6 +477,16 @@ h2 {
   background: #ccc;
 }
 
+#loading-popup {
+  position: absolute;
+  visibility: hidden;
+  border: 2px solid black;
+  background: white;
+  color: gray;
+  padding: 5px;
+  z-index: 10;
+}
+
 /* if javascript on/off */
 
 .js .sidebar {
