@@ -19,6 +19,7 @@
 
 import json
 import os
+import importlib
 
 import falcon
 from urllib import parse
@@ -32,12 +33,16 @@ def build_query(env, project):
         basedir = os.environ['LXR_PROJ_DIR']
         # fail if it's not defined either place
 
-    os.environ['LXR_DATA_DIR']= basedir + '/' + project + '/data'
+    os.environ['LXR_DATA_DIR'] = basedir + '/' + project + '/data'
     os.environ['LXR_REPO_DIR'] = basedir + '/' + project + '/repo'
 
     import sys
-    sys.path = [ ELIXIR_DIR ] + sys.path
+    if ELIXIR_DIR not in sys.path:
+        sys.path = [ ELIXIR_DIR ] + sys.path
+
     import query
+    importlib.reload(query)
+
     return query.query
 
 class IdentGetter:
