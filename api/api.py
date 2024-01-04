@@ -22,41 +22,41 @@ import os
 
 import falcon
 from urllib import parse
+import sys
 
 ELIXIR_DIR = os.path.dirname(os.path.realpath(__file__)) + '/..'
 
-def build_query(env, project):
-    try:
-        basedir = env['LXR_PROJ_DIR']
-    except KeyError:
-        basedir = os.environ['LXR_PROJ_DIR']
-        # fail if it's not defined either place
-
-    os.environ['LXR_DATA_DIR']= basedir + '/' + project + '/data'
-    os.environ['LXR_REPO_DIR'] = basedir + '/' + project + '/repo'
-
-    import sys
+if ELIXIR_DIR not in sys.path:
     sys.path = [ ELIXIR_DIR ] + sys.path
-    import query
-    return query.query
+
+import query
 
 class IdentGetter:
     def on_get(self, req, resp, project, ident):
-        query = build_query(req.env, project)
+        try:
+            basedir = req.env['LXR_PROJ_DIR']
+        except KeyError:
+            basedir = os.environ['LXR_PROJ_DIR']
+
+        data_dir = basedir + '/' + project + '/data'
+        repo_dir = basedir + '/' + project + '/repo'
+
+        q = query.Query(data_dir, repo_dir)
+
         if 'version' in req.params:
             version = req.params['version']
         else:
             raise falcon.HTTPMissingParam('version')
 
         if version == 'latest':
-            version = query('latest')
+            version = q.query('latest')
 
         if 'family' in req.params:
             family = req.params['family']
         else:
             family = 'C'
 
-        symbol_definitions, symbol_references, symbol_doccomments = query('ident', version, ident, family)
+        symbol_definitions, symbol_references, symbol_doccomments = q.query('ident', version, ident, family)
         resp.body = json.dumps(
             {
                 'definitions': [sym.__dict__ for sym in symbol_definitions],

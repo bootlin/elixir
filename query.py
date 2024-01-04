@@ -25,10 +25,6 @@ import os
 from collections import OrderedDict
 from urllib import parse
 
-dts_comp_support = int(script('dts-comp'))
-
-db = data.DB(lib.getDataDir(), readonly=True, dtscomp=dts_comp_support)
-
 from io import BytesIO
 
 class SymbolInstance(object):
@@ -47,7 +43,28 @@ class SymbolInstance(object):
     def __str__(self):
         return self.__repr__()
 
-def query(cmd, *args):
+class Query:
+    def __init__(self, data_dir, repo_dir):
+        self.repo_dir = repo_dir
+        self.data_dir = data_dir
+        self.dts_comp_support = int(self.script('dts-comp'))
+        self.db = data.DB(data_dir, readonly=True, dtscomp=self.dts_comp_support)
+
+    def query(self, cmd, *args):
+        return query(cmd, *args, ctx=self)
+
+    def script(self, *args):
+        return script(*args, env=self.getEnv())
+
+    def scriptLines(self, *args):
+        return scriptLines(*args, env=self.getEnv())
+
+    def getEnv(self):
+        return {"LXR_REPO_DIR": self.repo_dir}
+
+default_query = Query(lib.getDataDir(), lib.getRepoDir())
+
+def query(cmd, *args, ctx=default_query):
     if cmd == 'versions':
 
         # Returns the list of indexed versions in the following format:
@@ -55,7 +72,7 @@ def query(cmd, *args):
         # Example: v3 v3.1 v3.1-rc10
         versions = OrderedDict()
 
-        for line in scriptLines('list-tags', '-h'):
+        for line in ctx.scriptLines('list-tags', '-h'):
             taginfo = decode(line).split(' ')
             num = len(taginfo)
             topmenu, submenu = 'FIXME', 'FIXME'
@@ -67,7 +84,7 @@ def query(cmd, *args):
             elif num ==3:
                 topmenu,submenu,tag = taginfo
 
-            if db.vers.exists(tag):
+            if ctx.db.vers.exists(tag):
                 if topmenu not in versions:
                     versions[topmenu] = OrderedDict()
                 if submenu not in versions[topmenu]:
@@ -84,9 +101,9 @@ def query(cmd, *args):
         index = 0
 
         # If we get the same tag twice, we are at the oldest one
-        while not db.vers.exists(tag) and previous != tag:
+        while not ctx.db.vers.exists(tag) and previous != tag:
             previous = tag
-            tag = decode(script('get-latest', str(index))).rstrip('\n')
+            tag = decode(ctx.script('get-latest', str(index))).rstrip('\n')
             index += 1
 
         return tag
@@ -102,7 +119,7 @@ def query(cmd, *args):
 
         version = args[0]
         path = args[1]
-        return decode(script('get-type', version, path)).strip()
+        return decode(ctx.script('get-type', version, path)).strip()
 
     elif cmd == 'exist':
 
@@ -113,7 +130,7 @@ def query(cmd, *args):
 
         dirname, filename = os.path.split(path)
 
-        entries = decode(script('get-dir', version, dirname)).split("\n")[:-1]
+        entries = decode(ctx.script('get-dir', version, dirname)).split("\n")[:-1]
         for entry in entries:
             fname = entry.split(" ")[1]
 
@@ -129,7 +146,7 @@ def query(cmd, *args):
 
         version = args[0]
         path = args[1]
-        entries_str =  decode(script('get-dir', version, path))
+        entries_str =  decode(ctx.script('get-dir', version, path))
         return entries_str.split("\n")[:-1]
 
     elif cmd == 'file':
@@ -146,7 +163,7 @@ def query(cmd, *args):
 
         if family != None:
             buffer = BytesIO()
-            tokens = scriptLines('tokenize-file', version, path, family)
+            tokens = ctx.scriptLines('tokenize-file', version, path, family)
             even = True
 
             prefix = b''
@@ -156,16 +173,16 @@ def query(cmd, *args):
             for tok in tokens:
                 even = not even
                 tok2 = prefix + tok
-                if (even and db.defs.exists(tok2) and
-                    (lib.compatibleFamily(db.defs.get(tok2).get_families(), family) or
-                    lib.compatibleMacro(db.defs.get(tok2).get_macros(), family))):
+                if (even and ctx.db.defs.exists(tok2) and
+                    (lib.compatibleFamily(ctx.db.defs.get(tok2).get_families(), family) or
+                    lib.compatibleMacro(ctx.db.defs.get(tok2).get_macros(), family))):
                     tok = b'\033[31m' + tok2 + b'\033[0m'
                 else:
                     tok = lib.unescape(tok)
                 buffer.write(tok)
             return decode(buffer.getvalue())
         else:
-            return decode(script('get-file', version, path))
+            return decode(ctx.script('get-file', version, path))
 
     elif cmd == 'family':
         # Get the family of a given file
@@ -177,14 +194,14 @@ def query(cmd, *args):
     elif cmd == 'dts-comp':
         # Get state of dts_comp_support
 
-        return dts_comp_support
+        return ctx.dts_comp_support
 
     elif cmd == 'dts-comp-exists':
         # Check if a dts compatible string exists
 
         ident = args[0]
-        if dts_comp_support:
-            return db.comps.exists(ident)
+        if ctx.dts_comp_support:
+            return ctx.db.comps.exists(ident)
         else:
             return False
 
@@ -195,25 +212,25 @@ def query(cmd, *args):
         name = args[0]
 
         if name == 'vars':
-            return db.vars.get_keys()
+            return ctx.db.vars.get_keys()
         elif name == 'blob':
-            return db.blob.get_keys()
+            return ctx.db.blob.get_keys()
         elif name == 'hash':
-            return db.hash.get_keys()
+            return ctx.db.hash.get_keys()
         elif name == 'file':
-            return db.file.get_keys()
+            return ctx.db.file.get_keys()
         elif name == 'vers':
-            return db.vers.get_keys()
+            return ctx.db.vers.get_keys()
         elif name == 'defs':
-            return db.defs.get_keys()
+            return ctx.db.defs.get_keys()
         elif name == 'refs':
-            return db.refs.get_keys()
+            return ctx.db.refs.get_keys()
         elif name == 'docs':
-            return db.docs.get_keys()
-        elif name == 'comps' and dts_comp_support:
-            return db.comps.get_keys()
-        elif name == 'comps_docs' and dts_comp_support:
-            return db.comps_docs.get_keys()
+            return ctx.db.docs.get_keys()
+        elif name == 'comps' and ctx.dts_comp_support:
+            return ctx.db.comps.get_keys()
+        elif name == 'comps_docs' and ctx.dts_comp_support:
+            return ctx.db.comps_docs.get_keys()
         else:
             return []
 
@@ -227,14 +244,14 @@ def query(cmd, *args):
 
         # DT bindings compatible strings are handled differently
         if family == 'B':
-            return get_idents_comps(version, ident)
+            return get_idents_comps(version, ident, ctx=ctx)
         else:
-            return get_idents_defs(version, ident, family)
+            return get_idents_defs(version, ident, family, ctx=ctx)
 
     else:
         return 'Unknown subcommand: ' + cmd + '\n'
 
-def get_idents_comps(version, ident):
+def get_idents_comps(version, ident, ctx=default_query):
 
     # DT bindings compatible strings are handled differently
     # They are defined in C files
@@ -247,14 +264,14 @@ def get_idents_comps(version, ident):
     # DT compatible strings are quoted in the database
     ident = parse.quote(ident)
 
-    if not dts_comp_support or not db.comps.exists(ident):
+    if not ctx.dts_comp_support or not ctx.db.comps.exists(ident):
         return symbol_c, symbol_dts, symbol_docs
 
-    files_this_version = db.vers.get(version).iter()
-    comps = db.comps.get(ident).iter(dummy=True)
+    files_this_version = ctx.db.vers.get(version).iter()
+    comps = ctx.db.comps.get(ident).iter(dummy=True)
 
-    if db.comps_docs.exists(ident):
-        comps_docs = db.comps_docs.get(ident).iter(dummy=True)
+    if ctx.db.comps_docs.exists(ident):
+        comps_docs = ctx.db.comps_docs.get(ident).iter(dummy=True)
     else:
         comps_docs = data.RefList().iter(dummy=True)
 
@@ -291,30 +308,30 @@ def get_idents_comps(version, ident):
 
     return symbol_c, symbol_dts, symbol_docs
 
-def get_idents_defs(version, ident, family):
+def get_idents_defs(version, ident, family, ctx=default_query):
 
     symbol_definitions = []
     symbol_references = []
     symbol_doccomments = []
 
-    if not db.defs.exists(ident):
+    if not ctx.db.defs.exists(ident):
         return symbol_definitions, symbol_references, symbol_doccomments
 
-    if not db.vers.exists(version):
+    if not ctx.db.vers.exists(version):
         return symbol_definitions, symbol_references, symbol_doccomments
 
-    files_this_version = db.vers.get(version).iter()
-    this_ident = db.defs.get(ident)
+    files_this_version = ctx.db.vers.get(version).iter()
+    this_ident = ctx.db.defs.get(ident)
     defs_this_ident = this_ident.iter(dummy=True)
     macros_this_ident = this_ident.get_macros()
     # FIXME: see why we can have a discrepancy between defs_this_ident and refs
-    if db.refs.exists(ident):
-        refs = db.refs.get(ident).iter(dummy=True)
+    if ctx.db.refs.exists(ident):
+        refs = ctx.db.refs.get(ident).iter(dummy=True)
     else:
         refs = data.RefList().iter(dummy=True)
 
-    if db.docs.exists(ident):
-        docs = db.docs.get(ident).iter(dummy=True)
+    if ctx.db.docs.exists(ident):
+        docs = ctx.db.docs.get(ident).iter(dummy=True)
     else:
         docs = data.RefList().iter(dummy=True)
 

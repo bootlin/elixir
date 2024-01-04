@@ -22,12 +22,12 @@ import subprocess, os
 
 CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
 
-def script(*args):
+def script(*args, env=None):
     args = (os.path.join(CURRENT_DIR, 'script.sh'),) + args
     # subprocess.run was introduced in Python 3.5
     # fall back to subprocess.check_output if it's not available
     if hasattr(subprocess, 'run'):
-        p = subprocess.run(args, stdout=subprocess.PIPE)
+        p = subprocess.run(args, stdout=subprocess.PIPE, env=env)
         p = p.stdout
     else:
         p = subprocess.check_output(args)
@@ -36,8 +36,8 @@ def script(*args):
 # Invoke ./script.sh with the given arguments
 # Returns the list of output lines
 
-def scriptLines(*args):
-    p = script(*args)
+def scriptLines(*args, env=None):
+    p = script(*args, env=env)
     p = p.split(b'\n')
     del p[-1]
     return p
@@ -189,6 +189,14 @@ def getDataDir():
         dir=os.environ['LXR_DATA_DIR']
     except KeyError:
         print(argv[0] + ': LXR_DATA_DIR needs to be set')
+        exit(1)
+    return dir
+
+def getRepoDir():
+    try:
+        dir=os.environ['LXR_REPO_DIR']
+    except KeyError:
+        print(argv[0] + ': LXR_REPO_DIR needs to be set')
         exit(1)
     return dir
 
