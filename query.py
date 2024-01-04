@@ -62,6 +62,9 @@ class Query:
             "LXR_DATA_DIR": self.data_dir,
         }
 
+    def close(self):
+        self.db.close()
+
     def query(self, cmd, *args):
         if cmd == 'versions':
 

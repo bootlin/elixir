@@ -179,6 +179,9 @@ class BsdDB:
         if sync:
             self.db.sync()
 
+    def close(self):
+        self.db.close()
+
 class DB:
     def __init__(self, dir, readonly=True, dtscomp=False):
         if os.path.isdir(dir):
@@ -200,7 +203,22 @@ class DB:
         self.defs = BsdDB(dir + '/definitions.db', ro, DefList)
         self.refs = BsdDB(dir + '/references.db', ro, RefList)
         self.docs = BsdDB(dir + '/doccomments.db', ro, RefList)
+        self.dtscomp = dtscomp
         if dtscomp:
             self.comps = BsdDB(dir + '/compatibledts.db', ro, RefList)
             self.comps_docs = BsdDB(dir + '/compatibledts_docs.db', ro, RefList)
             # Use a RefList in case there are multiple doc comments for an identifier
+
+    def close(self):
+        self.vars.close()
+        self.blob.close()
+        self.hash.close()
+        self.file.close()
+        self.vers.close()
+        self.defs.close()
+        self.refs.close()
+        self.docs.close()
+        if self.dtscomp:
+            self.comps.close()
+            self.comps_docs.close()
+
