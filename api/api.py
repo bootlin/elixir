@@ -64,6 +64,7 @@ class IdentGetter:
                 'documentations': [sym.__dict__ for sym in symbol_doccomments]
             })
         resp.status = falcon.HTTP_200
+        q.close()
 
 def create_ident_getter():
     application = falcon.API()
