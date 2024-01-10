@@ -92,3 +92,4 @@ index toybox https://github.com/landley/toybox.git
 index grub https://git.savannah.gnu.org/git/grub.git
 index bluez https://git.kernel.org/pub/scm/bluetooth/bluez.git
 index linux https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git https://github.com/bootlin/linux-history.git
+index xen https://xenbits.xen.org/git-http/xen.git
