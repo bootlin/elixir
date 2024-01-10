@@ -149,6 +149,9 @@ parse_defs()
     "C")
         parse_defs_C
         ;;
+    "E")
+        parse_defs_E
+        ;;
     "K")
         parse_defs_K
         ;;
@@ -166,6 +169,25 @@ parse_defs_C()
 
     # Use ctags to parse most of the defs
     ctags -x --kinds-c=+p+x --extras='-{anonymous}' "$full_path" |
+    grep -avE "^operator |CONFIG_" |
+    awk '{print $1" "$2" "$3}'
+
+    # Parse function macros, e.g., in .S files
+    perl -ne '/^\s*ENTRY\((\w+)\)/ and print "$1 function $.\n"' "$full_path"
+    perl -ne '/^SYSCALL_DEFINE[0-9]\(\s*(\w+)\W/ and print "sys_$1 function $.\n"' "$full_path"
+
+    rm "$full_path"
+    rmdir $tmp
+}
+
+parse_defs_E()
+{
+    tmp=`mktemp -d`
+    full_path=$tmp/$opt2
+    git cat-file blob "$opt1" > "$full_path"
+
+    # Use ctags to parse most of the defs
+    ctags -x --extras='-{anonymous}' "$full_path" |
     grep -avE "^operator |CONFIG_" |
     awk '{print $1" "$2" "$3}'
 

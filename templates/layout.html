@@ -28,6 +28,7 @@
                         <select name="f" title="Restricts search to specific file families">
                             <option value="A" {% if family=="A" %} selected="selected"{% endif %}>All symbols</option>
                             <option value="C" {% if family=="C" %} selected="selected"{% endif %}>C/CPP/ASM</option>
+                            <option value="E" {% if family=="E" %} selected="selected"{% endif %}>non C/CPP/ASM</option>
                             <option value="K" {% if family=="K" %} selected="selected"{% endif %}>Kconfig</option>
                             <option value="D" {% if family=="D" %} selected="selected"{% endif %}>Devicetree</option>
                             <option value="B" {% if family=="B" %} selected="selected"{% endif %}>DT compatible</option>
