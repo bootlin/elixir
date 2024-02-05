@@ -58,6 +58,7 @@ class Query:
 
     def getEnv(self):
         return {
+            **os.environ,
             "LXR_REPO_DIR": self.repo_dir,
             "LXR_DATA_DIR": self.data_dir,
         }
@@ -387,13 +388,8 @@ class Query:
         return symbol_definitions, symbol_references, symbol_doccomments
 
 
-default_query = Query(lib.getDataDir(), lib.getRepoDir())
-
-def query(cmd, *args):
-    return default_query.query(cmd, *args)
-
-def cmd_ident(version, ident, family, **kwargs):
-    symbol_definitions, symbol_references, symbol_doccomments = query("ident", version, ident, family)
+def cmd_ident(q, version, ident, family, **kwargs):
+    symbol_definitions, symbol_references, symbol_doccomments = q.query("ident", version, ident, family)
     print("Symbol Definitions:")
     for symbol_definition in symbol_definitions:
         print(symbol_definition)
@@ -406,12 +402,14 @@ def cmd_ident(version, ident, family, **kwargs):
     for symbol_doccomment in symbol_doccomments:
         print(symbol_doccomment)
 
-def cmd_file(version, path, **kwargs):
-    code = query("file", version, path)
+def cmd_file(q, version, path, **kwargs):
+    code = q.query("file", version, path)
     print(code)
 
 if __name__ == "__main__":
     import argparse
+
+    query = Query(lib.getDataDir(), lib.getRepoDir())
 
     parser = argparse.ArgumentParser()
     parser.add_argument("version", help="The version of the project", type=str, default="latest")
@@ -420,11 +418,11 @@ if __name__ == "__main__":
     ident_subparser = subparsers.add_parser('ident', help="Get definitions and references of an identifier")
     ident_subparser.add_argument('ident', type=str, help="The name of the identifier")
     ident_subparser.add_argument('family', type=str, help="The file family requested")
-    ident_subparser.set_defaults(func=cmd_ident)
+    ident_subparser.set_defaults(func=cmd_ident, q=query)
 
     file_subparser = subparsers.add_parser('file', help="Get a source file")
     file_subparser.add_argument('path', type=str, help="The path of the source file")
-    file_subparser.set_defaults(func=cmd_file)
+    file_subparser.set_defaults(func=cmd_file, q=query)
 
     args = parser.parse_args()
     args.func(**vars(args))

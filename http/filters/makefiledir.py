@@ -9,7 +9,7 @@ def keep_makefiledir(m):
     if dir_name != '/':
         dir_name += '/'
 
-    if query('exist', tag, dir_name + m.group(1) + '/Makefile'):
+    if q.query('exist', tag, dir_name + m.group(1) + '/Makefile'):
         makefiledir.append(m.group(1))
         return '__KEEPMAKEFILEDIR__' + encode_number(len(makefiledir)) + '/' + m.group(2)
     else:

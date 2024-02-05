@@ -75,24 +75,24 @@ def init_query(project):
         return None;
 
     basedir = os.environ['LXR_PROJ_DIR']
-    os.environ['LXR_DATA_DIR']= basedir + '/' + project + '/data'
-    os.environ['LXR_REPO_DIR'] = basedir + '/' + project + '/repo'
+    datadir = basedir + '/' + project + '/data'
+    repodir = basedir + '/' + project + '/repo'
 
-    import query
-    return query.query
+    from query import Query
+    return Query(datadir, repodir)
 
 
 def get_ident(ident, version):
     if version == 'latest':
-            version = query('latest')
+            version = query.query('latest')
 
-    return query('ident', version, ident[0], ident[1])
+    return query.query('ident', version, ident[0], ident[1])
 
 def get_file(path, version):
     if version == 'latest':
-            version = query('latest')
+            version = query.query('latest')
 
-    return query('file', version, path)
+    return query.query('file', version, path)
 
 
 #Read arguments
