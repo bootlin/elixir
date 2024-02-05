@@ -5,7 +5,7 @@ dtscompB = []
 def keep_dtscompB(m):
     text = m.group(1)
 
-    if query('dts-comp-exists', parse.quote(text)):
+    if q.query('dts-comp-exists', parse.quote(text)):
         dtscompB.append(text)
         return '__KEEPDTSCOMPB__' + encode_number(len(dtscompB))
     else:

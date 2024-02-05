@@ -8,7 +8,7 @@ def keep_makefilefile(m):
     if dir_name != '/':
         dir_name += '/'
 
-    if query('exist', tag, dir_name + m.group(1)):
+    if q.query('exist', tag, dir_name + m.group(1)):
         makefilefile.append(m.group(1))
         return '__KEEPMAKEFILEFILE__' + encode_number(len(makefilefile)) + m.group(2)
     else:

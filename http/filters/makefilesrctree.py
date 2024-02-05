@@ -3,7 +3,7 @@
 makefilesrctree = []
 
 def keep_makefilesrctree(m):
-    if query('exist', tag, '/' +  m.group(1)):
+    if q.query('exist', tag, '/' +  m.group(1)):
         makefilesrctree.append(m.group(1))
         return '__KEEPMAKEFILESRCTREE__' + encode_number(len(makefilesrctree)) + m.group(2)
     else:

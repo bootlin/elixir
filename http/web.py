@@ -131,12 +131,13 @@ for (dirpath, dirnames, filenames) in os.walk(basedir):
     break
 projects.sort()
 
-from query import query
+from query import Query
 
-dts_comp_support = query('dts-comp')
+q = Query(datadir, repodir)
+dts_comp_support = q.query('dts-comp')
 
 if version_decoded == 'latest':
-    tag = query('latest')
+    tag = q.query('latest')
 else:
     tag = version_decoded
 
@@ -154,7 +155,7 @@ data = {
     'breadcrumb': '<a class="project" href="'+version+'/source">/</a>'
 }
 
-versions = query('versions')
+versions = q.query('versions')
 
 v = ''
 b = 1
@@ -207,12 +208,12 @@ if mode == 'source':
 
     lines = ['null - - -']
 
-    type = query('type', tag, path)
+    type = q.query('type', tag, path)
     if len(type) > 0:
         if type == 'tree':
-            lines += query('dir', tag, path)
+            lines += q.query('dir', tag, path)
         elif type == 'blob':
-            code = query('file', tag, path)
+            code = q.query('file', tag, path)
     else:
         print('<div class="lxrerror"><h2>This file does not exist.</h2></div>')
         status = 404
@@ -240,7 +241,7 @@ if mode == 'source':
                     # 120000 permission means it's a symlink
                     # So we need to handle that correctly
                     dir_name = os.path.dirname(path)
-                    rel_path = query('file', tag, path2)
+                    rel_path = q.query('file', tag, path2)
 
                     if dir_name != '/':
                         dir_name += '/'
@@ -271,7 +272,7 @@ if mode == 'source':
         fdir, fname = os.path.split(path)
         filename, extension = os.path.splitext(fname)
         extension = extension[1:].lower()
-        family = query('family', fname)
+        family = q.query('family', fname)
 
         # Source common filter definitions
         os.chdir('filters')
@@ -331,7 +332,7 @@ if mode == 'source':
 elif mode == 'ident':
     data['title'] = ident+' identifier - '+title_suffix
 
-    symbol_definitions, symbol_references, symbol_doccomments = query('ident', tag, ident, family)
+    symbol_definitions, symbol_references, symbol_doccomments = q.query('ident', tag, ident, family)
 
     print('<div class="lxrident">')
     if len(symbol_definitions) or len(symbol_references):

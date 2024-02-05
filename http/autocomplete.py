@@ -31,19 +31,20 @@ query_project = form.getvalue('p')
 
 # Get project dirs
 basedir = os.environ['LXR_PROJ_DIR']
-os.environ['LXR_DATA_DIR'] = basedir + '/' + query_project + '/data'
-os.environ['LXR_REPO_DIR'] = basedir + '/' + query_project + '/repo'
+datadir = basedir + '/' + query_project + '/data'
+repodir = basedir + '/' + query_project + '/repo'
 
 # Import query
 sys.path = [ sys.path[0] + '/..' ] + sys.path
-from query import query
+from query import Query
+q = Query(datadir, repodir)
 
 # Create tmp directory for autocomplete
 tmpdir = '/tmp/autocomplete/' + query_project
 if not(os.path.isdir(tmpdir)):
     os.makedirs(tmpdir, exist_ok=True)
 
-latest = query('latest')
+latest = q.query('latest')
 
 # Define some specific values for some families
 if query_family == 'B':
@@ -65,7 +66,7 @@ if not f.readline()[:-1] == latest:
     f.seek(0)
     f.truncate()
     f.write(latest + "\n")
-    f.write('\n'.join([process(x.decode()) for x in query('keys', name)]))
+    f.write('\n'.join([process(x.decode()) for x in q.query('keys', name)]))
     f.seek(0)
     f.readline() # Skip first line that store the version number
 
