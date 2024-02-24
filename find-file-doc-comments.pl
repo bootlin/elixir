@@ -131,7 +131,7 @@ sub main {
 
         # Is it actually a header for this function?
         say "  Checking line $lineno for header" if $VERBOSE;
-        next unless $source_lines[$lineno] =~ $this_doc_comment_header;
+        next unless $lineno > 0 && $source_lines[$lineno] =~ $this_doc_comment_header;
 
         # We have found a header.  Confirm it's a doc comment.
         --$lineno;
