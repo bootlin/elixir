@@ -73,7 +73,6 @@
     z-index: 99999;
 }
 header.header {
-    position: relative !important;
 }
 header.header h2 {
     margin-bottom: 3rem;

@@ -961,6 +961,7 @@ main {
   display: -ms-flexbox;
   display: flex;
   position: relative;
+  width: max-content;
 }
 .js .wrapper {
   position: absolute;
