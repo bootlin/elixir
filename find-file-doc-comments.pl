@@ -105,6 +105,9 @@ sub main {
         # back to it manually.  Move to the first line that might be a doc comment.
         --$lineno;
 
+        # If we ran off the beginning of the file, there's no doc comment.
+        next if $lineno <= 0;
+
         # TODO make sure we're not still in the definition.
         # E.g., memblock.h:for_each_mem_range().  The defintion is reported
         # on the second line of the #define, not the first line.
