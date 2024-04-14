@@ -1,8 +1,7 @@
 "use strict";
 
-async function fetchIdent(project, ident, version, family) {
-  return fetch(`/api/ident/${project}/${ident}?version=${version}&family=${family}`)
-    .then(r => r.json());
+function identUrl(project, ident, version, family) {
+  return `/api/ident/${project}/${ident}?version=${version}&family=${family}`;
 }
 
 /*
@@ -27,7 +26,7 @@ async function fetchIdent(project, ident, version, family) {
       "type": null
     }
   ]
-  */
+*/
 
 function generateSymbolDefinitionsHTML(symbolDefinitions, version) {
   let result = "";
@@ -184,27 +183,55 @@ document.addEventListener("DOMContentLoaded", _ => {
   let referencePopup = document.getElementById("reference-popup");
   let loadingPopup = document.getElementById("loading-popup");
   var loadingTimer;
+  var popupId = 0;
+  var abortController;
 
   document.body.querySelectorAll(".ident").forEach(el => {
     el.addEventListener("click", async ev => {
       if (ev.ctrlKey || ev.metaKey || ev.shiftKey) {
         return;
       }
-
       ev.preventDefault();
+
       let splitPath = ev.target.pathname.split("/");
       let [_, project, version, family, _i, ident] = splitPath;
 
+      let currentPopupId = ++popupId;
+
+      if(abortController !== undefined)
+        abortController.abort();
+      abortController = new AbortController();
+
+      hidePopup(loadingPopup);
       clearTimeout(loadingTimer);
       loadingTimer = setTimeout(() => {
         showPopup(loadingPopup, ev.target);
       }, 200);
-      let result = await fetchIdent(project, ident, version, family);
-      hidePopup(loadingPopup);
-      clearTimeout(loadingTimer);
 
-      referencePopup.innerHTML = generateReferencesHTML(result, version);
-      showPopup(referencePopup, ev.target);
+      function cancelLoadingPopup() {
+        if (currentPopupId == popupId) {
+          hidePopup(loadingPopup);
+          clearTimeout(loadingTimer);
+        }
+      }
+
+      try {
+        let result = await fetch(identUrl(project, ident, version, family),
+          { signal: abortController.signal })
+          .then(r => r.json());
+
+        if(currentPopupId == popupId) {
+          referencePopup.innerHTML = generateReferencesHTML(result, version);
+          showPopup(referencePopup, ev.target);
+        }
+      } catch(e) {
+        if(e.name !== "AbortError") {
+          cancelLoadingPopup();
+          throw e;
+        }
+      }
+
+      cancelLoadingPopup();
     });
   });
 
