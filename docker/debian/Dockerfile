@@ -21,7 +21,7 @@ RUN \
     python3-jinja2 \
     python3-bsddb3 \
     python3-pytest \
-    python3-pygments- \
+    python3-pygments \
     pipx \
     perl \
     git \
@@ -36,12 +36,6 @@ RUN \
 
 RUN \
   dpkg -i universal-ctags_0+git20200526-0ubuntu1_amd64.deb
-
-RUN \
-  wget https://bootlin.com/pub/elixir/Pygments-2.6.1.elixir-py3-none-any.whl
-
-RUN \
-  pip3 install ./Pygments-2.6.1.elixir-py3-none-any.whl --break-system-packages
 
 RUN \
   git config --global user.email 'elixir@dummy.com' && \
