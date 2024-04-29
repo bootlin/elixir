@@ -357,12 +357,14 @@ where all repositories are found.
 
 = Building Docker images
 
-Docker files are provided in the `docker/` directory. To generate your own
-Docker image for indexing the sources of a project (for example for the Musl
-project which is much faster to index than Linux), download the `Dockerfile`
-file for your target distribution and run:
+Docker files are provided in the `docker/` directory. To generate a Docker image
+for indexing the sources of a project, first fetch the Elixir repository. Then
+pick the project you want to index (Musl is nice test data being not too slow
+to index) and your target distribution (`debian` and `centos` available), and
+run:
 
- $ docker build -t elixir --build-arg GIT_REPO_URL=git://git.musl-libc.org/musl --build-arg PROJECT=musl .
+ $ docker build -t elixir-debian --build-arg GIT_REPO_URL=git://git.musl-libc.org/musl --build-arg PROJECT=musl ./docker/debian/
+ $ docker build -t elixir-centos --build-arg GIT_REPO_URL=git://git.musl-libc.org/musl --build-arg PROJECT=musl ./docker/centos/
 
 Then you can use your new container as follows (you get the container id from the output of `docker build`):
 
