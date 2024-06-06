@@ -124,7 +124,6 @@ blacklist = (
     b'msg',
     b'n',
     b'name',
-    b'net',
     b'next',
     b'offset',
     b'ops',
