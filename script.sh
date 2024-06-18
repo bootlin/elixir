@@ -204,7 +204,13 @@ parse_docs()
     tmpfile=`mktemp`
 
     git cat-file blob "$opt1" > "$tmpfile"
-    "$script_dir/find-file-doc-comments.pl" "$tmpfile" || exit "$?"
+
+    # Shortcut: if '/**' isn't present in the file, it cannot contain a doc.
+    # This avoids calling find-file-doc-comments.pl on most files, which is an
+    # expensive operation.
+    if grep -qF '/**' "$tmpfile"; then
+        "$script_dir/find-file-doc-comments.pl" "$tmpfile" || exit "$?"
+    fi
 
     rm -rf "$tmpfile"
 }
