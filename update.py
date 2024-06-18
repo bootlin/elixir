@@ -26,7 +26,7 @@ from sys import argv
 from threading import Thread, Lock, Event, Condition
 
 import lib
-from lib import script, scriptLines
+from lib import script, scriptLines, always_indexed_tokens
 import data
 from data import PathList
 from find_compatible_dts import FindCompatibleDTS
@@ -315,11 +315,12 @@ class UpdateRefs(Thread):
                     if even:
                         tok = prefix + tok
 
-                        if (db.defs.exists(tok) and
-                            not ( (idx*idx_key_mod + line_num) in defs_idxes and
-                                defs_idxes[idx*idx_key_mod + line_num] == tok ) and
-                            (family != 'M' or tok.startswith(b'CONFIG_'))):
-                            # We only index CONFIG_??? in makefiles
+                        ref_allowed = db.defs.exists(tok) or (tok in always_indexed_tokens)
+                        # We only index CONFIG_??? in makefiles
+                        config_or_not_makefile = tok.startswith(b'CONFIG_') or family != 'M'
+                        i = idx*idx_key_mod + line_num
+
+                        if ref_allowed and defs_idxes.get(i) != tok and config_or_not_makefile:
                             if tok in idents:
                                 idents[tok] += ',' + str(line_num)
                             else:
