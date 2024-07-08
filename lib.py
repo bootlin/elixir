@@ -171,7 +171,8 @@ blacklist = (
 
 # list of tokens, that are indexed as references even if no definitions are known
 
-always_indexed_tokens = [
+always_indexed_tokens = set([
+# gcc/c-family/c-common.cc
     b'_Alignas',
     b'_Alignof',
     b'_Atomic',
@@ -205,35 +206,6 @@ always_indexed_tokens = [
     b'__attribute',
     b'__attribute__',
     b'__auto_type',
-    b'__builtin_addressof',
-    b'__builtin_assoc_barrier',
-    b'__builtin_bit_cast',
-    b'__builtin_call_with_static_chain',
-    b'__builtin_choose_expr',
-    b'__builtin_complex',
-    b'__builtin_convertvector',
-    b'__builtin_has_attribute',
-    b'__builtin_launder',
-    b'__builtin_shuffle',
-    b'__builtin_shufflevector',
-    b'__builtin_stdc_bit_ceil',
-    b'__builtin_stdc_bit_floor',
-    b'__builtin_stdc_bit_width',
-    b'__builtin_stdc_count_ones',
-    b'__builtin_stdc_count_zeros',
-    b'__builtin_stdc_first_leading_one',
-    b'__builtin_stdc_first_leading_zero',
-    b'__builtin_stdc_first_trailing_one',
-    b'__builtin_stdc_first_trailing_zero',
-    b'__builtin_stdc_has_single_bit',
-    b'__builtin_stdc_leading_ones',
-    b'__builtin_stdc_leading_zeros',
-    b'__builtin_stdc_trailing_ones',
-    b'__builtin_stdc_trailing_zeros',
-    b'__builtin_tgmath',
-    b'__builtin_offsetof',
-    b'__builtin_types_compatible_p',
-    b'__builtin_va_arg',
     b'__complex',
     b'__complex__',
     b'__const',
@@ -273,7 +245,41 @@ always_indexed_tokens = [
     b'auto',
     b'thread_local',
     b'sizeof',
-]
+
+# https://gcc.gnu.org/onlinedocs/gcc/_005f_005fint128.html
+    b'__int128',
+
+# https://gcc.gnu.org/onlinedocs/gcc/Floating-Types.html
+    b'__float80',
+    b'__ibm128',
+
+# https://gcc.gnu.org/onlinedocs/gcc/Half-Precision.html
+    b'__fp16',
+
+# https://gcc.gnu.org/onlinedocs/gcc/Named-Address-Spaces.html
+    b'__flash',
+    b'__flash1',
+    b'__flash2',
+    b'__flash3',
+    b'__flash4',
+    b'__flash5',
+    b'__memx',
+    b'__far',
+    b'__regio_symbol',
+    b'__seg_fs',
+    b'__seg_gs',
+])
+
+always_indexed_prefixes = (
+    b'__builtin',
+
+# https://gcc.gnu.org/onlinedocs/gcc/_005f_005fsync-Builtins.html
+    b'__sync',
+
+# https://gcc.gnu.org/onlinedocs/gcc/_005f_005fatomic-Builtins.html
+    b'__atomic',
+    b'__ATOMIC',
+)
 
 def isIdent(bstr):
     if (len(bstr) < 2 or
