@@ -268,6 +268,71 @@ always_indexed_tokens = set([
     b'__regio_symbol',
     b'__seg_fs',
     b'__seg_gs',
+
+# https://clang.llvm.org/docs/LanguageExtensions.html#feature-checking-macros
+    b'__is_identifier',
+
+# https://clang.llvm.org/docs/LanguageExtensions.html#include-file-checking-macros
+    b'__BASE_FILE__',
+    b'__FILE_NAME__',
+    b'__COUNTER__',
+    b'__INCLUDE_LEVEL__',
+    b'__TIMESTAMP__',
+    b'__clang__',
+    b'__clang_major__',
+    b'__clang_minor__',
+    b'__clang_patchlevel__',
+    b'__clang_version__',
+    b'__clang_literal_encoding__',
+    b'__clang_wide_literal_encoding__',
+
+# https://clang.llvm.org/docs/LanguageExtensions.html#include-file-checking-macros
+    b'__datasizeof',
+
+# https://clang.llvm.org/docs/LanguageExtensions.html#vectors-and-extended-vectors
+    b'__bf16',
+
+# https://clang.llvm.org/docs/LanguageExtensions.html#type-trait-primitives
+    b'__array_rank',
+    b'__array_extent',
+    b'__can_pass_in_regs',
+    b'__reference_binds_to_temporary',
+    b'__reference_constructs_from_temporary',
+    b'__reference_converts_from_temporary',
+    b'__underlying_type',
+
+# https://clang.llvm.org/docs/LanguageExtensions.html#opencl-features
+    b'__remove_address_space',
+
+# https://clang.llvm.org/docs/LanguageExtensions.html#source-location-builtins
+    b'__LINE__', 
+    b'__FUNCSIG__', 
+    b'__FILE__',
+
+# https://clang.llvm.org/docs/LanguageExtensions.html#arm-aarch64-language-extensions
+    b'__dmb',
+    b'__dsb',
+    b'__isb',
+
+# https://en.cppreference.com/w/c/language/attributes
+    b'deprecated',
+    b'fallthrough',
+    b'maybe_unused',
+    b'nodiscard',
+    b'noreturn',
+    b'_Noreturn',
+    b'unsequenced',
+    b'reproducible'
+
+# https://en.cppreference.com/w/cpp/language/attributes
+    b'noreturn',
+    b'carries_dependency',
+    b'likely',
+    b'unlikely',
+    b'no_unique_address',
+    b'assume',
+    b'indeterminate',
+    b'optimize_for_synchronized',
 ])
 
 always_indexed_prefixes = (
@@ -279,6 +344,19 @@ always_indexed_prefixes = (
 # https://gcc.gnu.org/onlinedocs/gcc/_005f_005fatomic-Builtins.html
     b'__atomic',
     b'__ATOMIC',
+
+# https://clang.llvm.org/docs/LanguageExtensions.html#feature-checking-macros
+# https://clang.llvm.org/docs/LanguageExtensions.html#include-file-checking-macros
+    b'__has',
+
+# https://clang.llvm.org/docs/LanguageExtensions.html#language-extensions-back-ported-to-previous-standards
+    b'__cpp',
+
+# https://clang.llvm.org/docs/LanguageExtensions.html#type-trait-primitives
+    b'__is',
+
+# https://clang.llvm.org/docs/LanguageExtensions.html#opencl-features
+    b'__cl',
 )
 
 def isIdent(bstr):
