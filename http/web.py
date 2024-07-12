@@ -18,6 +18,11 @@
 #  You should have received a copy of the GNU Affero General Public License
 #  along with Elixir.  If not, see <http://www.gnu.org/licenses/>.
 
+# prepare a default globals dict to be later used for filter context
+default_globals = {
+    **globals(),
+}
+
 from io import StringIO
 from urllib import parse
 
@@ -34,9 +39,14 @@ import os
 import re
 from re import search, sub
 
+import jinja2
+loader = jinja2.FileSystemLoader(os.path.join(os.path.dirname(os.path.realpath(__file__)), '../templates/'))
+environment = jinja2.Environment(loader=loader)
+
 import sys
 sys.path = [ sys.path[0] + '/..' ] + sys.path
 from lib import validFamily
+from query import Query
 
 # Create /tmp/elixir-errors if not existing yet (could happen after a reboot)
 errdir = '/tmp/elixir-errors'
@@ -47,145 +57,215 @@ if not(os.path.isdir(errdir)):
 # Enable CGI Trackback Manager for debugging (https://docs.python.org/fr/3/library/cgitb.html)
 cgitb.enable(display=0, logdir=errdir, format='text')
 
+form = cgi.FieldStorage()
+
 ident = ''
 status = 200
 
-url = os.environ.get('REQUEST_URI') or os.environ.get('SCRIPT_URL')
-# Split the URL into its components (project, version, cmd, arg)
-m = search('^/([^/]*)/([^/]*)(?:/([^/]))?/([^/]*)(.*)$', url)
-
-if m:
-    project = m.group(1)
-    version = m.group(2)
-    version_decoded = parse.unquote(version)
-    family = str(m.group(3)).upper()
-    cmd = m.group(4)
-    arg = m.group(5)
-
-    if not validFamily(family):
-        family = 'C'
-
-    search_family = 'A'
-
-    basedir = os.environ['LXR_PROJ_DIR']
+# get query class from basedir and project is paths exist
+def get_query(basedir, project):
     datadir = basedir + '/' + project + '/data'
     repodir = basedir + '/' + project + '/repo'
 
     if not(os.path.exists(datadir)) or not(os.path.exists(repodir)):
-        status = 400
+        return None
 
-    elif cmd == 'source':
-        path = arg
-        if len(path) > 0 and path[-1] == '/':
-            path = path[:-1]
-            status = 301
-            location = '/'+project+'/'+version+'/source'+path
-        else:
-            mode = 'source'
-            if not search('^[A-Za-z0-9_/.,+-]*$', path):
-                status = 400
-            url = 'source'+path
+    return Query(datadir, repodir)
 
-    elif cmd == 'ident':
-        search_family = family
 
-        ident = arg[1:]
-        form = cgi.FieldStorage()
-        ident2 = form.getvalue('i')
-        family2 = str(form.getvalue('f')).upper()
-        if not validFamily(family2):
-            family2 = 'C'
+# parse source path
+def parse_source_path(path):
+    m = search('^/([^/]*)/([^/]*)/([^/]*)(.*)$', path)
 
-        if ident == '' and ident2:
-            status = 302
-            ident2 = parse.quote(ident2.strip())
-            location = '/'+project+'/'+version+'/'+family2+'/ident/'+ident2
-        else:
-            mode = 'ident'
-            if not(ident and search('^[A-Za-z0-9_\$\.%-]*$', ident)):
-                ident = ''
-            url = family + '/ident/' + ident
+    if m:
+        parsed_path = {
+            'project': m.group(1),
+            'version': m.group(2),
+            'arg': m.group(4),
+        }
+
+        return parsed_path
+
+# turn parsed source path to string
+def stringify_source_path(ppath):
+    path = f'/{ppath["project"]}/{parse.quote(ppath["version"])}/source{ppath["arg"]}'
+    return path.rstrip('/')
+
+# return 301 to actual latest version if version in parsed source url is latest
+def redirect_source_on_latest(parsed_path, q):
+    if parsed_path['version'] == 'latest':
+        parsed_path['version'] = parse.quote(q.query('latest'))
+        return (301, stringify_source_path(parsed_path))
+
+# return 301 if path contains a trailing slash
+def redirect_on_trailing_slash(path):
+    if path[-1] == '/':
+        return (301, path.rstrip('/'))
+
+# handle source url
+def handle_source_url(path, form):
+    status = redirect_on_trailing_slash(path)
+    if status is not None:
+        return status
+
+    parsed_path = parse_source_path(path)
+    if parsed_path is None:
+        return (400,)
+
+    query = get_query(os.environ['LXR_PROJ_DIR'], parsed_path['project'])
+    if not query:
+        return (400,)
+
+    if not search('^[A-Za-z0-9_/.,+-]*$', parsed_path['arg']):
+        return (400,)
+
+    status = redirect_source_on_latest(parsed_path, query)
+    if status is not None:
+        return status
+
+    url = 'source' + parsed_path['arg']
+    return generate_source_page(query, url, os.environ['LXR_PROJ_DIR'], parsed_path)
+
+
+# parse ident path
+def parse_ident_path(path):
+    m = search('^/([^/]*)/([^/]*)(?:/([^/]))?/([^/]*)(.*)$', path)
+
+    if m:
+        parsed_path = {
+            'project': m.group(1),
+            'version': m.group(2),
+            'family': str(m.group(3)).upper(),
+            'arg': m.group(5),
+        }
+
+        if not validFamily(parsed_path['family']):
+            parsed_path['family'] = 'C'
+
+        return parsed_path
+
+# turn parsed ident path to string
+def stringify_ident_path(ppath):
+    path = f'/{ppath["project"]}/{parse.quote(ppath["version"])}/{ppath["family"]}/ident/{ppath["arg"]}'
+    return path.rstrip('/')
+
+# handle ident search post request by redirecting to ident/$ident_name
+def handle_ident_post_form(parsed_path, form):
+    post_ident = form.getvalue('i')
+    post_family = str(form.getvalue('f')).upper()
+
+    if not validFamily(post_family):
+        post_family = 'C'
+
+    if parsed_path.get('ident', '') == '' and post_ident:
+        post_ident = parse.quote(post_ident.strip(), safe='/')
+        parsed_path['family'] = post_family
+        parsed_path['arg'] = post_ident
+        return (302, stringify_ident_path(parsed_path))
+
+# return 301 to actual latest version if version in parsed ident url is latest
+def redirect_ident_on_latest(parsed_path, q):
+    if parsed_path['version'] == 'latest':
+        parsed_path['version'] = parse.quote(q.query('latest'))
+        return (301, stringify_ident_path(parsed_path))
+
+# handle ident url
+def handle_ident_url(path, form):
+    parsed_path = parse_ident_path(path)
+    if parsed_path is None:
+        return (400,)
+
+    status = handle_ident_post_form(parsed_path, form)
+    if status is not None:
+        return status
+
+    ident = parsed_path['arg'][1:]
+    if not ident or not search('^[A-Za-z0-9_\$\.%-]*$', ident):
+        return (400,)
+
+    query = get_query(os.environ['LXR_PROJ_DIR'], parsed_path['project'])
+    if not query:
+        return (400,)
+
+    status = redirect_ident_on_latest(parsed_path, query)
+    if status is not None:
+        return status
+
+    url = parsed_path['family'] + '/ident/' + ident
+    return generate_ident_page(query, url, os.environ['LXR_PROJ_DIR'], parsed_path, ident)
+
+
+# route urls to appropriate functions
+def route(path, form):
+    if search('^/[^/]*/[^/]*/source(.*)$', path) is not None:
+        return handle_source_url(path, form)
+    elif search('^/([^/]*)/([^/]*)(?:/([^/]))?/ident(.*)$', path) is not None:
+        return handle_ident_url(path, form)
     else:
-        status = 400
-else:
-    status = 400
+        return (400,)
 
-if status == 301:
-    realprint('Status: 301 Moved Permanently')
-    realprint('Location: '+location+'\n')
-    exit()
-elif status == 302:
-    realprint('Status: 302 Found')
-    realprint('Location: '+location+'\n')
-    exit()
-elif status == 400:
-    realprint('Status: 400 Bad Request\n')
-    exit()
 
-os.environ['LXR_DATA_DIR'] = datadir
-os.environ['LXR_REPO_DIR'] = repodir
+def get_projects(basedir):
+    projects = []
+    for (dirpath, dirnames, filenames) in os.walk(basedir):
+        projects.extend(dirnames)
+        break
+    projects.sort()
+    return projects
 
-projects = []
-for (dirpath, dirnames, filenames) in os.walk(basedir):
-    projects.extend(dirnames)
-    break
-projects.sort()
+def generate_versions(versions, url, tag):
+    v = ''
+    b = 1
+    for topmenu in versions:
+        submenus = versions[topmenu]
+        v += '<li>\n'
+        v += '\t<span>'+topmenu+'</span>\n'
+        v += '\t<ul>\n'
+        b += 1
+        for submenu in submenus:
+            tags = submenus[submenu]
+            if submenu == tags[0] and len(tags) == 1:
+                if submenu == tag: v += '\t\t<li class="li-link active"><a href="'+submenu+'/'+url+'">'+submenu+'</a></li>\n'
+                else: v += '\t\t<li class="li-link"><a href="'+submenu+'/'+url+'">'+submenu+'</a></li>\n'
+            else:
+                v += '\t\t<li>\n'
+                v += '\t\t\t<span>'+submenu+'</span>\n'
+                v += '\t\t\t<ul>\n'
+                for _tag in tags:
+                    _tag_encoded = parse.quote(_tag, safe='')
+                    if _tag == tag: v += '\t\t\t\t<li class="li-link active"><a href="'+_tag_encoded+'/'+url+'">'+_tag+'</a></li>\n'
+                    else: v += '\t\t\t\t<li class="li-link"><a href="'+_tag_encoded+'/'+url+'">'+_tag+'</a></li>\n'
+                v += '\t\t\t</ul></li>\n'
+        v += '\t</ul></li>\n'
 
-from query import Query
+    return v
 
-q = Query(datadir, repodir)
-dts_comp_support = q.query('dts-comp')
+def generate_source_page(q, url, basedir, parsed_path):
+    status = 200
+    projects = get_projects(basedir)
 
-if version_decoded == 'latest':
-    tag = q.query('latest')
-else:
-    tag = version_decoded
+    project = parsed_path["project"]
+    version = parsed_path["version"]
+    path = parsed_path["arg"]
+    tag = parse.unquote(version)
+    search_family = 'A'
 
-ident = parse.unquote(ident)
+    title_suffix = project.capitalize()+' source code ('+tag+') - Bootlin'
 
-data = {
-    'baseurl': '/' + project + '/',
-    'tag': tag,
-    'version': version,
-    'url': url,
-    'project': project,
-    'projects': projects,
-    'ident': ident,
-    'family': search_family,
-    'breadcrumb': '<a class="project" href="'+version+'/source">/</a>'
-}
+    data = {
+        'baseurl': '/' + project + '/',
+        'tag': tag,
+        'version': version,
+        'url': url,
+        'project': project,
+        'projects': projects,
+        'ident': ident,
+        'family': search_family,
+        'breadcrumb': '<a class="project" href="'+version+'/source">/</a>'
+    }
 
-versions = q.query('versions')
+    data['versions'] = generate_versions(q.query('versions'), url, tag)
 
-v = ''
-b = 1
-for topmenu in versions:
-    submenus = versions[topmenu]
-    v += '<li>\n'
-    v += '\t<span>'+topmenu+'</span>\n'
-    v += '\t<ul>\n'
-    b += 1
-    for submenu in submenus:
-        tags = submenus[submenu]
-        if submenu == tags[0] and len(tags) == 1:
-            if submenu == tag: v += '\t\t<li class="li-link active"><a href="'+submenu+'/'+url+'">'+submenu+'</a></li>\n'
-            else: v += '\t\t<li class="li-link"><a href="'+submenu+'/'+url+'">'+submenu+'</a></li>\n'
-        else:
-            v += '\t\t<li>\n'
-            v += '\t\t\t<span>'+submenu+'</span>\n'
-            v += '\t\t\t<ul>\n'
-            for _tag in tags:
-                _tag_encoded = parse.quote(_tag, safe='')
-                if _tag == tag: v += '\t\t\t\t<li class="li-link active"><a href="'+_tag_encoded+'/'+url+'">'+_tag+'</a></li>\n'
-                else: v += '\t\t\t\t<li class="li-link"><a href="'+_tag_encoded+'/'+url+'">'+_tag+'</a></li>\n'
-            v += '\t\t\t</ul></li>\n'
-    v += '\t</ul></li>\n'
-
-data['versions'] = v
-
-title_suffix = project.capitalize()+' source code ('+tag+') - Bootlin'
-
-if mode == 'source':
     path_split = path.split('/')[1:]
     path_temp = ''
     links = []
@@ -274,15 +354,34 @@ if mode == 'source':
         extension = extension[1:].lower()
         family = q.query('family', fname)
 
+        # globals required by filters
+        # this dict is also modified by filters - most introduce new, global variables 
+        # that are later used by prefunc/postfunc
+        filter_ctx = {
+            **default_globals,
+            "os": os,
+            "parse": parse,
+            "re": re,
+            "dts_comp_support": q.query('dts-comp'),
+
+            "version": version,
+            "family": family,
+            "path": path,
+            "tag": tag,
+            "q": q,
+        }
+
         # Source common filter definitions
         os.chdir('filters')
-        exec(open("common.py").read())
+        exec(open("common.py").read(), filter_ctx)
 
         # Source project specific filters
         f = project + '.py'
         if os.path.isfile(f):
-            exec(open(f).read())
+            exec(open(f).read(), filter_ctx)
         os.chdir('..')
+
+        filters = filter_ctx["filters"]
 
         # Apply filters
         for f in filters:
@@ -303,6 +402,7 @@ if mode == 'source':
 
                 if apply_filter:
                     code = sub(f ['prerex'], f ['prefunc'], code, flags=re.MULTILINE)
+
 
         try:
             lexer = pygments.lexers.guess_lexer_for_filename(path, code)
@@ -329,8 +429,37 @@ if mode == 'source':
         print('<div class="lxrcode">' + result + '</div>')
 
 
-elif mode == 'ident':
+    template = environment.get_template('layout.html')
+    data['main'] = outputBuffer.getvalue()
+    return (status, template.render(data))
+
+
+def generate_ident_page(q, url, basedir, parsed_path, ident):
+    status = 200
+    projects = get_projects(basedir)
+
+    project = parsed_path["project"]
+    version = parsed_path["version"]
+    tag = parse.unquote(version)
+    search_family = parsed_path["family"]
+    family = parsed_path["family"]
+
+    title_suffix = project.capitalize()+' source code ('+tag+') - Bootlin'
+
+    data = {
+        'baseurl': '/' + project + '/',
+        'tag': tag,
+        'version': version,
+        'url': url,
+        'project': project,
+        'projects': projects,
+        'ident': ident,
+        'family': search_family,
+        'breadcrumb': '<a class="project" href="'+version+'/source">/</a>'
+    }
+
     data['title'] = ident+' identifier - '+title_suffix
+    data['versions'] = generate_versions(q.query('versions'), url, tag)
 
     symbol_definitions, symbol_references, symbol_doccomments = q.query('ident', tag, ident, family)
 
@@ -444,17 +573,31 @@ elif mode == 'ident':
             status = 404
     print('</div>')
 
-else:
-    print('Invalid request')
+    template = environment.get_template('layout.html')
+    data['main'] = outputBuffer.getvalue()
+    return (status, template.render(data))
 
-if status == 404:
-    realprint('Status: 404 Not Found')
 
-import jinja2
-loader = jinja2.FileSystemLoader(os.path.join(os.path.dirname(os.path.realpath(__file__)), '../templates/'))
-environment = jinja2.Environment(loader=loader)
-template = environment.get_template('layout.html')
+path = os.environ.get('REQUEST_URI') or os.environ.get('SCRIPT_URL')
+result = route(path, form)
 
-realprint('Content-Type: text/html;charset=utf-8\n')
-data['main'] = outputBuffer.getvalue()
-realprint(template.render(data), end='')
+if result is not None:
+    if result[0] == 200:
+        realprint('Content-Type: text/html;charset=utf-8\n')
+        realprint(result[1], end='')
+    elif result[0] == 301:
+        realprint('Status: 301 Moved Permanently')
+        realprint('Location: '+ result[1] +'\n')
+        exit()
+    elif result[0] == 302:
+        realprint('Status: 302 Found')
+        realprint('Location: '+ result[1] +'\n')
+        exit()
+    elif result[0] == 400:
+        realprint('Status: 400 Bad Request\n')
+        exit()
+    elif result[0] == 404:
+        realprint('Status: 404 Not Found')
+        realprint('Content-Type: text/html;charset=utf-8\n')
+        realprint(result[1], end='')
+
