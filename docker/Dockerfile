@@ -26,7 +26,7 @@ RUN \
 
 COPY . /usr/local/elixir/
 
-RUN mkdir -p /srv/elixir-data/ 
+RUN mkdir -p /srv/elixir-data/
 
 # apache elixir config, see elixir README
 # make apache less stricter about cgitb spam headers
