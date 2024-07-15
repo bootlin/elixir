@@ -372,11 +372,13 @@ This allows you to easily replace the container with a new version without losin
 The Docker image does not contain any repositories. To index a repository, you can use a utility script - index-repository.
 For example, to add musl repository, run:
 
- # docker exec -it elixir-container /usr/local/elixir/utils/index-repository musl https://git.musl-libc.org/git/musl
+ # docker exec -it -e PYTHONUNBUFFERED=1 elixir-container /usr/local/elixir/utils/index-repository musl https://git.musl-libc.org/git/musl
+
+Without PYTHONUNBUFFERED environment variable, update logs may show up with a delay.
 
 Or, to run indexing in a separate container:
 
- # docker run -v ./elixir-data/:/srv/elixir-data --entrypoint /usr/local/elixir/utils/index-repository elixir musl https://git.musl-libc.org/git/musl
+ # docker run -e PYTHONUNBUFFERED=1 -v ./elixir-data/:/srv/elixir-data --entrypoint /usr/local/elixir/utils/index-repository elixir musl https://git.musl-libc.org/git/musl
 
 You can also use utils/index-all-repositories to start indexing all officially supported repositories.
 
