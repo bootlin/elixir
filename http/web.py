@@ -106,7 +106,7 @@ def handle_source_url(path, _):
     parsed_path = parse_source_path(path)
     if parsed_path is None:
         realprint("Error: failed to parse path in handle_source_url", path, file=sys.stderr)
-        return (404,)
+        return (404, "Failed to parse path")
 
     query = get_query(os.environ['LXR_PROJ_DIR'], parsed_path.project)
     if not query:
@@ -180,7 +180,7 @@ def handle_ident_url(path, params):
     parsed_path = parse_ident_path(path)
     if parsed_path is None:
         realprint("Error: failed to parse path in handle_ident_url", path, file=sys.stderr)
-        return (404,)
+        return (404, "Failed to parse path")
 
     status = handle_ident_post_form(parsed_path, params)
     if status is not None:
@@ -211,7 +211,7 @@ def route(path, params):
     elif search('^/[^/]*/[^/]*(?:/[^/])?/ident.*$', path) is not None:
         return handle_ident_url(path, params)
     else:
-        return (404,)
+        return (404, "Unknown path")
 
 
 # Returns a list of names of top-level directories in basedir
