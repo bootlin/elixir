@@ -21,7 +21,11 @@
             <header class="topbar">
                 <div class="breadcrumb">
                     <a href="{{version}}/{{url}}#menu" class="open-menu icon-menu screenreader" title="Open Menu">Open Menu</a>
-                    {{breadcrumb}}
+                    <a class="project" href="{{ version }}/source">/</a>
+                    {% for name, url in breadcrumb_links %}
+                        <a href="{{ url }}">{{ name }}</a>
+                        {{ '/' if not loop.last else '' }}
+                    {% endfor %}
                 </div>
                 <div class="search">
                     <form  method="post" action="{{version}}/ident">

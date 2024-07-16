@@ -381,10 +381,10 @@ def generate_source_page(q, basedir, parsed_path):
     # Generate breadcrumbs
     path_split = path.split('/')[1:]
     path_temp = ''
-    links = []
+    breadcrumb_links = []
     for p in path_split:
         path_temp += '/'+p
-        links.append('<a href="'+version+'/source'+path_temp+'">'+p+'</a>')
+        breadcrumb_links.append((p, version + '/source' + path_temp))
 
     # Generate title
     title_suffix = project.capitalize()+' source code ('+tag+') - Bootlin'
@@ -409,7 +409,7 @@ def generate_source_page(q, basedir, parsed_path):
         'ident': '',
         'family': 'A',
 
-        'breadcrumb': '<a class="project" href="'+version+'/source">/</a>',
+        'breadcrumb_links': breadcrumb_links,
         'title': title,
 
         'versions': q.query('versions'),
@@ -418,9 +418,6 @@ def generate_source_page(q, basedir, parsed_path):
 
         'main': outputBuffer.getvalue(),
     }
-
-    if links:
-        data['breadcrumb'] += '/'.join(links)
 
     template = environment.get_template('layout.html')
     return (status, template.render(data))
@@ -567,7 +564,6 @@ def generate_ident_page(q, basedir, parsed_path):
         'ident': ident,
         'family': family,
 
-        'breadcrumb': '<a class="project" href="'+version+'/source">/</a>',
         'title': ident+' identifier - '+title_suffix,
 
         'versions': q.query('versions'),
