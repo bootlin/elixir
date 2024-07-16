@@ -60,7 +60,9 @@ cgitb.enable(display=0, logdir=errdir, format='text')
 ident = ''
 status = 200
 
-# get query class from basedir and project is paths exist
+# Returns a Query class instance or None if project data directory does not exist
+# basedir: absolute path to parent directory of all project data directories, ex. "/srv/elixir-data/"
+# project: name of the project, directory in basedir, ex. "linux"
 def get_query(basedir, project):
     datadir = basedir + '/' + project + '/data'
     repodir = basedir + '/' + project + '/repo'
@@ -72,9 +74,9 @@ def get_query(basedir, project):
 
 
 # Represents a parsed `source` URL path
-# project - name of the project, ex: musl
-# version - tagged commit of the project, ex: v1.2.5
-# path - path to the requested file, starts with a slash, ex: /src/prng/lrand48.c
+# project: name of the project, ex: "musl"
+# version: tagged commit of the project, ex: "v1.2.5"
+# path: path to the requested file, starts with a slash, ex: "/src/prng/lrand48.c"
 ParsedSourcePath = namedtuple('ParsedSourcePath', 'project, version, path')
 
 # Parse `source` route URL path into parts
@@ -84,17 +86,18 @@ def parse_source_path(path):
     if m:
         return ParsedSourcePath(m.group(1), m.group(2), m.group(3))
 
-# turn parsed source path to string
+# Converts ParsedSourcePath to a string with corresponding URL path
 def stringify_source_path(ppath):
     path = f'/{ppath.project}/{ppath.version}/source{ppath.path}'
     return path.rstrip('/')
 
-# return 301 if path contains a trailing slash
+# Returns 301 redirect to path with trailing slashes removed if path has a trailing slash
 def redirect_on_trailing_slash(path):
     if path[-1] == '/':
         return (301, path.rstrip('/'))
 
-# handle source url
+# Handles `source` URL, returns a response
+# path: string with URL path of the request
 def handle_source_url(path, _):
     status = redirect_on_trailing_slash(path)
     if status is not None:
@@ -115,15 +118,14 @@ def handle_source_url(path, _):
         new_parsed_path = parsed_path._replace(version=parse.quote(query.query('latest')))
         return (301, stringify_source_path(new_parsed_path))
 
-    url = 'source' + parsed_path.path
-    return generate_source_page(query, url, os.environ['LXR_PROJ_DIR'], parsed_path)
+    return generate_source_page(query, os.environ['LXR_PROJ_DIR'], parsed_path)
 
 
 # Represents a parsed `ident` URL path
-# project - name of the project, ex: musl
-# version - tagged commit of the project, ex: v1.2.5
-# family - searched symbol family, replaced with C if unknown, ex: A
-# ident - searched identificator, ex: fpathconf
+# project: name of the project, ex: musl
+# version: tagged commit of the project, ex: v1.2.5
+# family: searched symbol family, replaced with C if unknown, ex: A
+# ident: searched identificator, ex: fpathconf
 ParsedIdentPath = namedtuple('ParsedIdentPath', 'project, version, family, ident')
 
 # Parse `ident` route URL path into parts
@@ -145,12 +147,14 @@ def parse_ident_path(path):
 
         return parsed_path
 
-# turn parsed ident path to string
+# Converts ParsedIdentPath to a string with corresponding URL path
 def stringify_ident_path(ppath):
     path = f'/{ppath.project}/{ppath.version}/{ppath.family}/ident/{ppath.ident}'
     return path.rstrip('/')
 
-# handle ident search post request by redirecting to ident/$ident_name
+# Handles `ident` URL post request, returns a permanent redirect to ident/$ident_name
+# parsed_path: ParsedIdentPath
+# form: cgi.FieldStorage with parsed POST request form
 def handle_ident_post_form(parsed_path, form):
     post_ident = form.getvalue('i')
     post_family = str(form.getvalue('f')).upper()
@@ -166,7 +170,9 @@ def handle_ident_post_form(parsed_path, form):
         )
         return (302, stringify_ident_path(new_parsed_path))
 
-# handle ident url
+# Handles `ident` URL, returns a response
+# path: string with URL path
+# params: cgi.FieldStorage with request parameters
 def handle_ident_url(path, params):
     parsed_path = parse_ident_path(path)
     if parsed_path is None:
@@ -188,20 +194,22 @@ def handle_ident_url(path, params):
         new_parsed_path = parsed_path._replace(version=parse.quote(query.query('latest')))
         return (301, stringify_ident_path(new_parsed_path))
 
-    url = parsed_path.family + '/ident/' + ident
-    return generate_ident_page(query, url, os.environ['LXR_PROJ_DIR'], parsed_path, ident)
+    return generate_ident_page(query, os.environ['LXR_PROJ_DIR'], parsed_path, ident)
 
 
-# route urls to appropriate functions
+# Calls proper handler functions based on URL path, returns 404 if path is unknown
+# path: path part of the URL
+# params: cgi.FieldStorage with request parameters
 def route(path, params):
     if search('^/[^/]*/[^/]*/source.*$', path) is not None:
         return handle_source_url(path, params)
     elif search('^/[^/]*/[^/]*(?:/[^/])?/ident.*$', path) is not None:
         return handle_ident_url(path, params)
     else:
-        return (400,)
+        return (404,)
 
 
+# Returns a list of top-level directories in basedir
 def get_projects(basedir):
     projects = []
     for (dirpath, dirnames, filenames) in os.walk(basedir):
@@ -210,7 +218,12 @@ def get_projects(basedir):
     projects.sort()
     return projects
 
-def generate_versions(versions, url, tag):
+# Generates HTML with a list of project versions, displayed in the sidebar
+# versions - usually generated by Query.query('versions')
+# url: usually "ident/$ident" or "source/$path", URL of the current page with cmd but without version
+#      NOTE: "/$project/" is the base URL - see base tag in HTML head
+# tag: currently browsed tag
+def generate_versions(versions, url, current_tag):
     v = ''
     b = 1
     for topmenu, submenus in versions.items():
@@ -221,24 +234,33 @@ def generate_versions(versions, url, tag):
         for submenu in submenus:
             tags = submenus[submenu]
             if submenu == tags[0] and len(tags) == 1:
-                if submenu == tag: v += '\t\t<li class="li-link active"><a href="'+submenu+'/'+url+'">'+submenu+'</a></li>\n'
-                else: v += '\t\t<li class="li-link"><a href="'+submenu+'/'+url+'">'+submenu+'</a></li>\n'
+                if submenu == current_tag:
+                    v += '\t\t<li class="li-link active"><a href="'+submenu+'/'+url+'">'+submenu+'</a></li>\n'
+                else:
+                    v += '\t\t<li class="li-link"><a href="'+submenu+'/'+url+'">'+submenu+'</a></li>\n'
             else:
                 v += '\t\t<li>\n'
                 v += '\t\t\t<span>'+submenu+'</span>\n'
                 v += '\t\t\t<ul>\n'
                 for _tag in tags:
                     _tag_encoded = parse.quote(_tag, safe='')
-                    if _tag == tag: v += '\t\t\t\t<li class="li-link active"><a href="'+_tag_encoded+'/'+url+'">'+_tag+'</a></li>\n'
-                    else: v += '\t\t\t\t<li class="li-link"><a href="'+_tag_encoded+'/'+url+'">'+_tag+'</a></li>\n'
+                    if _tag == current_tag:
+                        v += '\t\t\t\t<li class="li-link active"><a href="'+_tag_encoded+'/'+url+'">'+_tag+'</a></li>\n'
+                    else:
+                        v += '\t\t\t\t<li class="li-link"><a href="'+_tag_encoded+'/'+url+'">'+_tag+'</a></li>\n'
                 v += '\t\t\t</ul></li>\n'
         v += '\t</ul></li>\n'
 
     return v
 
-def generate_source_page(q, url, basedir, parsed_path):
+# Generates response (status code and optionally HTML) of the `source` route
+# q: Query object
+# basedir: path to data directory, ex: "/srv/elixir-data"
+# parsed_path: ParsedSourcePath
+def generate_source_page(q, basedir, parsed_path):
     status = 200
 
+    url = 'source' + parsed_path.path
     project = parsed_path.project
     version = parsed_path.version
     path = parsed_path.path
@@ -432,9 +454,15 @@ def generate_source_page(q, url, basedir, parsed_path):
     return (status, template.render(data))
 
 
-def generate_ident_page(q, url, basedir, parsed_path, ident):
+# Generates response (status code and optionally HTML) of the `ident` route
+# q: Query object
+# basedir: path to data directory, ex: "/srv/elixir-data"
+# parsed_path: ParsedIdentPath
+# ident: requested identifier
+def generate_ident_page(q, basedir, parsed_path, ident):
     status = 200
 
+    url = parsed_path.family + '/ident/' + ident
     version = parsed_path.version
     tag = parse.unquote(version)
     family = parsed_path.family
