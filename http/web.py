@@ -225,8 +225,7 @@ def get_projects(basedir):
 def generate_versions(versions, url, tag):
     v = ''
     b = 1
-    for topmenu in versions:
-        submenus = versions[topmenu]
+    for topmenu, submenus in versions.items():
         v += '<li>\n'
         v += '\t<span>'+topmenu+'</span>\n'
         v += '\t<ul>\n'
