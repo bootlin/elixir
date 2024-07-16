@@ -134,7 +134,11 @@ def parse_ident_path(path):
     m = search('^/([^/]*)/([^/]*)(?:/([^/]))?/[^/]*(.*)$', path)
 
     if m:
-        family = str(m.group(3)).upper(),
+        family = str(m.group(3)).upper()
+        # If identifier family extracted from the path is unknown,
+        # replace it with C - the default family.
+        # This also handles ident paths without a family,
+        # ex: https://elixir.bootlin.com/linux/v6.10/ident/ROOT_DEV
         if not validFamily(family):
             family = 'C'
 
@@ -158,9 +162,6 @@ def stringify_ident_path(ppath):
 def handle_ident_post_form(parsed_path, form):
     post_ident = form.getvalue('i')
     post_family = str(form.getvalue('f')).upper()
-
-    if not validFamily(post_family):
-        post_family = 'C'
 
     if parsed_path.ident == '' and post_ident:
         post_ident = parse.quote(post_ident.strip(), safe='/')
