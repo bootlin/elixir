@@ -613,4 +613,14 @@ if result is not None:
         realprint('Status: 404 Not Found')
         realprint('Content-Type: text/html;charset=utf-8\n')
         realprint(result[1], end='')
+    else:
+        realprint('Status: 500 Internal Server Error')
+        realprint('Content-Type: text/html;charset=utf-8\n')
+        realprint('Error - route returned an unknown status code', result, file=sys.stderr)
+        realprint('Unknown error - check error logs for details\n')
+else:
+    realprint('Status: 500 Internal Server Error')
+    realprint('Content-Type: text/html;charset=utf-8\n')
+    realprint('Error - route returned None', file=sys.stderr)
+    realprint('Unknown error - check error logs for details\n')
 
