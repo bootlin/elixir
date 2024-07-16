@@ -103,15 +103,16 @@ def handle_source_url(path, _):
 
     parsed_path = parse_source_path(path)
     if parsed_path is None:
-        return (400,)
+        realprint("Error: failed to parse path in handle_source_url", path, file=sys.stderr)
+        return (404,)
 
     query = get_query(os.environ['LXR_PROJ_DIR'], parsed_path.project)
     if not query:
-        return (400,)
+        return (404, "Unknown project")
 
     # Check if path contains only allowed characters
     if not search('^[A-Za-z0-9_/.,+-]*$', parsed_path.path):
-        return (400,)
+        return (400, "Path contains characters that are not allowed.")
 
     if parsed_path.version == 'latest':
         new_parsed_path = parsed_path._replace(version=parse.quote(query.query('latest')))
@@ -175,7 +176,8 @@ def handle_ident_post_form(parsed_path, form):
 def handle_ident_url(path, params):
     parsed_path = parse_ident_path(path)
     if parsed_path is None:
-        return (400,)
+        realprint("Error: failed to parse path in handle_ident_url", path, file=sys.stderr)
+        return (404,)
 
     status = handle_ident_post_form(parsed_path, params)
     if status is not None:
@@ -183,12 +185,12 @@ def handle_ident_url(path, params):
 
     query = get_query(os.environ['LXR_PROJ_DIR'], parsed_path.project)
     if not query:
-        return (400,)
+        return (404, "Unknown project")
 
     # Check if identifier contains only allowed characters
     ident = parsed_path.ident[1:]
     if not ident or not search('^[A-Za-z0-9_\$\.%-]*$', ident):
-        return (400,)
+        return (400, "Identifier contains characters that are not allowed.")
 
     if parsed_path.version == 'latest':
         new_parsed_path = parsed_path._replace(version=parse.quote(query.query('latest')))
