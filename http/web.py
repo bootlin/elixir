@@ -23,8 +23,19 @@ default_globals = {
     **globals(),
 }
 
+import cgi
+import cgitb
+import os
+import re
+import sys
 from io import StringIO
+from re import search, sub
 from urllib import parse
+import jinja2
+
+sys.path = [ sys.path[0] + '/..' ] + sys.path
+from lib import validFamily
+from query import Query
 
 realprint = print
 outputBuffer = StringIO()
@@ -33,20 +44,8 @@ def print(arg, end='\n'):
     global outputBuffer
     outputBuffer.write(arg + end)
 
-import cgitb
-import cgi
-import os
-import re
-from re import search, sub
-
-import jinja2
 loader = jinja2.FileSystemLoader(os.path.join(os.path.dirname(os.path.realpath(__file__)), '../templates/'))
 environment = jinja2.Environment(loader=loader)
-
-import sys
-sys.path = [ sys.path[0] + '/..' ] + sys.path
-from lib import validFamily
-from query import Query
 
 # Create /tmp/elixir-errors if not existing yet (could happen after a reboot)
 errdir = '/tmp/elixir-errors'
