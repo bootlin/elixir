@@ -56,8 +56,6 @@ if not(os.path.isdir(errdir)):
 # Enable CGI Trackback Manager for debugging (https://docs.python.org/fr/3/library/cgitb.html)
 cgitb.enable(display=0, logdir=errdir, format='text')
 
-form = cgi.FieldStorage()
-
 ident = ''
 status = 200
 
@@ -102,7 +100,7 @@ def redirect_on_trailing_slash(path):
         return (301, path.rstrip('/'))
 
 # handle source url
-def handle_source_url(path, form):
+def handle_source_url(path, _):
     status = redirect_on_trailing_slash(path)
     if status is not None:
         return status
@@ -169,12 +167,12 @@ def redirect_ident_on_latest(parsed_path, q):
         return (301, stringify_ident_path(parsed_path))
 
 # handle ident url
-def handle_ident_url(path, form):
+def handle_ident_url(path, params):
     parsed_path = parse_ident_path(path)
     if parsed_path is None:
         return (400,)
 
-    status = handle_ident_post_form(parsed_path, form)
+    status = handle_ident_post_form(parsed_path, params)
     if status is not None:
         return status
 
@@ -195,11 +193,11 @@ def handle_ident_url(path, form):
 
 
 # route urls to appropriate functions
-def route(path, form):
+def route(path, params):
     if search('^/[^/]*/[^/]*/source(.*)$', path) is not None:
-        return handle_source_url(path, form)
+        return handle_source_url(path, params)
     elif search('^/([^/]*)/([^/]*)(?:/([^/]))?/ident(.*)$', path) is not None:
-        return handle_ident_url(path, form)
+        return handle_ident_url(path, params)
     else:
         return (400,)
 
@@ -578,7 +576,11 @@ def generate_ident_page(q, url, basedir, parsed_path, ident):
 
 
 path = os.environ.get('REQUEST_URI') or os.environ.get('SCRIPT_URL')
-result = route(path, form)
+
+# parses and stores request parameters, both query string and POST request form
+request_params = cgi.FieldStorage()
+
+result = route(path, request_params)
 
 if result is not None:
     if result[0] == 200:
