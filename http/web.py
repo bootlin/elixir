@@ -45,7 +45,9 @@ def print(arg, end='\n'):
     global outputBuffer
     outputBuffer.write(arg + end)
 
-loader = jinja2.FileSystemLoader(os.path.join(os.path.dirname(os.path.realpath(__file__)), '../templates/'))
+script_dir = os.path.dirname(os.path.realpath(__file__))
+templates_dir = os.path.join(script_dir, '../templates/')
+loader = jinja2.FileSystemLoader(templates_dir)
 environment = jinja2.Environment(loader=loader)
 
 # Create /tmp/elixir-errors if not existing yet (could happen after a reboot)
