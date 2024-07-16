@@ -111,6 +111,7 @@ def handle_source_url(path, _):
     if not query:
         return (400,)
 
+    # Check if path contains only allowed characters
     if not search('^[A-Za-z0-9_/.,+-]*$', parsed_path.path):
         return (400,)
 
@@ -182,12 +183,13 @@ def handle_ident_url(path, params):
     if status is not None:
         return status
 
-    ident = parsed_path.ident[1:]
-    if not ident or not search('^[A-Za-z0-9_\$\.%-]*$', ident):
-        return (400,)
-
     query = get_query(os.environ['LXR_PROJ_DIR'], parsed_path.project)
     if not query:
+        return (400,)
+
+    # Check if identifier contains only allowed characters
+    ident = parsed_path.ident[1:]
+    if not ident or not search('^[A-Za-z0-9_\$\.%-]*$', ident):
         return (400,)
 
     if parsed_path.version == 'latest':
