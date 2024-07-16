@@ -89,12 +89,6 @@ def stringify_source_path(ppath):
     path = f'/{ppath.project}/{ppath.version}/source{ppath.path}'
     return path.rstrip('/')
 
-# return 301 to actual latest version if version in parsed source url is latest
-def redirect_source_on_latest(parsed_path, q):
-    if parsed_path.version == 'latest':
-        new_parsed_path = parsed_path._replace(version=parse.quote(q.query('latest')))
-        return (301, stringify_source_path(new_parsed_path))
-
 # return 301 if path contains a trailing slash
 def redirect_on_trailing_slash(path):
     if path[-1] == '/':
@@ -117,9 +111,9 @@ def handle_source_url(path, _):
     if not search('^[A-Za-z0-9_/.,+-]*$', parsed_path.path):
         return (400,)
 
-    status = redirect_source_on_latest(parsed_path, query)
-    if status is not None:
-        return status
+    if parsed_path.version == 'latest':
+        new_parsed_path = parsed_path._replace(version=parse.quote(query.query('latest')))
+        return (301, stringify_source_path(new_parsed_path))
 
     url = 'source' + parsed_path.path
     return generate_source_page(query, url, os.environ['LXR_PROJ_DIR'], parsed_path)
@@ -172,12 +166,6 @@ def handle_ident_post_form(parsed_path, form):
         )
         return (302, stringify_ident_path(new_parsed_path))
 
-# return 301 to actual latest version if version in parsed ident url is latest
-def redirect_ident_on_latest(parsed_path, q):
-    if parsed_path.version == 'latest':
-        new_parsed_path = parsed_path._replace(version=parse.quote(q.query('latest')))
-        return (301, stringify_ident_path(new_parsed_path))
-
 # handle ident url
 def handle_ident_url(path, params):
     parsed_path = parse_ident_path(path)
@@ -196,9 +184,9 @@ def handle_ident_url(path, params):
     if not query:
         return (400,)
 
-    status = redirect_ident_on_latest(parsed_path, query)
-    if status is not None:
-        return status
+    if parsed_path.version == 'latest':
+        new_parsed_path = parsed_path._replace(version=parse.quote(query.query('latest')))
+        return (301, stringify_ident_path(new_parsed_path))
 
     url = parsed_path.family + '/ident/' + ident
     return generate_ident_page(query, url, os.environ['LXR_PROJ_DIR'], parsed_path, ident)
