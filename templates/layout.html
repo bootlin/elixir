@@ -61,7 +61,33 @@
                         </ul>
                         <h3 class="screenreader">Versions</h3>
                         <ul class="versions">
-                            {{versions}}
+                        {% for topmenu, submenus in versions.items() %}
+                            <li>
+                                <span>{{ topmenu }}</span>
+                                <ul>
+                                {% for submenu, tags in submenus.items() %}
+                                    {% if submenu == tags[0] and tags|length == 1 %}
+                                        <li class="li-link {{ 'active' if submenu == current_tag else '' }}">
+                                            <a href="{{ submenu }}/{{ url }}">{{ submenu }}</a>
+                                        </li>
+                                    {% else %}
+                                        <li>
+                                            <span>{{ submenu }}</span>
+                                            <ul>
+                                                {% for _tag in tags %}
+                                                    <li class="li-link {{ 'active' if _tag == current_tag else '' }}">
+                                                        <a href="{{ _tag | urlencode | replace('/', '%2F') }}/{{ url }}">
+                                                            {{ _tag }}
+                                                        </a>
+                                                    </li>
+                                                {% endfor %}
+                                            </ul>
+                                        </li>
+                                    {% endif %}
+                                {% endfor %}
+                                </ul>
+                            </li>
+                        {% endfor %}
                         </ul>
                     </nav>
                 </aside>
