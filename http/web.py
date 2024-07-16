@@ -28,6 +28,7 @@ import cgitb
 import os
 import re
 import sys
+from collections import namedtuple
 from io import StringIO
 from re import search, sub
 from urllib import parse
@@ -70,29 +71,29 @@ def get_query(basedir, project):
     return Query(datadir, repodir)
 
 
-# parse source path
+# Represents a parsed `source` URL path
+# project - name of the project, ex: musl
+# version - tagged commit of the project, ex: v1.2.5
+# path - path to the requested file, starts with a slash, ex: /src/prng/lrand48.c
+ParsedSourcePath = namedtuple('ParsedSourcePath', 'project, version, path')
+
+# Parse `source` route URL path into parts
+# NOTE: All parts are unquoted
 def parse_source_path(path):
     m = search('^/([^/]*)/([^/]*)/[^/]*(.*)$', path)
-
     if m:
-        parsed_path = {
-            'project': m.group(1),
-            'version': m.group(2),
-            'arg': m.group(3),
-        }
-
-        return parsed_path
+        return ParsedSourcePath(m.group(1), m.group(2), m.group(3))
 
 # turn parsed source path to string
 def stringify_source_path(ppath):
-    path = f'/{ppath["project"]}/{ppath["version"]}/source{ppath["arg"]}'
+    path = f'/{ppath.project}/{ppath.version}/source{ppath.path}'
     return path.rstrip('/')
 
 # return 301 to actual latest version if version in parsed source url is latest
 def redirect_source_on_latest(parsed_path, q):
-    if parsed_path['version'] == 'latest':
-        parsed_path['version'] = parse.quote(q.query('latest'))
-        return (301, stringify_source_path(parsed_path))
+    if parsed_path.version == 'latest':
+        new_parsed_path = parsed_path._replace(version=parse.quote(q.query('latest')))
+        return (301, stringify_source_path(new_parsed_path))
 
 # return 301 if path contains a trailing slash
 def redirect_on_trailing_slash(path):
@@ -109,41 +110,50 @@ def handle_source_url(path, _):
     if parsed_path is None:
         return (400,)
 
-    query = get_query(os.environ['LXR_PROJ_DIR'], parsed_path['project'])
+    query = get_query(os.environ['LXR_PROJ_DIR'], parsed_path.project)
     if not query:
         return (400,)
 
-    if not search('^[A-Za-z0-9_/.,+-]*$', parsed_path['arg']):
+    if not search('^[A-Za-z0-9_/.,+-]*$', parsed_path.path):
         return (400,)
 
     status = redirect_source_on_latest(parsed_path, query)
     if status is not None:
         return status
 
-    url = 'source' + parsed_path['arg']
+    url = 'source' + parsed_path.path
     return generate_source_page(query, url, os.environ['LXR_PROJ_DIR'], parsed_path)
 
 
-# parse ident path
+# Represents a parsed `ident` URL path
+# project - name of the project, ex: musl
+# version - tagged commit of the project, ex: v1.2.5
+# family - searched symbol family, replaced with C if unknown, ex: A
+# ident - searched identificator, ex: fpathconf
+ParsedIdentPath = namedtuple('ParsedIdentPath', 'project, version, family, ident')
+
+# Parse `ident` route URL path into parts
+# NOTE: All parts are unquoted
 def parse_ident_path(path):
     m = search('^/([^/]*)/([^/]*)(?:/([^/]))?/[^/]*(.*)$', path)
 
     if m:
-        parsed_path = {
-            'project': m.group(1),
-            'version': m.group(2),
-            'family': str(m.group(3)).upper(),
-            'arg': m.group(4),
-        }
+        family = str(m.group(3)).upper(),
+        if not validFamily(family):
+            family = 'C'
 
-        if not validFamily(parsed_path['family']):
-            parsed_path['family'] = 'C'
+        parsed_path = ParsedIdentPath(
+            m.group(1),
+            m.group(2),
+            family,
+            m.group(4)
+        )
 
         return parsed_path
 
 # turn parsed ident path to string
 def stringify_ident_path(ppath):
-    path = f'/{ppath["project"]}/{ppath["version"]}/{ppath["family"]}/ident/{ppath["arg"]}'
+    path = f'/{ppath.project}/{ppath.version}/{ppath.family}/ident/{ppath.ident}'
     return path.rstrip('/')
 
 # handle ident search post request by redirecting to ident/$ident_name
@@ -154,17 +164,19 @@ def handle_ident_post_form(parsed_path, form):
     if not validFamily(post_family):
         post_family = 'C'
 
-    if parsed_path.get('ident', '') == '' and post_ident:
+    if parsed_path.ident == '' and post_ident:
         post_ident = parse.quote(post_ident.strip(), safe='/')
-        parsed_path['family'] = post_family
-        parsed_path['arg'] = post_ident
-        return (302, stringify_ident_path(parsed_path))
+        new_parsed_path = parsed_path._replace(
+            family=post_family,
+            ident=post_ident
+        )
+        return (302, stringify_ident_path(new_parsed_path))
 
 # return 301 to actual latest version if version in parsed ident url is latest
 def redirect_ident_on_latest(parsed_path, q):
-    if parsed_path['version'] == 'latest':
-        parsed_path['version'] = parse.quote(q.query('latest'))
-        return (301, stringify_ident_path(parsed_path))
+    if parsed_path.version == 'latest':
+        new_parsed_path = parsed_path._replace(version=parse.quote(q.query('latest')))
+        return (301, stringify_ident_path(new_parsed_path))
 
 # handle ident url
 def handle_ident_url(path, params):
@@ -176,11 +188,11 @@ def handle_ident_url(path, params):
     if status is not None:
         return status
 
-    ident = parsed_path['arg'][1:]
+    ident = parsed_path.ident[1:]
     if not ident or not search('^[A-Za-z0-9_\$\.%-]*$', ident):
         return (400,)
 
-    query = get_query(os.environ['LXR_PROJ_DIR'], parsed_path['project'])
+    query = get_query(os.environ['LXR_PROJ_DIR'], parsed_path.project)
     if not query:
         return (400,)
 
@@ -188,7 +200,7 @@ def handle_ident_url(path, params):
     if status is not None:
         return status
 
-    url = parsed_path['family'] + '/ident/' + ident
+    url = parsed_path.family + '/ident/' + ident
     return generate_ident_page(query, url, os.environ['LXR_PROJ_DIR'], parsed_path, ident)
 
 
@@ -241,9 +253,9 @@ def generate_source_page(q, url, basedir, parsed_path):
     status = 200
     projects = get_projects(basedir)
 
-    project = parsed_path["project"]
-    version = parsed_path["version"]
-    path = parsed_path["arg"]
+    project = parsed_path.project
+    version = parsed_path.version
+    path = parsed_path.path
     tag = parse.unquote(version)
     search_family = 'A'
 
@@ -435,11 +447,11 @@ def generate_ident_page(q, url, basedir, parsed_path, ident):
     status = 200
     projects = get_projects(basedir)
 
-    project = parsed_path["project"]
-    version = parsed_path["version"]
+    project = parsed_path.project
+    version = parsed_path.version
     tag = parse.unquote(version)
-    search_family = parsed_path["family"]
-    family = parsed_path["family"]
+    search_family = parsed_path.family
+    family = parsed_path.family
 
     title_suffix = project.capitalize()+' source code ('+tag+') - Bootlin'
 
