@@ -251,49 +251,11 @@ def generate_versions(versions, url, tag):
 
 def generate_source_page(q, url, basedir, parsed_path):
     status = 200
-    projects = get_projects(basedir)
 
     project = parsed_path.project
     version = parsed_path.version
     path = parsed_path.path
     tag = parse.unquote(version)
-    search_family = 'A'
-
-    title_suffix = project.capitalize()+' source code ('+tag+') - Bootlin'
-
-    data = {
-        'baseurl': '/' + project + '/',
-        'tag': tag,
-        'version': version,
-        'url': url,
-        'project': project,
-        'projects': projects,
-        'ident': ident,
-        'family': search_family,
-        'breadcrumb': '<a class="project" href="'+version+'/source">/</a>'
-    }
-
-    data['versions'] = generate_versions(q.query('versions'), url, tag)
-
-    path_split = path.split('/')[1:]
-    path_temp = ''
-    links = []
-    for p in path_split:
-        path_temp += '/'+p
-        links.append('<a href="'+version+'/source'+path_temp+'">'+p+'</a>')
-
-    if links:
-        data['breadcrumb'] += '/'.join(links)
-
-    data['ident'] = ident
-    # Create titles like this:
-    # root path: "Linux source code (v5.5.6) - Bootlin"
-    # first level path: "arch - Linux source code (v5.5.6) - Bootlin"
-    # deeper paths: "Makefile - arch/um/Makefile - Linux source code (v5.5.6) - Bootlin"
-    data['title'] = ('' if path == ''
-                     else path_split[0]+' - ' if len(path_split) == 1
-                     else path_split[-1]+' - '+'/'.join(path_split)+' - ') \
-            +title_suffix
 
     lines = ['null - - -']
 
@@ -438,37 +400,57 @@ def generate_source_page(q, url, basedir, parsed_path):
         print('<div class="lxrcode">' + result + '</div>')
 
 
-    template = environment.get_template('layout.html')
-    data['main'] = outputBuffer.getvalue()
-    return (status, template.render(data))
+    # Generate breadcrumbs
+    path_split = path.split('/')[1:]
+    path_temp = ''
+    links = []
+    for p in path_split:
+        path_temp += '/'+p
+        links.append('<a href="'+version+'/source'+path_temp+'">'+p+'</a>')
 
-
-def generate_ident_page(q, url, basedir, parsed_path, ident):
-    status = 200
-    projects = get_projects(basedir)
-
-    project = parsed_path.project
-    version = parsed_path.version
-    tag = parse.unquote(version)
-    search_family = parsed_path.family
-    family = parsed_path.family
-
+    # Generate title
     title_suffix = project.capitalize()+' source code ('+tag+') - Bootlin'
 
+    # Create titles like this:
+    # root path: "Linux source code (v5.5.6) - Bootlin"
+    # first level path: "arch - Linux source code (v5.5.6) - Bootlin"
+    # deeper paths: "Makefile - arch/um/Makefile - Linux source code (v5.5.6) - Bootlin"
+    title = ('' if path == ''
+                     else path_split[0]+' - ' if len(path_split) == 1
+                     else path_split[-1]+' - '+'/'.join(path_split)+' - ') \
+            +title_suffix
+
+    # Create template context
     data = {
         'baseurl': '/' + project + '/',
         'tag': tag,
         'version': version,
         'url': url,
         'project': project,
-        'projects': projects,
+        'projects': get_projects(basedir),
         'ident': ident,
-        'family': search_family,
-        'breadcrumb': '<a class="project" href="'+version+'/source">/</a>'
+        'family': 'A',
+
+        'breadcrumb': '<a class="project" href="'+version+'/source">/</a>',
+        'versions': generate_versions(q.query('versions'), url, tag),
+        'title': title,
+
+        'main': outputBuffer.getvalue(),
     }
 
-    data['title'] = ident+' identifier - '+title_suffix
-    data['versions'] = generate_versions(q.query('versions'), url, tag)
+    if links:
+        data['breadcrumb'] += '/'.join(links)
+
+    template = environment.get_template('layout.html')
+    return (status, template.render(data))
+
+
+def generate_ident_page(q, url, basedir, parsed_path, ident):
+    status = 200
+
+    version = parsed_path.version
+    tag = parse.unquote(version)
+    family = parsed_path.family
 
     symbol_definitions, symbol_references, symbol_doccomments = q.query('ident', tag, ident, family)
 
@@ -582,8 +564,30 @@ def generate_ident_page(q, url, basedir, parsed_path, ident):
             status = 404
     print('</div>')
 
+
+    # Create template context
+    project = parsed_path.project
+
+    title_suffix = project.capitalize()+' source code ('+tag+') - Bootlin'
+
+    data = {
+        'baseurl': '/' + project + '/',
+        'tag': tag,
+        'version': version,
+        'url': url,
+        'project': project,
+        'projects': get_projects(basedir),
+        'ident': ident,
+        'family': family,
+
+        'breadcrumb': '<a class="project" href="'+version+'/source">/</a>',
+        'title': ident+' identifier - '+title_suffix,
+        'versions': generate_versions(q.query('versions'), url, tag),
+
+        'main': outputBuffer.getvalue()
+    }
+
     template = environment.get_template('layout.html')
-    data['main'] = outputBuffer.getvalue()
     return (status, template.render(data))
 
 
