@@ -72,13 +72,13 @@ def get_query(basedir, project):
 
 # parse source path
 def parse_source_path(path):
-    m = search('^/([^/]*)/([^/]*)/([^/]*)(.*)$', path)
+    m = search('^/([^/]*)/([^/]*)/[^/]*(.*)$', path)
 
     if m:
         parsed_path = {
             'project': m.group(1),
             'version': m.group(2),
-            'arg': m.group(4),
+            'arg': m.group(3),
         }
 
         return parsed_path
@@ -126,14 +126,14 @@ def handle_source_url(path, _):
 
 # parse ident path
 def parse_ident_path(path):
-    m = search('^/([^/]*)/([^/]*)(?:/([^/]))?/([^/]*)(.*)$', path)
+    m = search('^/([^/]*)/([^/]*)(?:/([^/]))?/[^/]*(.*)$', path)
 
     if m:
         parsed_path = {
             'project': m.group(1),
             'version': m.group(2),
             'family': str(m.group(3)).upper(),
-            'arg': m.group(5),
+            'arg': m.group(4),
         }
 
         if not validFamily(parsed_path['family']):
@@ -194,9 +194,9 @@ def handle_ident_url(path, params):
 
 # route urls to appropriate functions
 def route(path, params):
-    if search('^/[^/]*/[^/]*/source(.*)$', path) is not None:
+    if search('^/[^/]*/[^/]*/source.*$', path) is not None:
         return handle_source_url(path, params)
-    elif search('^/([^/]*)/([^/]*)(?:/([^/]))?/ident(.*)$', path) is not None:
+    elif search('^/[^/]*/[^/]*(?:/[^/])?/ident.*$', path) is not None:
         return handle_ident_url(path, params)
     else:
         return (400,)
