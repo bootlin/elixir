@@ -85,7 +85,7 @@ def parse_source_path(path):
 
 # turn parsed source path to string
 def stringify_source_path(ppath):
-    path = f'/{ppath["project"]}/{parse.quote(ppath["version"])}/source{ppath["arg"]}'
+    path = f'/{ppath["project"]}/{ppath["version"]}/source{ppath["arg"]}'
     return path.rstrip('/')
 
 # return 301 to actual latest version if version in parsed source url is latest
@@ -143,7 +143,7 @@ def parse_ident_path(path):
 
 # turn parsed ident path to string
 def stringify_ident_path(ppath):
-    path = f'/{ppath["project"]}/{parse.quote(ppath["version"])}/{ppath["family"]}/ident/{ppath["arg"]}'
+    path = f'/{ppath["project"]}/{ppath["version"]}/{ppath["family"]}/ident/{ppath["arg"]}'
     return path.rstrip('/')
 
 # handle ident search post request by redirecting to ident/$ident_name
