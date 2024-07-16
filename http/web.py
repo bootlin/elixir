@@ -57,8 +57,6 @@ if not(os.path.isdir(errdir)):
 # Enable CGI Trackback Manager for debugging (https://docs.python.org/fr/3/library/cgitb.html)
 cgitb.enable(display=0, logdir=errdir, format='text')
 
-ident = ''
-status = 200
 
 # Returns a Query class instance or None if project data directory does not exist
 # basedir: absolute path to parent directory of all project data directories, ex. "/srv/elixir-data/"
@@ -439,7 +437,7 @@ def generate_source_page(q, basedir, parsed_path):
         'url': url,
         'project': project,
         'projects': get_projects(basedir),
-        'ident': ident,
+        'ident': '',
         'family': 'A',
 
         'breadcrumb': '<a class="project" href="'+version+'/source">/</a>',
