@@ -148,7 +148,7 @@ def parse_ident_path(path):
             m.group(1),
             m.group(2),
             family,
-            m.group(4)
+            m.group(4)[1:]
         )
 
         return parsed_path
@@ -191,15 +191,14 @@ def handle_ident_url(path, params):
         return (404, "Unknown project")
 
     # Check if identifier contains only allowed characters
-    ident = parsed_path.ident[1:]
-    if not ident or not search('^[A-Za-z0-9_\$\.%-]*$', ident):
+    if not parsed_path.ident or not search('^[A-Za-z0-9_\$\.%-]*$', parsed_path.ident):
         return (400, "Identifier contains characters that are not allowed.")
 
     if parsed_path.version == 'latest':
         new_parsed_path = parsed_path._replace(version=parse.quote(query.query('latest')))
         return (301, stringify_ident_path(new_parsed_path))
 
-    return generate_ident_page(query, os.environ['LXR_PROJ_DIR'], parsed_path, ident)
+    return generate_ident_page(query, os.environ['LXR_PROJ_DIR'], parsed_path)
 
 
 # Calls proper handler functions based on URL path, returns 404 if path is unknown
@@ -463,10 +462,10 @@ def generate_source_page(q, basedir, parsed_path):
 # q: Query object
 # basedir: path to data directory, ex: "/srv/elixir-data"
 # parsed_path: ParsedIdentPath
-# ident: requested identifier
-def generate_ident_page(q, basedir, parsed_path, ident):
+def generate_ident_page(q, basedir, parsed_path):
     status = 200
 
+    ident = parsed_path.ident
     url = parsed_path.family + '/ident/' + ident
     version = parsed_path.version
     tag = parse.unquote(version)
