@@ -222,6 +222,90 @@ def get_directories(basedir):
             directories.append(filename)
     return sorted(directories)
 
+def generate_source(q, code, path, version, tag, project):
+    import pygments
+    import pygments.lexers
+    import pygments.formatters
+
+    fdir, fname = os.path.split(path)
+    filename, extension = os.path.splitext(fname)
+    extension = extension[1:].lower()
+    family = q.query('family', fname)
+
+    # globals required by filters
+    # this dict is also modified by filters - most introduce new, global variables 
+    # that are later used by prefunc/postfunc
+    filter_ctx = {
+        **default_globals,
+        "os": os,
+        "parse": parse,
+        "re": re,
+        "dts_comp_support": q.query('dts-comp'),
+
+        "version": version,
+        "family": family,
+        "path": path,
+        "tag": tag,
+        "q": q,
+    }
+
+    # Source common filter definitions
+    os.chdir('filters')
+    exec(open("common.py").read(), filter_ctx)
+
+    # Source project specific filters
+    f = project + '.py'
+    if os.path.isfile(f):
+        exec(open(f).read(), filter_ctx)
+    os.chdir('..')
+
+    filters = filter_ctx["filters"]
+
+    # Apply filters
+    for f in filters:
+        c = f['case']
+        if (c == 'any' or
+            (c == 'filename' and filename in f['match']) or
+            (c == 'extension' and extension in f['match']) or
+            (c == 'path' and fdir.startswith(tuple(f['match']))) or
+            (c == 'filename_extension' and filename.endswith(tuple(f['match'])))):
+
+            apply_filter = True
+
+            if 'path_exceptions' in f:
+                for p in f['path_exceptions']:
+                    if re.match(p, path):
+                        apply_filter = False
+                        break
+
+            if apply_filter:
+                code = sub(f ['prerex'], f ['prefunc'], code, flags=re.MULTILINE)
+
+
+    try:
+        lexer = pygments.lexers.guess_lexer_for_filename(path, code)
+    except:
+        lexer = pygments.lexers.get_lexer_by_name('text')
+
+    lexer.stripnl = False
+    formatter = pygments.formatters.HtmlFormatter(linenos=True, anchorlinenos=True)
+    result = pygments.highlight(code, lexer, formatter)
+
+    # Replace line numbers by links to the corresponding line in the current file
+    result = sub('href="#-(\d+)', 'name="L\\1" id="L\\1" href="'+version+'/source'+path+'#L\\1', result)
+
+    for f in filters:
+        c = f['case']
+        if (c == 'any' or
+            (c == 'filename' and filename in f['match']) or
+            (c == 'extension' and extension in f['match']) or
+            (c == 'path' and fdir.startswith(tuple(f['match']))) or
+            (c == 'filename_extension' and filename.endswith(tuple(f['match'])))):
+
+            result = sub(f ['postrex'], f ['postfunc'], result)
+
+    return result
+
 # Generates response (status code and optionally HTML) of the `source` route
 # q: Query object
 # basedir: path to data directory, ex: "/srv/elixir-data"
@@ -235,7 +319,7 @@ def generate_source_page(q, basedir, parsed_path):
     path = parsed_path.path
     tag = parse.unquote(version)
 
-    lines = ['null - - -']
+    lines = []
 
     type = q.query('type', tag, path)
     if len(type) > 0:
@@ -244,139 +328,52 @@ def generate_source_page(q, basedir, parsed_path):
         elif type == 'blob':
             code = q.query('file', tag, path)
     else:
-        print('<div class="lxrerror"><h2>This file does not exist.</h2></div>')
+        template_ctx = {
+            'error_title': 'This file does not exist.',
+        }
+        template = environment.get_template('error.html')
         status = 404
 
     if type == 'tree':
-        if path != '':
-            lines[0] = 'back - - -'
+        dir_entries = []
 
-        print('<div class="lxrtree">')
-        print('<table><tbody>\n')
+        if path != '':
+            back_path = os.path.dirname(path[:-1])
+            if back_path == '/':
+                back_path = ''
+            dir_entries.append(('back', 'Parent directory', back_path, ''))
+
         for l in lines:
             type, name, size, perm = l.split(' ')
 
-            if type == 'null':
-                continue
-            elif type == 'tree':
-                size = ''
-                path2 = path+'/'+name
-                name = name
-            elif type == 'blob':
-                size = size+' bytes'
-                path2 = path+'/'+name
+            if type == 'tree':
+                dir_entries.append(('tree', name, f"{path}/{name}", ''))
+            if type == 'blob':
+                file_path = f"{path}/{name}"
 
+                # 120000 permission means it's a symlink
                 if perm == '120000':
-                    # 120000 permission means it's a symlink
-                    # So we need to handle that correctly
                     dir_name = os.path.dirname(path)
-                    rel_path = q.query('file', tag, path2)
+                    rel_path = q.query('file', tag, file_path)
 
                     if dir_name != '/':
                         dir_name += '/'
 
-                    path2 = os.path.abspath(dir_name + rel_path)
+                    file_path = os.path.abspath(dir_name + rel_path)
+                    name = name + ' -> ' + file_path
 
-                    name = name + ' -> ' + path2
-            elif type == 'back':
-                size = ''
-                path2 = os.path.dirname(path[:-1])
-                if path2 == '/': path2 = ''
-                name = 'Parent directory'
+                dir_entries.append(('blob', name, file_path, f"{size} bytes"))
 
-            print('  <tr>\n')
-            print('    <td><a class="tree-icon icon-'+type+'" href="'+version+'/source'+path2+'">'+name+'</a></td>\n')
-            print('    <td><a tabindex="-1" class="size" href="'+version+'/source'+path2+'">'+size+'</a></td>\n')
-            print('  </tr>\n')
-
-        print('</tbody></table>', end='')
-        print('</div>')
+        template_ctx = {
+            'dir_entries': dir_entries,
+        }
+        template = environment.get_template('tree.html')
 
     elif type == 'blob':
-
-        import pygments
-        import pygments.lexers
-        import pygments.formatters
-
-        fdir, fname = os.path.split(path)
-        filename, extension = os.path.splitext(fname)
-        extension = extension[1:].lower()
-        family = q.query('family', fname)
-
-        # globals required by filters
-        # this dict is also modified by filters - most introduce new, global variables 
-        # that are later used by prefunc/postfunc
-        filter_ctx = {
-            **default_globals,
-            "os": os,
-            "parse": parse,
-            "re": re,
-            "dts_comp_support": q.query('dts-comp'),
-
-            "version": version,
-            "family": family,
-            "path": path,
-            "tag": tag,
-            "q": q,
+        template_ctx = {
+            'code': generate_source(q, code, path, version, tag, project),
         }
-
-        # Source common filter definitions
-        os.chdir('filters')
-        exec(open("common.py").read(), filter_ctx)
-
-        # Source project specific filters
-        f = project + '.py'
-        if os.path.isfile(f):
-            exec(open(f).read(), filter_ctx)
-        os.chdir('..')
-
-        filters = filter_ctx["filters"]
-
-        # Apply filters
-        for f in filters:
-            c = f['case']
-            if (c == 'any' or
-                (c == 'filename' and filename in f['match']) or
-                (c == 'extension' and extension in f['match']) or
-                (c == 'path' and fdir.startswith(tuple(f['match']))) or
-                (c == 'filename_extension' and filename.endswith(tuple(f['match'])))):
-
-                apply_filter = True
-
-                if 'path_exceptions' in f:
-                    for p in f['path_exceptions']:
-                        if re.match(p, path):
-                            apply_filter = False
-                            break
-
-                if apply_filter:
-                    code = sub(f ['prerex'], f ['prefunc'], code, flags=re.MULTILINE)
-
-
-        try:
-            lexer = pygments.lexers.guess_lexer_for_filename(path, code)
-        except:
-            lexer = pygments.lexers.get_lexer_by_name('text')
-
-        lexer.stripnl = False
-        formatter = pygments.formatters.HtmlFormatter(linenos=True, anchorlinenos=True)
-        result = pygments.highlight(code, lexer, formatter)
-
-        # Replace line numbers by links to the corresponding line in the current file
-        result = sub('href="#-(\d+)', 'name="L\\1" id="L\\1" href="'+version+'/source'+path+'#L\\1', result)
-
-        for f in filters:
-            c = f['case']
-            if (c == 'any' or
-                (c == 'filename' and filename in f['match']) or
-                (c == 'extension' and extension in f['match']) or
-                (c == 'path' and fdir.startswith(tuple(f['match']))) or
-                (c == 'filename_extension' and filename.endswith(tuple(f['match'])))):
-
-                result = sub(f ['postrex'], f ['postfunc'], result)
-
-        print('<div class="lxrcode">' + result + '</div>')
-
+        template = environment.get_template('source.html')
 
     # Generate breadcrumbs
     path_split = path.split('/')[1:]
@@ -400,6 +397,8 @@ def generate_source_page(q, basedir, parsed_path):
 
     # Create template context
     data = {
+        **template_ctx,
+
         'baseurl': '/' + project + '/',
         'tag': tag,
         'version': version,
@@ -415,11 +414,8 @@ def generate_source_page(q, basedir, parsed_path):
         'versions': q.query('versions'),
         'url': url,
         'current_tag': tag,
-
-        'content': outputBuffer.getvalue(),
     }
 
-    template = environment.get_template('source.html')
     return (status, template.render(data))
 
 

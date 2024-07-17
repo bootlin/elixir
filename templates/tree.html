@@ -1,0 +1,18 @@
+{% extends "layout.html" %}
+
+{% block main %}
+
+<div class="lxrtree">
+    <table>
+        <tbody>
+            {% for type, name, path, size in dir_entries %}
+                <tr>
+                    <td><a class="tree-icon icon-{{- type -}}" href="{{- version -}}/source{{- path -}}">{{ name }}</a></td>
+                    <td><a tabindex="-1" class="size" href="{{- version -}}/source{{- path -}}">{{ size }}</a></td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+{% endblock %}
