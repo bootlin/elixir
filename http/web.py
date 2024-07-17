@@ -214,11 +214,22 @@ def get_directories(basedir):
             directories.append(filename)
     return sorted(directories)
 
-def generate_source(q, path, version, tag, project):
+# Guesses file format based on filename, returns code formatted as HTML
+def format_code(filename, code):
     import pygments
     import pygments.lexers
     import pygments.formatters
 
+    try:
+        lexer = pygments.lexers.guess_lexer_for_filename(filename, code)
+    except pygments.util.ClassNotFound:
+        lexer = pygments.lexers.get_lexer_by_name('text')
+
+    lexer.stripnl = False
+    formatter = pygments.formatters.HtmlFormatter(linenos=True, anchorlinenos=True)
+    return pygments.highlight(code, lexer, formatter)
+
+def generate_source(q, path, version, tag, project):
     code = q.query('file', tag, path)
 
     fdir, fname = os.path.split(path)
@@ -276,17 +287,10 @@ def generate_source(q, path, version, tag, project):
                 code = sub(f ['prerex'], f ['prefunc'], code, flags=re.MULTILINE)
 
 
-    try:
-        lexer = pygments.lexers.guess_lexer_for_filename(path, code)
-    except:
-        lexer = pygments.lexers.get_lexer_by_name('text')
-
-    lexer.stripnl = False
-    formatter = pygments.formatters.HtmlFormatter(linenos=True, anchorlinenos=True)
-    result = pygments.highlight(code, lexer, formatter)
+    html_code_block = format_code(fname, code)
 
     # Replace line numbers by links to the corresponding line in the current file
-    result = sub('href="#-(\d+)', 'name="L\\1" id="L\\1" href="'+version+'/source'+path+'#L\\1', result)
+    html_code_block = sub('href="#-(\d+)', 'name="L\\1" id="L\\1" href="'+version+'/source'+path+'#L\\1', html_code_block)
 
     for f in filters:
         c = f['case']
@@ -296,9 +300,10 @@ def generate_source(q, path, version, tag, project):
             (c == 'path' and fdir.startswith(tuple(f['match']))) or
             (c == 'filename_extension' and filename.endswith(tuple(f['match'])))):
 
-            result = sub(f ['postrex'], f ['postfunc'], result)
+            html_code_block = sub(f ['postrex'], f ['postfunc'], html_code_block)
 
-    return result
+    return html_code_block
+
 
 # Represents a file entry in git tree
 # type: either tree (directory), blob (file) or symlink
