@@ -222,10 +222,12 @@ def get_directories(basedir):
             directories.append(filename)
     return sorted(directories)
 
-def generate_source(q, code, path, version, tag, project):
+def generate_source(q, path, version, tag, project):
     import pygments
     import pygments.lexers
     import pygments.formatters
+
+    code = q.query('file', tag, path)
 
     fdir, fname = os.path.split(path)
     filename, extension = os.path.splitext(fname)
@@ -306,6 +308,39 @@ def generate_source(q, code, path, version, tag, project):
 
     return result
 
+def get_directory_entries(q, tag, path):
+    dir_entries = []
+    lines = q.query('dir', tag, path)
+
+    if path != '':
+        back_path = os.path.dirname(path[:-1])
+        if back_path == '/':
+            back_path = ''
+        dir_entries.append(('back', 'Parent directory', back_path, ''))
+
+    for l in lines:
+        type, name, size, perm = l.split(' ')
+
+        if type == 'tree':
+            dir_entries.append(('tree', name, f"{path}/{name}", ''))
+        if type == 'blob':
+            file_path = f"{path}/{name}"
+
+            # 120000 permission means it's a symlink
+            if perm == '120000':
+                dir_name = os.path.dirname(path)
+                rel_path = q.query('file', tag, file_path)
+
+                if dir_name != '/':
+                    dir_name += '/'
+
+                file_path = os.path.abspath(dir_name + rel_path)
+                name = name + ' -> ' + file_path
+
+            dir_entries.append(('blob', name, file_path, f"{size} bytes"))
+
+    return dir_entries
+
 # Generates response (status code and optionally HTML) of the `source` route
 # q: Query object
 # basedir: path to data directory, ex: "/srv/elixir-data"
@@ -319,61 +354,25 @@ def generate_source_page(q, basedir, parsed_path):
     path = parsed_path.path
     tag = parse.unquote(version)
 
-    lines = []
-
     type = q.query('type', tag, path)
-    if len(type) > 0:
-        if type == 'tree':
-            lines += q.query('dir', tag, path)
-        elif type == 'blob':
-            code = q.query('file', tag, path)
+
+    if type == 'tree':
+        template_ctx = {
+            'dir_entries': get_directory_entries(q, tag, path),
+        }
+        template = environment.get_template('tree.html')
+    elif type == 'blob':
+        template_ctx = {
+            'code': generate_source(q, path, version, tag, project),
+        }
+        template = environment.get_template('source.html')
     else:
+        status = 404
         template_ctx = {
             'error_title': 'This file does not exist.',
         }
         template = environment.get_template('error.html')
-        status = 404
 
-    if type == 'tree':
-        dir_entries = []
-
-        if path != '':
-            back_path = os.path.dirname(path[:-1])
-            if back_path == '/':
-                back_path = ''
-            dir_entries.append(('back', 'Parent directory', back_path, ''))
-
-        for l in lines:
-            type, name, size, perm = l.split(' ')
-
-            if type == 'tree':
-                dir_entries.append(('tree', name, f"{path}/{name}", ''))
-            if type == 'blob':
-                file_path = f"{path}/{name}"
-
-                # 120000 permission means it's a symlink
-                if perm == '120000':
-                    dir_name = os.path.dirname(path)
-                    rel_path = q.query('file', tag, file_path)
-
-                    if dir_name != '/':
-                        dir_name += '/'
-
-                    file_path = os.path.abspath(dir_name + rel_path)
-                    name = name + ' -> ' + file_path
-
-                dir_entries.append(('blob', name, file_path, f"{size} bytes"))
-
-        template_ctx = {
-            'dir_entries': dir_entries,
-        }
-        template = environment.get_template('tree.html')
-
-    elif type == 'blob':
-        template_ctx = {
-            'code': generate_source(q, code, path, version, tag, project),
-        }
-        template = environment.get_template('source.html')
 
     # Generate breadcrumbs
     path_split = path.split('/')[1:]
