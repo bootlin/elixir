@@ -29,7 +29,6 @@ import os
 import re
 import sys
 from collections import OrderedDict, namedtuple
-from io import StringIO
 from re import search, sub
 from urllib import parse
 import jinja2
@@ -37,13 +36,6 @@ import jinja2
 sys.path = [ sys.path[0] + '/..' ] + sys.path
 from lib import validFamily
 from query import Query, SymbolInstance
-
-realprint = print
-outputBuffer = StringIO()
-
-def print(arg, end='\n'):
-    global outputBuffer
-    outputBuffer.write(arg + end)
 
 script_dir = os.path.dirname(os.path.realpath(__file__))
 templates_dir = os.path.join(script_dir, '../templates/')
@@ -105,7 +97,7 @@ def handle_source_url(path, _):
 
     parsed_path = parse_source_path(path)
     if parsed_path is None:
-        realprint("Error: failed to parse path in handle_source_url", path, file=sys.stderr)
+        print("Error: failed to parse path in handle_source_url", path, file=sys.stderr)
         return (404, "Failed to parse path")
 
     query = get_query(os.environ['LXR_PROJ_DIR'], parsed_path.project)
@@ -179,7 +171,7 @@ def handle_ident_post_form(parsed_path, form):
 def handle_ident_url(path, params):
     parsed_path = parse_ident_path(path)
     if parsed_path is None:
-        realprint("Error: failed to parse path in handle_ident_url", path, file=sys.stderr)
+        print("Error: failed to parse path in handle_ident_url", path, file=sys.stderr)
         return (404, "Failed to parse path")
 
     status = handle_ident_post_form(parsed_path, params)
@@ -527,31 +519,31 @@ result = route(path, request_params)
 
 if result is not None:
     if result[0] == 200:
-        realprint('Content-Type: text/html;charset=utf-8\n')
-        realprint(result[1], end='')
+        print('Content-Type: text/html;charset=utf-8\n')
+        print(result[1], end='')
     elif result[0] == 301:
-        realprint('Status: 301 Moved Permanently')
-        realprint('Location: '+ result[1] +'\n')
+        print('Status: 301 Moved Permanently')
+        print('Location: '+ result[1] +'\n')
         exit()
     elif result[0] == 302:
-        realprint('Status: 302 Found')
-        realprint('Location: '+ result[1] +'\n')
+        print('Status: 302 Found')
+        print('Location: '+ result[1] +'\n')
         exit()
     elif result[0] == 400:
-        realprint('Status: 400 Bad Request\n')
+        print('Status: 400 Bad Request\n')
         exit()
     elif result[0] == 404:
-        realprint('Status: 404 Not Found')
-        realprint('Content-Type: text/html;charset=utf-8\n')
-        realprint(result[1], end='')
+        print('Status: 404 Not Found')
+        print('Content-Type: text/html;charset=utf-8\n')
+        print(result[1], end='')
     else:
-        realprint('Status: 500 Internal Server Error')
-        realprint('Content-Type: text/html;charset=utf-8\n')
-        realprint('Error - route returned an unknown status code', result, file=sys.stderr)
-        realprint('Unknown error - check error logs for details\n')
+        print('Status: 500 Internal Server Error')
+        print('Content-Type: text/html;charset=utf-8\n')
+        print('Error - route returned an unknown status code', result, file=sys.stderr)
+        print('Unknown error - check error logs for details\n')
 else:
-    realprint('Status: 500 Internal Server Error')
-    realprint('Content-Type: text/html;charset=utf-8\n')
-    realprint('Error - route returned None', file=sys.stderr)
-    realprint('Unknown error - check error logs for details\n')
+    print('Status: 500 Internal Server Error')
+    print('Content-Type: text/html;charset=utf-8\n')
+    print('Error - route returned None', file=sys.stderr)
+    print('Unknown error - check error logs for details\n')
 
