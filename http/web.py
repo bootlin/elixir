@@ -36,7 +36,7 @@ import jinja2
 
 sys.path = [ sys.path[0] + '/..' ] + sys.path
 from lib import validFamily
-from query import Query
+from query import Query, SymbolInstance
 
 realprint = print
 outputBuffer = StringIO()
@@ -422,55 +422,13 @@ def generate_source_page(q, basedir, parsed_path):
     template = environment.get_template('layout.html')
     return (status, template.render(data))
 
-def generate_symbol_source(symbol, version, concise):
+
+# TODO this should be a responsibility of Query
+def convert_symbol_lines(symbol):
     if type(symbol.line) is str:
-        ln = symbol.line.split(',')
+        return SymbolInstance(symbol.path, symbol.line.split(','), symbol.type)
     else:
-        ln = str(symbol.line).split(',')
-
-    if len(ln) == 1:
-        n = ln[0]
-        print('<li><a href="{v}/source/{f}#L{n}"><strong>{f}</strong>, line {n}'.format(
-            v=version, f=symbol.path, n=n
-        ))
-        if symbol.type is not None:
-            print(' <em>(as a {t})</em>'.format(t=symbol.type))
-        print('</a>')
-    else:
-        if concise:
-            n = len(ln)
-            print('<li><a href="{v}/source/{f}#L{l}"><strong>{f}</strong>, <em>{n} times</em>'.format(
-                v=version, f=symbol.path, n=n, l=ln[0]
-            ))
-            if symbol.type is not None:
-                print(' <em>(as a {t})</em>'.format(t=symbol.type))
-            print('</a>')
-        else:
-            print('<li><a href="{v}/source/{f}#L{n}"><strong>{f}</strong>'.format(
-                v=version, f=symbol.path, n=ln[0]
-            ))
-            if symbol.type is not None:
-                print(' <em>(as a {t})</em>'.format(t=symbol.type))
-            print('</a>')
-            print('<ul>')
-            for n in ln:
-                print('<li><a href="{v}/source/{f}#L{n}">line {n}</a>'.format(
-                    v=version, f=symbol.path, n=n
-                ))
-            print('</ul>')
-
-
-def generate_reference_list(title, symbols_by_type, version):
-    for type, symbols in symbols_by_type.items():
-        if type == '_unknown':
-            print('<h2>'+title+' in '+str(len(symbols))+' files:</h2>')
-        else:
-            print('<h2>'+title+' in '+str(len(symbols))+' files as a '+type+':</h2>')
-
-        print('<ul>')
-        for symbol in symbols:
-            generate_symbol_source(symbol, version, len(symbols) > 100)
-        print('</ul>')
+        return SymbolInstance(symbol.path, [str(symbol.line)], symbol.type)
 
 # Generates response (status code and optionally HTML) of the `ident` route
 # q: Query object
@@ -487,35 +445,47 @@ def generate_ident_page(q, basedir, parsed_path):
 
     symbol_definitions, symbol_references, symbol_doccomments = q.query('ident', tag, ident, family)
 
-    print('<div class="lxrident">')
+    symbol_sections = []
+
     if len(symbol_definitions) or len(symbol_references):
         if len(symbol_definitions):
             defs_by_type = OrderedDict({})
 
+            # TODO this should be a responsibility of Query
             for symbol_definition in symbol_definitions:
                 if symbol_definition.type in defs_by_type:
-                    defs_by_type[symbol_definition.type].append(symbol_definition)
+                    defs_by_type[symbol_definition.type].append(convert_symbol_lines(symbol_definition))
                 else:
-                    defs_by_type[symbol_definition.type] = [symbol_definition]
+                    defs_by_type[symbol_definition.type] = [convert_symbol_lines(symbol_definition)]
 
-            generate_reference_list('Defined', defs_by_type, version)
+            symbol_sections.append({
+                'title': 'Defined',
+                'symbols': defs_by_type,
+            })
         else:
-            print('<h2>No definitions found in the database</h2>')
+            symbol_sections.append({
+                'message': 'No definitions found in the database',
+            })
 
         if len(symbol_doccomments):
-            generate_reference_list('Documented', {'_unknown': symbol_doccomments}, version)
+            symbol_sections.append({
+                'title': 'Documented',
+                'symbols': {'_unknown': [convert_symbol_lines(sym) for sym in symbol_doccomments]},
+            })
 
         if len(symbol_references):
-            generate_reference_list('Referenced', {'_unknown': symbol_references}, version)
+            symbol_sections.append({
+                'title': 'Referenced',
+                'symbols': {'_unknown': [convert_symbol_lines(sym) for sym in symbol_references]},
+            })
         else:
-            print('<h2>No references found in the database</h2>')
+            symbol_sections.append({
+                'message': 'No references found in the database',
+            })
 
     else:
         if ident != '':
-            print('<h2>Identifier not used</h2>')
             status = 404
-    print('</div>')
-
 
     # Create template context
     project = parsed_path.project
@@ -538,7 +508,7 @@ def generate_ident_page(q, basedir, parsed_path):
         'url': url,
         'current_tag': tag,
 
-        'main': outputBuffer.getvalue()
+        'symbol_sections': symbol_sections,
     }
 
     template = environment.get_template('layout.html')

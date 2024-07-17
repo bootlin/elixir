@@ -48,7 +48,49 @@
                         <div id="reference-popup"></div>
                         <div id="loading-popup">Loading...</div>
                     </div>
-                    {{main}}
+                    {% if symbol_sections is defined %}
+                        <div class="lxrident">
+                        {% if symbol_sections|length != 0 %}
+                            {% for section in symbol_sections %}
+                                {% if 'symbols' in section %}
+                                    {% for type, symbols in section['symbols'].items() %}
+                                        <h2>{{ section['title'] }} in {{ symbols|length }} files
+                                            {{- ' as a '+type if type != '_unknown' else '' -}}:</h2>
+                                        <ul>
+                                        {% for symbol in symbols %}
+                                            <li>
+                                            <a href="{{ version }}/source/{{ symbol.path }}#L{{ symbol.line[0] }}">
+                                            <strong>{{ symbol.path }}</strong>
+                                            {%- if symbol.line|length == 1 %},
+                                                line {{ symbol.line[0] }}
+                                            {%- elif symbols|length > 100 %},
+                                                <em>{{ symbol.line|length }} times</em>
+                                            {% endif %}
+                                            {% if symbol.type is not none %}
+                                                <em>(as a {{ symbol.type }})</em>
+                                            {% endif %}
+                                            </a>
+                                            {% if symbol.line|length > 1 and symbols|length <= 100 %}
+                                                <ul>
+                                                {% for l in symbol.line %}
+                                                    <li><a href="{{ version }}/source/{{ symbol.path }}#L{{ l }}">line {{ l }}</a>
+                                                {% endfor %}
+                                                </ul>
+                                            {% endif %}
+                                        {% endfor %}
+                                        </ul>
+                                    {% endfor %}
+                                {% else %}
+                                    {{ section['message'] }}
+                                {% endif %}
+                            {% endfor %}
+                        {% else %}
+                            <h2>Identifier not used</h2>
+                        {% endif %}
+                        </div>
+                    {% else %}
+                        {{ main }}
+                    {% endif %}
                 </div>
                 <aside class="sidebar" id="menu">
                     <select class="select-projects" onchange="window.location.href=this.value">
