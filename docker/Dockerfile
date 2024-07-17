@@ -10,6 +10,7 @@ RUN \
     python3-bsddb3 \
     python3-pytest \
     python3-pygments \
+    universal-ctags \
     perl \
     git \
     apache2 \
@@ -17,12 +18,6 @@ RUN \
     libjansson4 \
     libyaml-0-2 \
     wget
-
-RUN \
-  wget https://bootlin.com/pub/elixir/universal-ctags_0+git20200526-0ubuntu1_amd64.deb
-
-RUN \
-  dpkg -i universal-ctags_0+git20200526-0ubuntu1_amd64.deb
 
 COPY . /usr/local/elixir/
 
