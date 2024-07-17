@@ -416,10 +416,10 @@ def generate_source_page(q, basedir, parsed_path):
         'url': url,
         'current_tag': tag,
 
-        'main': outputBuffer.getvalue(),
+        'content': outputBuffer.getvalue(),
     }
 
-    template = environment.get_template('layout.html')
+    template = environment.get_template('source.html')
     return (status, template.render(data))
 
 
@@ -511,7 +511,7 @@ def generate_ident_page(q, basedir, parsed_path):
         'symbol_sections': symbol_sections,
     }
 
-    template = environment.get_template('layout.html')
+    template = environment.get_template('ident.html')
     return (status, template.render(data))
 
 
