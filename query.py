@@ -253,6 +253,9 @@ class Query:
         else:
             return 'Unknown subcommand: ' + cmd + '\n'
 
+    def get_file_raw(self, version, path):
+        return decode(self.script('get-file', version, path))
+
     def get_idents_comps(self, version, ident):
 
         # DT bindings compatible strings are handled differently

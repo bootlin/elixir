@@ -5,12 +5,26 @@
 <div class="lxrtree">
     <table>
         <tbody>
-            {% for type, name, path, size in dir_entries %}
-                <tr>
-                    <td><a class="tree-icon icon-{{- type -}}" href="{{- version -}}/source{{- path -}}">{{ name }}</a></td>
-                    <td><a tabindex="-1" class="size" href="{{- version -}}/source{{- path -}}">{{ size }}</a></td>
-                </tr>
-            {% endfor %}
+        {% if current_path != '' %}
+            <tr>
+                <td><a class="tree-icon icon-back" href="{{- version -}}/source{{- back_path -}}">Parent directory</a></td>
+            </tr>
+        {% endif %}
+        {% for type, name, path, size in dir_entries %}
+            <tr>
+                <td>
+                    <a class="tree-icon icon-{{- type if type != 'symlink' else 'blob' -}}"
+                        href="{{- version -}}/source{{- path -}}">
+                    {% if type == 'symlink' %}
+                        {{ name }} -> {{  path }}
+                    {% else %}
+                        {{ name }}
+                    {% endif %}
+                    </a>
+                </td>
+                <td><a tabindex="-1" class="size" href="{{- version -}}/source{{- path -}}">{{ size }} bytes</a></td>
+            </tr>
+        {% endfor %}
         </tbody>
     </table>
 </div>

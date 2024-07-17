@@ -308,36 +308,38 @@ def generate_source(q, path, version, tag, project):
 
     return result
 
+# Represents a file entry in git tree
+# type: either tree (directory), blob (file) or symlink
+# name: filename of the file
+# path: path of the file, path to the target in case of symlinks
+# size: int, file size in bytes, None for directories and symlinks
+DirectoryEntry = namedtuple('DirectoryEntry', 'type, name, path, size')
+
+# Returns a list of DirectoryEntry objects with information about files in directory
+# q - Query object
+# tag - request repository tag
+# path - path to the directory
 def get_directory_entries(q, tag, path):
     dir_entries = []
     lines = q.query('dir', tag, path)
-
-    if path != '':
-        back_path = os.path.dirname(path[:-1])
-        if back_path == '/':
-            back_path = ''
-        dir_entries.append(('back', 'Parent directory', back_path, ''))
 
     for l in lines:
         type, name, size, perm = l.split(' ')
 
         if type == 'tree':
             dir_entries.append(('tree', name, f"{path}/{name}", ''))
-        if type == 'blob':
+        elif type == 'blob':
             file_path = f"{path}/{name}"
 
             # 120000 permission means it's a symlink
             if perm == '120000':
-                dir_name = os.path.dirname(path)
-                rel_path = q.query('file', tag, file_path)
+                dir_path = path if path.endswith('/') else path + '/'
+                link_contents = q.get_file_raw(tag, file_path)
+                link_target_path = os.path.abspath(dir_path + link_contents)
 
-                if dir_name != '/':
-                    dir_name += '/'
-
-                file_path = os.path.abspath(dir_name + rel_path)
-                name = name + ' -> ' + file_path
-
-            dir_entries.append(('blob', name, file_path, f"{size} bytes"))
+                dir_entries.append(('symlink', name, link_target_path, size))
+            else:
+                dir_entries.append(('blob', name, file_path, size))
 
     return dir_entries
 
@@ -357,8 +359,14 @@ def generate_source_page(q, basedir, parsed_path):
     type = q.query('type', tag, path)
 
     if type == 'tree':
+        back_path = os.path.dirname(path[:-1])
+        if back_path == '/':
+            back_path = ''
+
         template_ctx = {
             'dir_entries': get_directory_entries(q, tag, path),
+            'current_path': path,
+            'back_path': back_path,
         }
         template = environment.get_template('tree.html')
     elif type == 'blob':
