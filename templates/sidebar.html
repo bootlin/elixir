@@ -1,0 +1,47 @@
+<aside class="sidebar" id="menu">
+    <select class="select-projects" onchange="window.location.href=this.value">
+    {%- for p in projects %}
+        <option {% if p == project -%} selected {%- endif %} value="/{{p}}/latest/source">{{ p }}</option>
+    {%- endfor %}
+    </select>
+    <nav>
+        <h3 class="screenreader">Projects</h3>
+        <ul class="projects">
+        {%- for p in projects %}
+            <li {%- if p == project %} class="active" {% endif -%}><a href="/{{p}}/latest/source">{{ p }}</a></li>
+        {%- endfor %}
+        </ul>
+
+        <h3 class="screenreader">Versions</h3>
+        <ul class="versions">
+        {% for topmenu, submenus in versions.items() %}
+            <li>
+                <span>{{ topmenu }}</span>
+                <ul>
+                {% for submenu, tags in submenus.items() %}
+                    {% if submenu == tags[0] and tags|length == 1 %}
+                        <li class="li-link {{ 'active' if submenu == current_tag else '' }}">
+                            <a href="{{ submenu }}/{{ url }}">{{ submenu }}</a>
+                        </li>
+                    {% else %}
+                        <li>
+                            <span>{{ submenu }}</span>
+                            <ul>
+                                {% for _tag in tags %}
+                                    <li class="li-link {{ 'active' if _tag == current_tag else '' }}">
+                                        <a href="{{ _tag | urlencode | replace('/', '%2F') }}/{{ url }}">
+                                            {{ _tag }}
+                                        </a>
+                                    </li>
+                                {% endfor %}
+                            </ul>
+                        </li>
+                    {% endif %}
+                {% endfor %}
+                </ul>
+            </li>
+        {% endfor %}
+        </ul>
+
+    </nav>
+</aside>

@@ -3,13 +3,13 @@
     <head>
         <meta charset="utf-8">
         <meta http-equiv="x-ua-compatible" content="ie=edge">
-        <title>{{title}}</title>
+        <title>{{ title }}</title>
         <meta name="description" content="Elixir Cross Referencer - Explore source code in your browser - Particularly useful for the Linux kernel and other low-level projects in C/C++ (bootloaders, C libraries...)">
         <meta name="viewport" content="user-scalable=no, initial-scale=1, maximum-scale=1, minimum-scale=1" />
         <link rel="stylesheet" href="/style.css?v=5">
         <link rel="stylesheet" href="/banner.css">
         <link rel="stylesheet" href="/autocomplete.css">
-        <base href="{{baseurl}}"/>
+        <base href="{{ baseurl }}"/>
         <script>document.documentElement.className = 'js'</script>
     </head>
     <body>
@@ -18,30 +18,7 @@
         <![endif]-->
         <div class="wrapper">
             {% include 'header.html' %}
-            <header class="topbar">
-                <div class="breadcrumb">
-                    <a href="{{version}}/{{url}}#menu" class="open-menu icon-menu screenreader" title="Open Menu">Open Menu</a>
-                    <a class="project" href="{{ version }}/source">/</a>
-                    {% for name, url in breadcrumb_links %}
-                        <a href="{{ url }}">{{ name }}</a>
-                        {{ '/' if not loop.last else '' }}
-                    {% endfor %}
-                </div>
-                <div class="search">
-                    <form  method="post" action="{{version}}/ident">
-                        <select name="f" title="Restricts search to specific file families">
-                            <option value="A" {% if family=="A" %} selected="selected"{% endif %}>All symbols</option>
-                            <option value="C" {% if family=="C" %} selected="selected"{% endif %}>C/CPP/ASM</option>
-                            <option value="K" {% if family=="K" %} selected="selected"{% endif %}>Kconfig</option>
-                            <option value="D" {% if family=="D" %} selected="selected"{% endif %}>Devicetree</option>
-                            <option value="B" {% if family=="B" %} selected="selected"{% endif %}>DT compatible</option>
-                        </select>
-
-                        <input placeholder="Search Identifier" type="text" id="search-input" name="i" value="{{ident}}" autofocus/>
-                        <button class="icon-search"><span class="screenreader">Go get it</span></button>
-                    </form>
-                </div>
-            </header>
+            {% include 'topbar.html' %}
             <main>
                 <div class="workspace">
                     <div id="reference-popup-wrapper">
@@ -51,60 +28,16 @@
                     {% block main %}
                     {% endblock %}
                 </div>
-                <aside class="sidebar" id="menu">
-                    <select class="select-projects" onchange="window.location.href=this.value">
-                        {%- for p in projects %}
-                            <option{% if p == project %} selected{% endif %} value="/{{p}}/latest/source">{{p}}</option>
-                        {%- endfor %}
-                    </select>
-                    <nav>
-                        <h3 class="screenreader">Projects</h3>
-                        <ul class="projects">
-                            {%- for p in projects %}
-                            <li{% if p == project %} class="active"{% endif %}><a href="/{{p}}/latest/source">{{p}}</a></li>
-                            {%- endfor %}
-                        </ul>
-                        <h3 class="screenreader">Versions</h3>
-                        <ul class="versions">
-                        {% for topmenu, submenus in versions.items() %}
-                            <li>
-                                <span>{{ topmenu }}</span>
-                                <ul>
-                                {% for submenu, tags in submenus.items() %}
-                                    {% if submenu == tags[0] and tags|length == 1 %}
-                                        <li class="li-link {{ 'active' if submenu == current_tag else '' }}">
-                                            <a href="{{ submenu }}/{{ url }}">{{ submenu }}</a>
-                                        </li>
-                                    {% else %}
-                                        <li>
-                                            <span>{{ submenu }}</span>
-                                            <ul>
-                                                {% for _tag in tags %}
-                                                    <li class="li-link {{ 'active' if _tag == current_tag else '' }}">
-                                                        <a href="{{ _tag | urlencode | replace('/', '%2F') }}/{{ url }}">
-                                                            {{ _tag }}
-                                                        </a>
-                                                    </li>
-                                                {% endfor %}
-                                            </ul>
-                                        </li>
-                                    {% endif %}
-                                {% endfor %}
-                                </ul>
-                            </li>
-                        {% endfor %}
-                        </ul>
-                    </nav>
-                </aside>
+                {% include "sidebar.html" %}
             </main>
             <footer class="footer">
-                <span class="version"><a href="{{version}}/source">{{project}}</a> <em class="icon-tag">{{tag}}</em></span>
-                <a title="Go to top of the page" class="go-top icon-up screenreader" href="{{version}}/{{url}}#">Top</a>
+                <span class="version"><a href="{{ version }}/source">{{ project }}</a> <em class="icon-tag">{{ tag }}</em></span>
+                <a title="Go to top of the page" class="go-top icon-up screenreader" href="{{ version }}/{{ url }}#">Top</a>
                 <span class="poweredby">powered by <a target="_blank" href="https://github.com/bootlin/elixir">Elixir 2.2</a></span>
             </footer>
         </div>
         <script src="/script.js?v=3"></script>
         <script src="/dynamic-references.js?v=3"></script>
-        <script src="/autocomplete.js"  project="{{project}}"></script>
+        <script src="/autocomplete.js" project="{{ project }}"></script>
     </body>
 </html>
