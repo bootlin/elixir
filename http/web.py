@@ -28,7 +28,7 @@ import cgitb
 import os
 import re
 import sys
-from collections import namedtuple
+from collections import OrderedDict, namedtuple
 from io import StringIO
 from re import search, sub
 from urllib import parse
@@ -460,24 +460,17 @@ def generate_symbol_source(symbol, version, concise):
             print('</ul>')
 
 
-def generate_reference_list(symbols, version, types_count=None, count_separator_title=''):
-    previous_type = ''
+def generate_reference_list(title, symbols_by_type, version):
+    for type, symbols in symbols_by_type.items():
+        if type == '_unknown':
+            print('<h2>'+title+' in '+str(len(symbols))+' files:</h2>')
+        else:
+            print('<h2>'+title+' in '+str(len(symbols))+' files as a '+type+':</h2>')
 
-    if types_count is None:
         print('<ul>')
-
-    for symbol in symbols:
-        if types_count is not None:
-            if symbol.type != previous_type:
-                if previous_type != '':
-                    print('</ul>')
-                print('<h2>'+count_separator_title+' in '+str(types_count[symbol.type])+' files as a '+symbol.type+':</h2>')
-                print('<ul>')
-                previous_type = symbol.type
-
-        generate_symbol_source(symbol, version, len(symbols) > 100)
-
-    print('</ul>')
+        for symbol in symbols:
+            generate_symbol_source(symbol, version, len(symbols) > 100)
+        print('</ul>')
 
 # Generates response (status code and optionally HTML) of the `ident` route
 # q: Query object
@@ -497,26 +490,23 @@ def generate_ident_page(q, basedir, parsed_path):
     print('<div class="lxrident">')
     if len(symbol_definitions) or len(symbol_references):
         if len(symbol_definitions):
-            types_count = {}
+            defs_by_type = OrderedDict({})
 
-            # Count occurrences of each type before printing
             for symbol_definition in symbol_definitions:
-                if symbol_definition.type in types_count:
-                        types_count[symbol_definition.type] += 1
+                if symbol_definition.type in defs_by_type:
+                    defs_by_type[symbol_definition.type].append(symbol_definition)
                 else:
-                        types_count[symbol_definition.type] = 1
+                    defs_by_type[symbol_definition.type] = [symbol_definition]
 
-            generate_reference_list(symbol_definitions, version, types_count, 'Defined')
+            generate_reference_list('Defined', defs_by_type, version)
         else:
             print('<h2>No definitions found in the database</h2>')
 
         if len(symbol_doccomments):
-            print('<h2> Documented in '+str(len(symbol_doccomments))+' files:</h2>')
-            generate_reference_list(symbol_doccomments, version)
+            generate_reference_list('Documented', {'_unknown': symbol_doccomments}, version)
 
         if len(symbol_references):
-            print('<h2> Referenced in '+str(len(symbol_references))+' files:</h2>')
-            generate_reference_list(symbol_references, version)
+            generate_reference_list('Referenced', {'_unknown': symbol_references}, version)
         else:
             print('<h2>No references found in the database</h2>')
 
