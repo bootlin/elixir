@@ -422,6 +422,62 @@ def generate_source_page(q, basedir, parsed_path):
     template = environment.get_template('layout.html')
     return (status, template.render(data))
 
+def generate_symbol_source(symbol, version, concise):
+    if type(symbol.line) is str:
+        ln = symbol.line.split(',')
+    else:
+        ln = str(symbol.line).split(',')
+
+    if len(ln) == 1:
+        n = ln[0]
+        print('<li><a href="{v}/source/{f}#L{n}"><strong>{f}</strong>, line {n}'.format(
+            v=version, f=symbol.path, n=n
+        ))
+        if symbol.type is not None:
+            print(' <em>(as a {t})</em>'.format(t=symbol.type))
+        print('</a>')
+    else:
+        if concise:
+            n = len(ln)
+            print('<li><a href="{v}/source/{f}#L{l}"><strong>{f}</strong>, <em>{n} times</em>'.format(
+                v=version, f=symbol.path, n=n, l=ln[0]
+            ))
+            if symbol.type is not None:
+                print(' <em>(as a {t})</em>'.format(t=symbol.type))
+            print('</a>')
+        else:
+            print('<li><a href="{v}/source/{f}#L{n}"><strong>{f}</strong>'.format(
+                v=version, f=symbol.path, n=ln[0]
+            ))
+            if symbol.type is not None:
+                print(' <em>(as a {t})</em>'.format(t=symbol.type))
+            print('</a>')
+            print('<ul>')
+            for n in ln:
+                print('<li><a href="{v}/source/{f}#L{n}">line {n}</a>'.format(
+                    v=version, f=symbol.path, n=n
+                ))
+            print('</ul>')
+
+
+def generate_reference_list(symbols, version, types_count=None, count_separator_title=''):
+    previous_type = ''
+
+    if types_count is None:
+        print('<ul>')
+
+    for symbol in symbols:
+        if types_count is not None:
+            if symbol.type != previous_type:
+                if previous_type != '':
+                    print('</ul>')
+                print('<h2>'+count_separator_title+' in '+str(types_count[symbol.type])+' files as a '+symbol.type+':</h2>')
+                print('<ul>')
+                previous_type = symbol.type
+
+        generate_symbol_source(symbol, version, len(symbols) > 100)
+
+    print('</ul>')
 
 # Generates response (status code and optionally HTML) of the `ident` route
 # q: Query object
@@ -441,7 +497,6 @@ def generate_ident_page(q, basedir, parsed_path):
     print('<div class="lxrident">')
     if len(symbol_definitions) or len(symbol_references):
         if len(symbol_definitions):
-            previous_type = ''
             types_count = {}
 
             # Count occurrences of each type before printing
@@ -451,97 +506,20 @@ def generate_ident_page(q, basedir, parsed_path):
                 else:
                         types_count[symbol_definition.type] = 1
 
-            for symbol_definition in symbol_definitions:
-                if symbol_definition.type != previous_type:
-                    if previous_type != '':
-                        print('</ul>')
-                    print('<h2>Defined in '+str(types_count[symbol_definition.type])+' files as a '+symbol_definition.type+':</h2>')
-                    print('<ul>')
-                    previous_type = symbol_definition.type
-
-                ln = str(symbol_definition.line).split(',')
-                if len(ln) == 1:
-                    n = ln[0]
-                    print('<li><a href="{v}/source/{f}#L{n}"><strong>{f}</strong>, line {n} <em>(as a {t})</em></a>'.format(
-                        v=version, f=symbol_definition.path, n=n, t=symbol_definition.type
-                    ))
-                else:
-                    if len(symbol_definitions) > 100:    # Concise display
-                        n = len(ln)
-                        print('<li><a href="{v}/source/{f}#L{l}"><strong>{f}</strong>, <em>{n} times</em> <em>(as a {t})</em></a>'.format(
-                            v=version, f=symbol_definition.path, n=n, t=symbol_definition.type, l=ln[0]
-                        ))
-                    else:    # Verbose display
-                        print('<li><a href="{v}/source/{f}#L{n}"><strong>{f}</strong> <em>(as a {t})</em></a>'.format(
-                            v=version, f=symbol_definition.path, n=ln[0], t=symbol_definition.type
-                        ))
-                        print('<ul>')
-                        for n in ln:
-                            print('<li><a href="{v}/source/{f}#L{n}">line {n}</a>'.format(
-                                v=version, f=symbol_definition.path, n=n
-                            ))
-                        print('</ul>')
-            print('</ul>')
+            generate_reference_list(symbol_definitions, version, types_count, 'Defined')
         else:
             print('<h2>No definitions found in the database</h2>')
 
         if len(symbol_doccomments):
-            print('<h2>Documented in '+str(len(symbol_doccomments))+' files:</h2>')
-            print('<ul>')
-            for symbol_doccomment in symbol_doccomments:
-                ln = symbol_doccomment.line.split(',')
-                if len(ln) == 1:
-                    n = ln[0]
-                    print('<li><a href="{v}/source/{f}#L{n}"><strong>{f}</strong>, line {n}</a>'.format(
-                        v=version, f=symbol_doccomment.path, n=n
-                    ))
-                else:
-                    if len(symbol_doccomments) > 100:    # Concise display
-                        n = len(ln)
-                        print('<li><a href="{v}/source/{f}#L{l}"><strong>{f}</strong>, <em>{n} times</em></a>'.format(
-                            v=version, f=symbol_doccomment.path, n=n, l=ln[0]
-                        ))
-                    else:    # Verbose display
-                        print('<li><a href="{v}/source/{f}#L{n}"><strong>{f}</strong></a>'.format(
-                            v=version, f=symbol_doccomment.path, n=ln[0]
-                        ))
-                        print('<ul>')
-                        for n in ln:
-                            print('<li><a href="{v}/source/{f}#L{n}">line {n}</a>'.format(
-                                v=version, f=symbol_doccomment.path, n=n
-                            ))
-                        print('</ul>')
-            print('</ul>')
+            print('<h2> Documented in '+str(len(symbol_doccomments))+' files:</h2>')
+            generate_reference_list(symbol_doccomments, version)
 
         if len(symbol_references):
-            print('<h2>Referenced in '+str(len(symbol_references))+' files:</h2>')
-            print('<ul>')
-            for symbol_reference in symbol_references:
-                ln = symbol_reference.line.split(',')
-                if len(ln) == 1:
-                    n = ln[0]
-                    print('<li><a href="{v}/source/{f}#L{n}"><strong>{f}</strong>, line {n}</a>'.format(
-                        v=version, f=symbol_reference.path, n=n
-                    ))
-                else:
-                    if len(symbol_references) > 100:    # Concise display
-                        n = len(ln)
-                        print('<li><a href="{v}/source/{f}#L{l}"><strong>{f}</strong>, <em>{n} times</em></a>'.format(
-                            v=version, f=symbol_reference.path, n=n, l=ln[0]
-                        ))
-                    else:    # Verbose display
-                        print('<li><a href="{v}/source/{f}#L{n}"><strong>{f}</strong></a>'.format(
-                            v=version, f=symbol_reference.path, n=ln[0]
-                        ))
-                        print('<ul>')
-                        for n in ln:
-                            print('<li><a href="{v}/source/{f}#L{n}">line {n}</a>'.format(
-                                v=version, f=symbol_reference.path, n=n
-                            ))
-                        print('</ul>')
-            print('</ul>')
+            print('<h2> Referenced in '+str(len(symbol_references))+' files:</h2>')
+            generate_reference_list(symbol_references, version)
         else:
             print('<h2>No references found in the database</h2>')
+
     else:
         if ident != '':
             print('<h2>Identifier not used</h2>')
