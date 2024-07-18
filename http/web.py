@@ -450,13 +450,30 @@ def generate_source_page(q, basedir, parsed_path):
 
     return (status, template.render(data))
 
+# Represents line in a file with URL to that line
+LineWithURL = namedtuple('LineWithURL', 'lineno, url')
 
-# TODO this should be a responsibility of Query
-def convert_symbol_lines(symbol):
+# Represents a symbol occurrence to be rendered by ident template
+# type: type of the symbol
+# path: path of the file that contains the symbol
+# line: list of LineWithURL
+SymbolEntry = namedtuple('SymbolEntry', 'type, path, lines')
+
+# Converts SymbolInstance into SymbolEntry
+# path of SymbolInstance will be appended to base_url
+def symbol_instance_to_entry(base_url, symbol):
+    # TODO this should be a responsibility of Query
     if type(symbol.line) is str:
-        return SymbolInstance(symbol.path, symbol.line.split(','), symbol.type)
+        line_numbers = symbol.line.split(',')
     else:
-        return SymbolInstance(symbol.path, [str(symbol.line)], symbol.type)
+        line_numbers = [symbol.line]
+
+    lines = [
+        LineWithURL(l, f'{ base_url }/{ symbol.path }#L{ l }')
+        for l in line_numbers
+    ]
+
+    return SymbolEntry(symbol.type, symbol.path, lines)
 
 # Generates response (status code and optionally HTML) of the `ident` route
 # q: Query object
@@ -469,6 +486,8 @@ def generate_ident_page(q, basedir, parsed_path):
     version = parsed_path.version
     tag = parse.unquote(version)
     family = parsed_path.family
+    project = parsed_path.project
+    source_base_url = f'/{ project }/{ version }/source'
 
     symbol_definitions, symbol_references, symbol_doccomments = q.query('ident', tag, ident, family)
 
@@ -479,11 +498,11 @@ def generate_ident_page(q, basedir, parsed_path):
             defs_by_type = OrderedDict({})
 
             # TODO this should be a responsibility of Query
-            for symbol_definition in symbol_definitions:
-                if symbol_definition.type in defs_by_type:
-                    defs_by_type[symbol_definition.type].append(convert_symbol_lines(symbol_definition))
+            for sym in symbol_definitions:
+                if sym.type not in defs_by_type:
+                    defs_by_type[sym.type] = [symbol_instance_to_entry(source_base_url, sym)]
                 else:
-                    defs_by_type[symbol_definition.type] = [convert_symbol_lines(symbol_definition)]
+                    defs_by_type[sym.type].append(symbol_instance_to_entry(source_base_url, sym))
 
             symbol_sections.append({
                 'title': 'Defined',
@@ -497,13 +516,13 @@ def generate_ident_page(q, basedir, parsed_path):
         if len(symbol_doccomments):
             symbol_sections.append({
                 'title': 'Documented',
-                'symbols': {'_unknown': [convert_symbol_lines(sym) for sym in symbol_doccomments]},
+                'symbols': {'_unknown': [symbol_instance_to_entry(source_base_url, sym) for sym in symbol_doccomments]},
             })
 
         if len(symbol_references):
             symbol_sections.append({
                 'title': 'Referenced',
-                'symbols': {'_unknown': [convert_symbol_lines(sym) for sym in symbol_references]},
+                'symbols': {'_unknown': [symbol_instance_to_entry(source_base_url, sym) for sym in symbol_references]},
             })
         else:
             symbol_sections.append({
@@ -513,9 +532,6 @@ def generate_ident_page(q, basedir, parsed_path):
     else:
         if ident != '':
             status = 404
-
-    # Create template context
-    project = parsed_path.project
 
     title_suffix = project.capitalize()+' source code ('+tag+') - Bootlin'
 

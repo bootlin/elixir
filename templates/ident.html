@@ -12,21 +12,21 @@
                 <ul>
                 {% for symbol in symbols %}
                     <li>
-                    <a href="{{source_base_url}}/{{ symbol.path }}#L{{ symbol.line[0] }}">
+                    <a href="{{ symbol.lines[0].url }}">
                         <strong>{{ symbol.path }}</strong>
-                        {%- if symbol.line|length == 1 %},
-                            line {{ symbol.line[0] }}
+                        {%- if symbol.lines|length == 1 %},
+                            line {{ symbol.lines[0].lineno }}
                         {%- elif symbols|length > 100 %},
-                            <em>{{ symbol.line|length }} times</em>
+                            <em>{{ symbol.lines|length }} times</em>
                         {% endif %}
                         {% if symbol.type is not none %}
                             <em>(as a {{ symbol.type }})</em>
                         {% endif %}
                     </a>
-                    {% if symbol.line|length > 1 and symbols|length <= 100 %}
+                    {% if symbol.lines|length > 1 and symbols|length <= 100 %}
                         <ul>
-                        {% for l in symbol.line %}
-                            <li><a href="{{ source_base_url }}/{{ symbol.path }}#L{{ l }}">line {{ l }}</a>
+                        {% for line, url in symbol.lines %}
+                            <li><a href="{{ url }}">line {{ line }}</a>
                         {% endfor %}
                         </ul>
                     {% endif %}
