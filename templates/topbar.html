@@ -10,14 +10,15 @@
     <div class="search">
         <form method="post" action="{{ ident_base_url }}">
             <select name="f" title="Restricts search to specific file families">
-                <option value="A" {{ 'selected' if family == 'A' or family is not defined else '' }}>All symbols</option>
-                <option value="C" {{ 'selected' if family == 'C' else '' }}>C/CPP/ASM</option>
-                <option value="K" {{ 'selected' if family == 'K' else '' }}>Kconfig</option>
-                <option value="D" {{ 'selected' if family == 'D' else '' }}>Devicetree</option>
-                <option value="B" {{ 'selected' if family == 'B' else '' }}>DT compatible</option>
+            {% for id, description in topbar_families.items() %}
+                <option value="{{ id }}" {{ 'selected' if (current_family == id or current_family is not defined) else '' }}>
+                {{ description }}
+                </option>
+            {% endfor %}
             </select>
 
-            <input placeholder="Search Identifier" type="text" id="search-input" name="i" value="{{ ident|default('') }}" autofocus/>
+            <input placeholder="Search Identifier" type="text" id="search-input" name="i" 
+                value="{{ searched_ident|default('') }}" autofocus/>
             <button class="icon-search"><span class="screenreader">Go get it</span></button>
         </form>
     </div>
