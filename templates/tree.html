@@ -7,14 +7,14 @@
         <tbody>
         {% if current_path != '' %}
             <tr>
-                <td><a class="tree-icon icon-back" href="/{{ current_project }}/{{ current_tag_urlencoded }}/source{{ back_path }}">Parent directory</a></td>
+                <td><a class="tree-icon icon-back" href="{{ source_base_url }}{{ back_path }}">Parent directory</a></td>
             </tr>
         {% endif %}
         {% for type, name, path, size in dir_entries %}
             <tr>
                 <td>
                     <a class="tree-icon icon-{{- type if type != 'symlink' else 'blob' -}}"
-                       href="/{{ current_project }}/{{ current_tag_urlencoded }}/source{{ path }}">
+                       href="{{ source_base_url }}{{ path }}">
                     {% if type == 'symlink' %}
                         {{ name }} -> {{  path }}
                     {% else %}
@@ -24,7 +24,7 @@
                 </td>
                 <td>
                 {% if size is not none %}
-                    <a tabindex="-1" class="size" href="/{{ current_project }}/{{ current_tag_urlencoded }}/source{{ path }}">
+                    <a tabindex="-1" class="size" href="{{ source_base_url }}{{ path }}">
                         {{ size }} bytes
                     </a>
                 {% endif %}
