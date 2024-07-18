@@ -214,6 +214,14 @@ def get_directories(basedir):
             directories.append(filename)
     return sorted(directories)
 
+# Tuple of project name and URL to root of that project
+# Used to render project list
+ProjectEntry = namedtuple('ProjectEntry', 'name, url')
+
+# Returns a list of ProjectEntry tuples of projects stored in directory basedir
+def get_projects(basedir):
+    return [ProjectEntry(p, f"/{p}/latest/source") for p in get_directories(basedir)]
+
 # Tuple of version name and URL to chosen resource with that version
 # Used to render version list in the sidebar
 VersionEntry = namedtuple('VersionEntry', 'version, url')
@@ -349,7 +357,7 @@ def get_directory_entries(q, tag, path):
         type, name, size, perm = l.split(' ')
 
         if type == 'tree':
-            dir_entries.append(('tree', name, f"{path}/{name}", ''))
+            dir_entries.append(('tree', name, f"{path}/{name}", None))
         elif type == 'blob':
             file_path = f"{path}/{name}"
 
@@ -435,7 +443,7 @@ def generate_source_page(q, basedir, parsed_path):
         'title': title,
 
         'versions': get_versions(q.query('versions'), lambda v: stringify_source_path(parsed_path._replace(version=parse.quote(v, safe='')))),
-        'projects': get_directories(basedir),
+        'projects': get_projects(basedir),
     }
 
     return (status, template.render(data))
@@ -519,7 +527,7 @@ def generate_ident_page(q, basedir, parsed_path):
 
         'title': ident+' identifier - '+title_suffix,
 
-        'projects': get_directories(basedir),
+        'projects': get_projects(basedir),
         'versions': get_versions(q.query('versions'), lambda v: stringify_ident_path(parsed_path._replace(version=parse.quote(v, safe='')))),
 
         'symbol_sections': symbol_sections,

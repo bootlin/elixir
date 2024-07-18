@@ -1,14 +1,14 @@
 <aside class="sidebar" id="menu">
     <select class="select-projects" onchange="window.location.href=this.value">
     {%- for p in projects %}
-        <option {% if p == current_project -%} selected {%- endif %} value="/{{p}}/latest/source">{{ p }}</option>
+        <option {% if p.name == current_project -%} selected {%- endif %} value="{{ p.url }}">{{ p.name }}</option>
     {%- endfor %}
     </select>
     <nav>
         <h3 class="screenreader">Projects</h3>
         <ul class="projects">
         {%- for p in projects %}
-            <li {%- if p == current_project %} class="active" {% endif -%}><a href="/{{p}}/latest/source">{{ p }}</a></li>
+            <li {%- if p.name == current_project %} class="active" {% endif -%}><a href="{{ p.url }}">{{ p.name }}</a></li>
         {%- endfor %}
         </ul>
 
