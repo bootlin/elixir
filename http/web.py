@@ -406,20 +406,17 @@ def generate_source_page(q, basedir, parsed_path):
         **template_ctx,
 
         'baseurl': '/' + project + '/',
-        'tag': tag,
-        'version': version,
         'url': url,
-        'project': project,
-        'projects': get_directories(basedir),
-        'ident': '',
-        'family': 'A',
+
+        'current_project': project,
+        'current_tag': tag,
+        'current_tag_urlencoded': version,
 
         'breadcrumb_links': breadcrumb_links,
         'title': title,
 
         'versions': q.query('versions'),
-        'url': url,
-        'current_tag': tag,
+        'projects': get_directories(basedir),
     }
 
     return (status, template.render(data))
@@ -496,19 +493,19 @@ def generate_ident_page(q, basedir, parsed_path):
 
     data = {
         'baseurl': '/' + project + '/',
-        'tag': tag,
-        'version': version,
         'url': url,
-        'project': project,
-        'projects': get_directories(basedir),
+
+        'current_project': project,
+        'current_tag': tag,
+        'current_tag_urlencoded': version,
+
         'ident': ident,
         'family': family,
 
         'title': ident+' identifier - '+title_suffix,
 
+        'projects': get_directories(basedir),
         'versions': q.query('versions'),
-        'url': url,
-        'current_tag': tag,
 
         'symbol_sections': symbol_sections,
     }

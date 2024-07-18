@@ -31,13 +31,19 @@
                 {% include "sidebar.html" %}
             </main>
             <footer class="footer">
-                <span class="version"><a href="{{ version }}/source">{{ project }}</a> <em class="icon-tag">{{ tag }}</em></span>
-                <a title="Go to top of the page" class="go-top icon-up screenreader" href="{{ version }}/{{ url }}#">Top</a>
+                <span class="version">
+                    <a href="{{ current_tag_urlencoded }}/source">{{ current_project }}</a>
+                    <em class="icon-tag">{{ current_tag }}</em>
+                </span>
+                <a title="Go to top of the page" class="go-top icon-up screenreader"
+                    href="{{ current_tag_urlencoded }}/{{ url }}#">
+                    Top
+                </a>
                 <span class="poweredby">powered by <a target="_blank" href="https://github.com/bootlin/elixir">Elixir 2.2</a></span>
             </footer>
         </div>
         <script src="/script.js?v=3"></script>
         <script src="/dynamic-references.js?v=3"></script>
-        <script src="/autocomplete.js" project="{{ project }}"></script>
+        <script src="/autocomplete.js" project="{{ current_project }}"></script>
     </body>
 </html>
