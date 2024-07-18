@@ -28,7 +28,7 @@ function identUrl(project, ident, version, family) {
   ]
 */
 
-function generateSymbolDefinitionsHTML(symbolDefinitions, version) {
+function generateSymbolDefinitionsHTML(symbolDefinitions, project, version) {
   let result = "";
   let typesCount = {};
   let previous_type = "";
@@ -57,16 +57,16 @@ function generateSymbolDefinitionsHTML(symbolDefinitions, version) {
     let ln = sd.line.toString().split(',');
     if (ln.length == 1) {
       let n = ln[0];
-      result += `<li><a href="${version}/source/${sd.path}#L${n}"><strong>${sd.path}</strong>, line ${n} <em>(as a ${sd.type})</em></a>`;
+      result += `<li><a href="/${project}/${version}/source/${sd.path}#L${n}"><strong>${sd.path}</strong>, line ${n} <em>(as a ${sd.type})</em></a>`;
     } else {
       if (symbolDefinitions.length > 100) {
         let n = ln.length;
-        result += `<li><a href="${version}/source/${sd.path}#L${ln[0]}"><strong>${sd.path}</strong>, <em>${n} times</em> <em>(as a ${sd.type})</em></a>`;
+        result += `<li><a href="/${project}/${version}/source/${sd.path}#L${ln[0]}"><strong>${sd.path}</strong>, <em>${n} times</em> <em>(as a ${sd.type})</em></a>`;
       } else {
-        result += `<li><a href="${version}/source/${sd.path}#L${ln[0]}"><strong>${sd.path}</strong> <em>(as a ${sd.type})</em></a>`;
+        result += `<li><a href="/${project}/${version}/source/${sd.path}#L${ln[0]}"><strong>${sd.path}</strong> <em>(as a ${sd.type})</em></a>`;
         result += '<ul>';
         for(let n of ln) {
-          result += `<li><a href="${version}/source/${sd.path}#L${n}">line ${n}</a></li>`;
+          result += `<li><a href="/${project}/${version}/source/${sd.path}#L${n}">line ${n}</a></li>`;
         }
         result += '</ul>';
       }
@@ -77,7 +77,7 @@ function generateSymbolDefinitionsHTML(symbolDefinitions, version) {
   return result;
 }
 
-function generateSymbolReferencesHTML(symbolReferences, version) {
+function generateSymbolReferencesHTML(symbolReferences, project, version) {
   let result = "";
 
   if(symbolReferences.length == 0) {
@@ -90,16 +90,16 @@ function generateSymbolReferencesHTML(symbolReferences, version) {
     let ln = sr.line.split(',');
     if (ln.length == 1) {
       let n = ln[0];
-      result += `<li><a href="${version}/source/${sr.path}#L${n}"><strong>${sr.path}</strong>, line ${n}</a>`;
+      result += `<li><a href="/${project}/${version}/source/${sr.path}#L${n}"><strong>${sr.path}</strong>, line ${n}</a>`;
     } else {
       if(symbolReferences.length > 100) {
         let n = ln.length;
-        result += `<li><a href="${version}/source/${sr.path}#L${ln[0]}"><strong>${sr.path}</strong>, <em>${n} times</em></a>`;
+        result += `<li><a href="/${project}/${version}/source/${sr.path}#L${ln[0]}"><strong>${sr.path}</strong>, <em>${n} times</em></a>`;
       } else {
-        result += `<li><a href="${version}/source/${sr.path}#L${ln[0]}"><strong>${sr.path}</strong></a>`;
+        result += `<li><a href="/${project}/${version}/source/${sr.path}#L${ln[0]}"><strong>${sr.path}</strong></a>`;
         result += '<ul>'
         for(let n of ln) {
-          result += `<li><a href="${version}/source/${sr.path}#L${n}">line ${n}</a>`
+          result += `<li><a href="/${project}/${version}/source/${sr.path}#L${n}">line ${n}</a>`
         }
         result += '</ul>'
       }
@@ -109,7 +109,7 @@ function generateSymbolReferencesHTML(symbolReferences, version) {
   return result;
 }
 
-function generateDocCommentsHTML(symbolDocComments, version) {
+function generateDocCommentsHTML(symbolDocComments, project, version) {
   let result = "";
   if (symbolDocComments.length == 0) {
     return result;
@@ -120,16 +120,16 @@ function generateDocCommentsHTML(symbolDocComments, version) {
     let ln = sd.line.split(',');
     if(ln.length == 1) {
       let n = ln[0];
-      result += `<li><a href="${version}/source/${sd.path}#L${n}"><strong>${sd.path}</strong>, line ${n}</a>`;
+      result += `<li><a href="/${project}/${version}/source/${sd.path}#L${n}"><strong>${sd.path}</strong>, line ${n}</a>`;
     } else {
       if(symbolDocComments.length > 100) {
         let n = ln.length;
-        result += `<li><a href="${version}/source/${sd.path}#L${ln[0]}"><strong>${sd.path}</strong>, <em>${n} times</em></a>`;
+        result += `<li><a href="/${project}/${version}/source/${sd.path}#L${ln[0]}"><strong>${sd.path}</strong>, <em>${n} times</em></a>`;
       } else {
-        result += `<li><a href="${version}/source/${sd.path}#L${ln[0]}"><strong>${sd.path}</strong></a>`;
+        result += `<li><a href="/${project}/${version}/source/${sd.path}#L${ln[0]}"><strong>${sd.path}</strong></a>`;
         result += '<ul>';
         for(let n of ln) {
-          result += `<li><a href="${version}/source/${sd.path}#L${n}">line ${n}</a>`;
+          result += `<li><a href="/${project}/${version}/source/${sd.path}#L${n}">line ${n}</a>`;
         }
         result += '</ul>';
       }
@@ -139,14 +139,14 @@ function generateDocCommentsHTML(symbolDocComments, version) {
   return result;
 }
 
-function generateReferencesHTML(data, version) {
+function generateReferencesHTML(data, project, version) {
   let symbolDefinitions = data["definitions"];
   let symbolReferences = data["references"];
   let symbolDocumentations = data["documentations"];
   return '<div class="lxrident">' +
-    generateSymbolDefinitionsHTML(symbolDefinitions, version) +
-    generateDocCommentsHTML(symbolDocumentations, version) +
-    generateSymbolReferencesHTML(symbolReferences, version) +
+    generateSymbolDefinitionsHTML(symbolDefinitions, project, version) +
+    generateDocCommentsHTML(symbolDocumentations, project, version) +
+    generateSymbolReferencesHTML(symbolReferences, project, version) +
     '</div>';
 }
 
@@ -221,7 +221,7 @@ document.addEventListener("DOMContentLoaded", _ => {
           .then(r => r.json());
 
         if(currentPopupId == popupId) {
-          referencePopup.innerHTML = generateReferencesHTML(result, version);
+          referencePopup.innerHTML = generateReferencesHTML(result, project, version);
           showPopup(referencePopup, ev.target);
         }
       } catch(e) {
