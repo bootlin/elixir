@@ -434,23 +434,22 @@ def generate_source_page(q, basedir, parsed_path):
         path_temp += '/'+p
         breadcrumb_links.append((p, f'{ source_base_url }{ path_temp }'))
 
-    # Generate title
-    title_suffix = f'{ project.capitalize() } source code ({ version_unquoted }) - Bootlin'
-
     # Create titles like this:
     # root path: "Linux source code (v5.5.6) - Bootlin"
     # first level path: "arch - Linux source code (v5.5.6) - Bootlin"
     # deeper paths: "Makefile - arch/um/Makefile - Linux source code (v5.5.6) - Bootlin"
-    title = ('' if path == ''
-                     else path_split[0]+' - ' if len(path_split) == 1
-                     else path_split[-1]+' - '+'/'.join(path_split)+' - ') \
-            +title_suffix
+    if path == '':
+        title_path = ''
+    elif len(path_split) == 1:
+        title_path = f'{ path_split[0] } - '
+    else:
+        title_path = f'{ path_split[-1] } - { "/".join(path_split) } - '
 
     get_url_with_new_version = lambda v: stringify_source_path(parsed_path._replace(version=parse.quote(v, safe='')))
 
     # Create template context
     data = {
-        'title': title,
+        'title_path': title_path,
         'projects': get_projects(basedir),
         'versions': get_versions(q.query('versions'), get_url_with_new_version),
         'topbar_families': TOPBAR_FAMILIES,
@@ -551,12 +550,9 @@ def generate_ident_page(q, basedir, parsed_path):
         if ident != '':
             status = 404
 
-    title_suffix = f'{ project.capitalize() } source code { tag } - Bootlin'
-
     get_url_with_new_version = lambda v: stringify_ident_path(parsed_path._replace(version=parse.quote(v, safe='')))
 
     data = {
-        'title': f'{ ident } identifier - { title_suffix }',
         'projects': get_projects(basedir),
         'versions': get_versions(q.query('versions'), get_url_with_new_version),
         'topbar_families': TOPBAR_FAMILIES,
