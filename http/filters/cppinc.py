@@ -9,7 +9,7 @@ def keep_cppinc(m):
 
 def replace_cppinc(m):
     w = cppinc[decode_number(m.group(1)) - 1]
-    return '<a href="'+version+'/source'+os.path.dirname(path)+'/'+w+'">'+w+'</a>'
+    return '<a href="/'+project+'/'+version+'/source'+os.path.dirname(path)+'/'+w+'">'+w+'</a>'
 
 cppinc_filters = {
                 'case': 'extension',

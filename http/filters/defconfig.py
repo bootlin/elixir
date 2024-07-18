@@ -9,7 +9,7 @@ def keep_defconfigidents(m):
 def replace_defconfigidents(m):
     i = defconfigidents[decode_number(m.group(1)) - 1]
 
-    return '<a class="ident" href="'+version+'/K/ident/'+i+'">'+i+'</a>'
+    return '<a class="ident" href="/'+project+'/'+version+'/K/ident/'+i+'">'+i+'</a>'
 
 defconfigident_filters = {
                 'case': 'filename_extension',

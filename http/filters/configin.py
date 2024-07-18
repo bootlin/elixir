@@ -8,7 +8,7 @@ def keep_configin(m):
 
 def replace_configin(m):
     w = configin[decode_number(m.group(1)) - 1]
-    return '<a href="'+version+'/source/'+w+'">'+w+'</a>'
+    return '<a href="/'+project+'/'+version+'/source/'+w+'">'+w+'</a>'
 
 configin_filters = {
                 'case': 'filename',

@@ -9,7 +9,7 @@ def keep_dtscompC(m):
 def replace_dtscompC(m):
     i = dtscompC[decode_number(m.group(1)) - 1]
 
-    return '<a class="ident" href="'+version+'/B/ident/'+parse.quote(i)+'">'+i+'</a>'
+    return '<a class="ident" href="/'+project+'/'+version+'/B/ident/'+parse.quote(i)+'">'+i+'</a>'
 
 dtscompC_filters = {
                 'case': 'extension',

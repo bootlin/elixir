@@ -9,7 +9,7 @@ def keep_dtsi(m):
 
 def replace_dtsi(m):
     w = dtsi[decode_number(m.group(1)) - 1]
-    return '<a href="'+version+'/source'+os.path.dirname(path)+'/'+w+'">'+w+'</a>'
+    return '<a href="/'+project+'/'+version+'/source'+os.path.dirname(path)+'/'+w+'">'+w+'</a>'
 
 dtsi_filters = {
                 'case': 'extension',

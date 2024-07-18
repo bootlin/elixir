@@ -15,7 +15,7 @@ def replace_makefileo(m):
     if dir_name != '/':
         dir_name += '/'
 
-    return '<a href="'+version+'/source'+dir_name+w+'.c">'+w+'.o</a>'
+    return '<a href="/'+project+'/'+version+'/source'+dir_name+w+'.c">'+w+'.o</a>'
 
 makefileo_filters = {
                 'case': 'filename',

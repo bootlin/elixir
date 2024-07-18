@@ -21,7 +21,7 @@ def replace_makefilefile(m):
     if dir_name != '/':
         dir_name += '/'
 
-    return '<a href="'+version+'/source'+dir_name+w+'">'+w+'</a>'
+    return '<a href="/'+project+'/'+version+'/source'+dir_name+w+'">'+w+'</a>'
 
 makefilefile_filters = {
                 'case': 'filename',

@@ -8,7 +8,7 @@ def keep_kconfig(m):
 
 def replace_kconfig(m):
     w = kconfig[decode_number(m.group(1)) - 1]
-    return '<a href="'+version+'/source/'+w+'">'+w+'</a>'
+    return '<a href="/'+project+'/'+version+'/source/'+w+'">'+w+'</a>'
 
 kconfig_filters = {
                 'case': 'filename',

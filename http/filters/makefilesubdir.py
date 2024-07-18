@@ -15,7 +15,7 @@ def replace_makefilesubdir(m):
     if dir_name != '/':
         dir_name += '/'
 
-    return '<a href="'+version+'/source'+dir_name+w+'/Makefile">'+w+'</a>'
+    return '<a href="/'+project+'/'+version+'/source'+dir_name+w+'/Makefile">'+w+'</a>'
 
 makefilesubdir_filters = {
                 'case': 'filename',

@@ -11,7 +11,7 @@ def keep_makefilesrctree(m):
 
 def replace_makefilesrctree(m):
     w = makefilesrctree[decode_number(m.group(1)) - 1]
-    return '<a href="'+version+'/source'+'/'+w+'">'+'$(srctree)/'+w+'</a>'
+    return '<a href="/'+project+'/'+version+'/source'+'/'+w+'">'+'$(srctree)/'+w+'</a>'
 
 makefilesrctree_filters = {
                 'case': 'filename',

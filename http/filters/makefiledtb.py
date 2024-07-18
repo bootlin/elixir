@@ -15,7 +15,7 @@ def replace_makefiledtb(m):
     if dir_name != '/':
         dir_name += '/'
 
-    return '<a href="'+version+'/source'+dir_name+w+'.dts">'+w+'.dtb</a>'
+    return '<a href="/'+project+'/'+version+'/source'+dir_name+w+'.dts">'+w+'.dtb</a>'
 
 makefiledtb_filters = {
                 'case': 'filename',

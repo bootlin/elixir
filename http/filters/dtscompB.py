@@ -14,7 +14,7 @@ def keep_dtscompB(m):
 def replace_dtscompB(m):
     i = dtscompB[decode_number(m.group(1)) - 1]
 
-    return '<a class="ident" href="'+version+'/B/ident/'+parse.quote(i)+'">'+i+'</a>'
+    return '<a class="ident" href="/'+project+'/'+version+'/B/ident/'+parse.quote(i)+'">'+i+'</a>'
 
 dtscompB_filters = {
                 'case': 'path',

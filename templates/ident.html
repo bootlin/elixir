@@ -12,7 +12,7 @@
                 <ul>
                 {% for symbol in symbols %}
                     <li>
-                    <a href="{{ current_tag_urlencoded }}/source/{{ symbol.path }}#L{{ symbol.line[0] }}">
+                    <a href="/{{ current_project }}/{{ current_tag_urlencoded }}/source/{{ symbol.path }}#L{{ symbol.line[0] }}">
                         <strong>{{ symbol.path }}</strong>
                         {%- if symbol.line|length == 1 %},
                             line {{ symbol.line[0] }}
@@ -26,7 +26,7 @@
                     {% if symbol.line|length > 1 and symbols|length <= 100 %}
                         <ul>
                         {% for l in symbol.line %}
-                            <li><a href="{{ current_tag_urlencoded }}/source/{{ symbol.path }}#L{{ l }}">line {{ l }}</a>
+                            <li><a href="/{{ current_project }}/{{ current_tag_urlencoded }}/source/{{ symbol.path }}#L{{ l }}">line {{ l }}</a>
                         {% endfor %}
                         </ul>
                     {% endif %}

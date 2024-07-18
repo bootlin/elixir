@@ -21,7 +21,7 @@ def keep_cpppathinc(m):
 
 def replace_cpppathinc(m):
     w = cpppathinc[decode_number(m.group(1)) - 1]
-    return '<a href="'+version+'/source'+'/include/'+w+'">'+w+'</a>'
+    return '<a href="/'+project+'/'+version+'/source'+'/include/'+w+'">'+w+'</a>'
 
 cpppathinc_filters = {
                 'case': 'extension',
