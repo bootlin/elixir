@@ -342,34 +342,35 @@ def generate_source(q, path, version, tag, project):
 # type: either tree (directory), blob (file) or symlink
 # name: filename of the file
 # path: path of the file, path to the target in case of symlinks
+# url: absolute URL of the file
 # size: int, file size in bytes, None for directories and symlinks
-DirectoryEntry = namedtuple('DirectoryEntry', 'type, name, path, size')
+DirectoryEntry = namedtuple('DirectoryEntry', 'type, name, path, url, size')
 
-# Returns a list of DirectoryEntry objects with information about files in directory
-# q - Query object
-# tag - request repository tag
-# path - path to the directory
-def get_directory_entries(q, tag, path):
+# Returns a list of DirectoryEntry objects with information about files in a directory
+# q: Query object
+# base_url: file URLs will be created by appending file path to this URL. It shouldn't end with a slash
+# tag: requested repository tag
+# path: path to the directory in the repository
+def get_directory_entries(q, base_url, tag, path):
     dir_entries = []
     lines = q.query('dir', tag, path)
 
     for l in lines:
         type, name, size, perm = l.split(' ')
+        file_path = f"{ path }/{ name }"
 
         if type == 'tree':
-            dir_entries.append(('tree', name, f"{path}/{name}", None))
+            dir_entries.append(('tree', name, file_path, f"{ base_url }{ file_path }", None))
         elif type == 'blob':
-            file_path = f"{path}/{name}"
-
             # 120000 permission means it's a symlink
             if perm == '120000':
                 dir_path = path if path.endswith('/') else path + '/'
                 link_contents = q.get_file_raw(tag, file_path)
                 link_target_path = os.path.abspath(dir_path + link_contents)
 
-                dir_entries.append(('symlink', name, link_target_path, size))
+                dir_entries.append(('symlink', name, link_target_path, f"{ base_url }{ link_target_path }", size))
             else:
-                dir_entries.append(('blob', name, file_path, size))
+                dir_entries.append(('blob', name, file_path, f"{ base_url }{ file_path }", size))
 
     return dir_entries
 
@@ -384,6 +385,7 @@ def generate_source_page(q, basedir, parsed_path):
     version = parsed_path.version
     path = parsed_path.path
     tag = parse.unquote(version)
+    source_base_url = f'/{ project }/{ version }/source'
 
     type = q.query('type', tag, path)
 
@@ -393,9 +395,8 @@ def generate_source_page(q, basedir, parsed_path):
             back_path = ''
 
         template_ctx = {
-            'dir_entries': get_directory_entries(q, tag, path),
-            'current_path': path,
-            'back_path': back_path,
+            'dir_entries': get_directory_entries(q, source_base_url, tag, path),
+            'back_url': f'{ source_base_url }{ back_path }' if path != '' else None,
         }
         template = environment.get_template('tree.html')
     elif type == 'blob':
@@ -417,7 +418,7 @@ def generate_source_page(q, basedir, parsed_path):
     breadcrumb_links = []
     for p in path_split:
         path_temp += '/'+p
-        breadcrumb_links.append((p, '/' + project + '/' + version + '/source' + path_temp))
+        breadcrumb_links.append((p, f'{ source_base_url }{ path_temp }'))
 
     # Generate title
     title_suffix = project.capitalize()+' source code ('+tag+') - Bootlin'
@@ -435,7 +436,7 @@ def generate_source_page(q, basedir, parsed_path):
     data = {
         **template_ctx,
 
-        'source_base_url': f'/{ project }/{ version }/source',
+        'source_base_url': source_base_url,
         'ident_base_url': f'/{ project }/{ version }/ident',
         'current_project': project,
         'current_tag': tag,
