@@ -14,23 +14,23 @@
 
         <h3 class="screenreader">Versions</h3>
         <ul class="versions">
-        {% for topmenu, submenus in versions.items() %}
+        {% for major, major_versions in versions.items() %}
             <li>
-                <span>{{ topmenu }}</span>
+                <span>{{ major }}</span>
                 <ul>
-                {% for submenu, tags in submenus.items() %}
-                    {% if submenu == tags[0] and tags|length == 1 %}
-                        <li class="li-link {{ 'active' if submenu == current_tag else '' }}">
-                            <a href="{{ submenu }}/{{ url }}">{{ submenu }}</a>
+                {% for minor, minor_versions in major_versions.items() %}
+                    {% if minor == minor_versions[0] and minor_versions|length == 1 %}
+                        <li class="li-link {{ 'active' if minor == current_tag else '' }}">
+                            <a href="{{ minor_versions[0].url }}">{{ minor_versions[0].version }}</a>
                         </li>
                     {% else %}
                         <li>
-                            <span>{{ submenu }}</span>
+                            <span>{{ minor }}</span>
                             <ul>
-                                {% for _tag in tags %}
-                                    <li class="li-link {{ 'active' if _tag == current_tag else '' }}">
-                                        <a href="{{ _tag | urlencode | replace('/', '%2F') }}/{{ url }}">
-                                            {{ _tag }}
+                                {% for v in minor_versions %}
+                                    <li class="li-link {{ 'active' if v.version == current_tag else '' }}">
+                                        <a href="{{ v.url }}">
+                                            {{ v.version }}
                                         </a>
                                     </li>
                                 {% endfor %}

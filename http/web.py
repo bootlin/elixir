@@ -214,6 +214,28 @@ def get_directories(basedir):
             directories.append(filename)
     return sorted(directories)
 
+# Tuple of version name and URL to chosen resource with that version
+# Used to render version list in the sidebar
+VersionEntry = namedtuple('VersionEntry', 'version, url')
+
+# Takes result of Query.query('version') and prepares it for the sidebar template
+# versions: OrderedDict with major parts of versions as keys, values are OrderedDicts
+#   with minor version parts as keys and complete version strings as values
+# get_url: function that takes a version string and returns the URL
+#   for that version. Meaning of the URL can depend on the context
+def get_versions(versions, get_url):
+    result = OrderedDict()
+    for major, minor_verions in versions.items():
+        for minor, patch_versions in minor_verions.items():
+            for v in patch_versions:
+                if major not in result:
+                    result[major] = OrderedDict()
+                if minor not in result[major]:
+                    result[major][minor] = []
+                result[major][minor].append(VersionEntry(v, get_url(v)))
+
+    return result
+
 # Guesses file format based on filename, returns code formatted as HTML
 def format_code(filename, code):
     import pygments
@@ -349,7 +371,6 @@ def get_directory_entries(q, tag, path):
 def generate_source_page(q, basedir, parsed_path):
     status = 200
 
-    url = 'source' + parsed_path.path
     project = parsed_path.project
     version = parsed_path.version
     path = parsed_path.path
@@ -406,7 +427,7 @@ def generate_source_page(q, basedir, parsed_path):
         **template_ctx,
 
         'baseurl': '/' + project + '/',
-        'url': url,
+        'current_url': stringify_source_path(parsed_path),
 
         'current_project': project,
         'current_tag': tag,
@@ -415,7 +436,7 @@ def generate_source_page(q, basedir, parsed_path):
         'breadcrumb_links': breadcrumb_links,
         'title': title,
 
-        'versions': q.query('versions'),
+        'versions': get_versions(q.query('versions'), lambda v: stringify_source_path(parsed_path._replace(version=parse.quote(v, safe='')))),
         'projects': get_directories(basedir),
     }
 
@@ -437,7 +458,6 @@ def generate_ident_page(q, basedir, parsed_path):
     status = 200
 
     ident = parsed_path.ident
-    url = parsed_path.family + '/ident/' + ident
     version = parsed_path.version
     tag = parse.unquote(version)
     family = parsed_path.family
@@ -493,7 +513,7 @@ def generate_ident_page(q, basedir, parsed_path):
 
     data = {
         'baseurl': '/' + project + '/',
-        'url': url,
+        'current_url': stringify_ident_path(parsed_path),
 
         'current_project': project,
         'current_tag': tag,
@@ -505,7 +525,7 @@ def generate_ident_page(q, basedir, parsed_path):
         'title': ident+' identifier - '+title_suffix,
 
         'projects': get_directories(basedir),
-        'versions': q.query('versions'),
+        'versions': get_versions(q.query('versions'), lambda v: stringify_ident_path(parsed_path._replace(version=parse.quote(v, safe='')))),
 
         'symbol_sections': symbol_sections,
     }
