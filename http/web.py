@@ -269,6 +269,25 @@ def get_versions(versions, get_url):
 
     return result
 
+# Retruns template context used by the layout template
+# q: Query object
+# base: directory with project
+# get_url_with_new_version: see get_url parameter of get_versions
+# project: name of the project
+# version: version of the project
+def get_layout_template_context(q, basedir, get_url_with_new_version, project, version):
+    return {
+        'projects': get_projects(basedir),
+        'versions': get_versions(q.query('versions'), get_url_with_new_version),
+        'topbar_families': TOPBAR_FAMILIES,
+
+        'source_base_url': f'/{ project }/{ version }/source',
+        'ident_base_url': f'/{ project }/{ version }/ident',
+        'current_project': project,
+        'current_tag': parse.unquote(version),
+        'current_family': 'A',
+    }
+
 # Guesses file format based on filename, returns code formatted as HTML
 def format_code(filename, code):
     import pygments
@@ -466,17 +485,9 @@ def generate_source_page(q, basedir, parsed_path):
 
     # Create template context
     data = {
+        **get_layout_template_context(q, basedir, get_url_with_new_version, project, version),
+
         'title_path': title_path,
-        'projects': get_projects(basedir),
-        'versions': get_versions(q.query('versions'), get_url_with_new_version),
-        'topbar_families': TOPBAR_FAMILIES,
-
-        'source_base_url': source_base_url,
-        'ident_base_url': f'/{ project }/{ version }/ident',
-        'current_project': project,
-        'current_tag': version_unquoted,
-        'current_family': 'A',
-
         'breadcrumb_links': breadcrumb_links,
 
         **template_ctx,
@@ -518,12 +529,12 @@ def generate_ident_page(q, basedir, parsed_path):
 
     ident = parsed_path.ident
     version = parsed_path.version
-    tag = parse.unquote(version)
+    version_unquoted = parse.unquote(version)
     family = parsed_path.family
     project = parsed_path.project
     source_base_url = f'/{ project }/{ version }/source'
 
-    symbol_definitions, symbol_references, symbol_doccomments = q.query('ident', tag, ident, family)
+    symbol_definitions, symbol_references, symbol_doccomments = q.query('ident', version_unquoted, ident, family)
 
     symbol_sections = []
 
@@ -570,14 +581,7 @@ def generate_ident_page(q, basedir, parsed_path):
     get_url_with_new_version = lambda v: stringify_ident_path(parsed_path._replace(version=parse.quote(v, safe='')))
 
     data = {
-        'projects': get_projects(basedir),
-        'versions': get_versions(q.query('versions'), get_url_with_new_version),
-        'topbar_families': TOPBAR_FAMILIES,
-
-        'source_base_url': f'/{ project }/{ version }/source',
-        'ident_base_url': f'/{ project }/{ version }/ident',
-        'current_project': project,
-        'current_tag': tag,
+        **get_layout_template_context(q, basedir, get_url_with_new_version, project, version),
 
         'searched_ident': ident,
         'current_family': family,
@@ -587,7 +591,6 @@ def generate_ident_page(q, basedir, parsed_path):
 
     template = environment.get_template('ident.html')
     return (status, template.render(data))
-
 
 path = os.environ.get('REQUEST_URI') or os.environ.get('SCRIPT_URL')
 
