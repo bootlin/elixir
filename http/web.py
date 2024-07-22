@@ -64,6 +64,19 @@ def get_query(basedir, project):
 
     return Query(datadir, repodir)
 
+def get_error_page(basedir, title, details=None):
+    template_ctx = {
+        'projects': get_projects(basedir),
+        'topbar_families': TOPBAR_FAMILIES,
+
+        'error_title': title,
+    }
+
+    if details is not None:
+        template_ctx['error_details'] = details
+
+    template = environment.get_template('error.html')
+    return template.render(template_ctx)
 
 # Represents a parsed `source` URL path
 # project: name of the project, ex: "musl"
@@ -91,6 +104,8 @@ def redirect_on_trailing_slash(path):
 # Handles `source` URL, returns a response
 # path: string with URL path of the request
 def handle_source_url(path, _):
+    basedir = os.environ['LXR_PROJ_DIR']
+
     status = redirect_on_trailing_slash(path)
     if status is not None:
         return status
@@ -98,21 +113,21 @@ def handle_source_url(path, _):
     parsed_path = parse_source_path(path)
     if parsed_path is None:
         print("Error: failed to parse path in handle_source_url", path, file=sys.stderr)
-        return (404, "Failed to parse path")
+        return (404, get_error_page(basedir, "Failed to parse path"))
 
-    query = get_query(os.environ['LXR_PROJ_DIR'], parsed_path.project)
+    query = get_query(basedir, parsed_path.project)
     if not query:
-        return (404, "Unknown project")
+        return (404, get_error_page(basedir, "Unknown project"))
 
     # Check if path contains only allowed characters
     if not search('^[A-Za-z0-9_/.,+-]*$', parsed_path.path):
-        return (400, "Path contains characters that are not allowed.")
+        return (400, get_error_page(basedir, "Path contains characters that are not allowed."))
 
     if parsed_path.version == 'latest':
         new_parsed_path = parsed_path._replace(version=parse.quote(query.query('latest')))
         return (301, stringify_source_path(new_parsed_path))
 
-    return generate_source_page(query, os.environ['LXR_PROJ_DIR'], parsed_path)
+    return generate_source_page(query, basedir, parsed_path)
 
 
 # Represents a parsed `ident` URL path
@@ -169,28 +184,30 @@ def handle_ident_post_form(parsed_path, form):
 # path: string with URL path
 # params: cgi.FieldStorage with request parameters
 def handle_ident_url(path, params):
+    basedir = os.environ['LXR_PROJ_DIR']
+
     parsed_path = parse_ident_path(path)
     if parsed_path is None:
         print("Error: failed to parse path in handle_ident_url", path, file=sys.stderr)
-        return (404, "Failed to parse path")
+        return (404, get_error_page(basedir, "Invalid path."))
 
     status = handle_ident_post_form(parsed_path, params)
     if status is not None:
         return status
 
-    query = get_query(os.environ['LXR_PROJ_DIR'], parsed_path.project)
+    query = get_query(basedir, parsed_path.project)
     if not query:
-        return (404, "Unknown project")
+        return (404, get_error_page(basedir, "Unknown project."))
 
     # Check if identifier contains only allowed characters
     if not parsed_path.ident or not search('^[A-Za-z0-9_\$\.%-]*$', parsed_path.ident):
-        return (400, "Identifier contains characters that are not allowed.")
+        return (400, get_error_page(basedir, "Identifier is invalid."))
 
     if parsed_path.version == 'latest':
         new_parsed_path = parsed_path._replace(version=parse.quote(query.query('latest')))
         return (301, stringify_ident_path(new_parsed_path))
 
-    return generate_ident_page(query, os.environ['LXR_PROJ_DIR'], parsed_path)
+    return generate_ident_page(query, basedir, parsed_path)
 
 
 # Calls proper handler functions based on URL path, returns 404 if path is unknown
@@ -202,7 +219,7 @@ def route(path, params):
     elif search('^/[^/]*/[^/]*(?:/[^/])?/ident.*$', path) is not None:
         return handle_ident_url(path, params)
     else:
-        return (404, "Unknown path")
+        return (404, get_error_page(os.environ['LXR_PROJ_DIR'], "Unknown path."))
 
 
 TOPBAR_FAMILIES = {
@@ -586,14 +603,13 @@ if result is not None:
     elif result[0] == 301:
         print('Status: 301 Moved Permanently')
         print('Location: '+ result[1] +'\n')
-        exit()
     elif result[0] == 302:
         print('Status: 302 Found')
         print('Location: '+ result[1] +'\n')
-        exit()
     elif result[0] == 400:
-        print('Status: 400 Bad Request\n')
-        exit()
+        print('Status: 400 Bad Request')
+        print('Content-Type: text/html;charset=utf-8\n')
+        print(result[1], end='')
     elif result[0] == 404:
         print('Status: 404 Not Found')
         print('Content-Type: text/html;charset=utf-8\n')

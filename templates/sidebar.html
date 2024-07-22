@@ -14,7 +14,7 @@
 
         <h3 class="screenreader">Versions</h3>
         <ul class="versions">
-        {% for major, major_versions in versions.items() %}
+            {% for major, major_versions in (versions|default({})).items() %}
             <li>
                 <span>{{ major }}</span>
                 <ul>

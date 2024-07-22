@@ -8,7 +8,7 @@
 
 <div class="lxrerror">
     <h2>{{ error_title }}</h2>
-    {{ error_details }}
+    {{ error_details|default('') }}
 </div>
 
 {% endblock %}
