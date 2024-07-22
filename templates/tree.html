@@ -12,6 +12,7 @@
         {% if back_url is not none %}
             <tr>
                 <td><a class="tree-icon icon-back" href="{{ back_url }}">Parent directory</a></td>
+                <td><a tabindex="-1" class="size" href="{{ back_url }}"></a></td>
             </tr>
         {% endif %}
         {% for type, name, path, url, size in dir_entries %}
@@ -27,11 +28,11 @@
                     </a>
                 </td>
                 <td>
-                {% if size is not none %}
                     <a tabindex="-1" class="size" href="{{ url }}">
+                    {% if size is not none %}
                         {{ size }} bytes
+                    {% endif %}
                     </a>
-                {% endif %}
                 </td>
             </tr>
         {% endfor %}
