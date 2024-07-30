@@ -283,8 +283,14 @@ def filter_applies(filter, path):
     else:
         raise ValueError('Invalid filter case', filter['case'])
 
-def generate_source(q, path, version, tag, project):
-    code = q.query('file', tag, path)
+# Generate formatted HTML of a file, apply filters (for ex. to add identifier links)
+# q: Query object
+# project: name of the requested project
+# version: requested version of the project
+# path: path to the file in the repository
+def generate_source(q, project, version, path):
+    version_unquoted = parse.unquote(version)
+    code = q.query('file', version_unquoted, path)
 
     _, fname = os.path.split(path)
     _, extension = os.path.splitext(fname)
@@ -305,7 +311,7 @@ def generate_source(q, path, version, tag, project):
         "family": family,
         "project": project,
         "path": path,
-        "tag": tag,
+        "tag": version_unquoted,
         "q": q,
     }
 
@@ -384,10 +390,10 @@ def generate_source_page(q, basedir, parsed_path):
     project = parsed_path.project
     version = parsed_path.version
     path = parsed_path.path
-    tag = parse.unquote(version)
+    version_unquoted = parse.unquote(version)
     source_base_url = f'/{ project }/{ version }/source'
 
-    type = q.query('type', tag, path)
+    type = q.query('type', version_unquoted, path)
 
     if type == 'tree':
         back_path = os.path.dirname(path[:-1])
@@ -395,13 +401,13 @@ def generate_source_page(q, basedir, parsed_path):
             back_path = ''
 
         template_ctx = {
-            'dir_entries': get_directory_entries(q, source_base_url, tag, path),
+            'dir_entries': get_directory_entries(q, source_base_url, version_unquoted, path),
             'back_url': f'{ source_base_url }{ back_path }' if path != '' else None,
         }
         template = environment.get_template('tree.html')
     elif type == 'blob':
         template_ctx = {
-            'code': generate_source(q, path, version, tag, project),
+            'code': generate_source(q, project, version, path),
         }
         template = environment.get_template('source.html')
     else:
@@ -421,7 +427,7 @@ def generate_source_page(q, basedir, parsed_path):
         breadcrumb_links.append((p, f'{ source_base_url }{ path_temp }'))
 
     # Generate title
-    title_suffix = project.capitalize()+' source code ('+tag+') - Bootlin'
+    title_suffix = project.capitalize()+' source code ('+version_unquoted+') - Bootlin'
 
     # Create titles like this:
     # root path: "Linux source code (v5.5.6) - Bootlin"
@@ -432,6 +438,8 @@ def generate_source_page(q, basedir, parsed_path):
                      else path_split[-1]+' - '+'/'.join(path_split)+' - ') \
             +title_suffix
 
+    get_url_with_new_version = lambda v: stringify_source_path(parsed_path._replace(version=parse.quote(v, safe='')))
+
     # Create template context
     data = {
         **template_ctx,
@@ -439,12 +447,12 @@ def generate_source_page(q, basedir, parsed_path):
         'source_base_url': source_base_url,
         'ident_base_url': f'/{ project }/{ version }/ident',
         'current_project': project,
-        'current_tag': tag,
+        'current_tag': version_unquoted,
 
         'breadcrumb_links': breadcrumb_links,
         'title': title,
 
-        'versions': get_versions(q.query('versions'), lambda v: stringify_source_path(parsed_path._replace(version=parse.quote(v, safe='')))),
+        'versions': get_versions(q.query('versions'), get_url_with_new_version),
         'projects': get_projects(basedir),
     }
 
@@ -535,6 +543,8 @@ def generate_ident_page(q, basedir, parsed_path):
 
     title_suffix = project.capitalize()+' source code ('+tag+') - Bootlin'
 
+    get_url_with_new_version = lambda v: stringify_ident_path(parsed_path._replace(version=parse.quote(v, safe='')))
+
     data = {
         'source_base_url': f'/{ project }/{ version }/source',
         'ident_base_url': f'/{ project }/{ version }/ident',
@@ -547,7 +557,7 @@ def generate_ident_page(q, basedir, parsed_path):
         'title': ident+' identifier - '+title_suffix,
 
         'projects': get_projects(basedir),
-        'versions': get_versions(q.query('versions'), lambda v: stringify_ident_path(parsed_path._replace(version=parse.quote(v, safe='')))),
+        'versions': get_versions(q.query('versions'), get_url_with_new_version),
 
         'symbol_sections': symbol_sections,
     }
