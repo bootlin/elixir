@@ -1,23 +1,30 @@
+import re
+from filters.utils import Filter, FilterContext, encode_number, decode_number, extension_matches
+
 # Filters for dts includes as follows:
+# Replaces include directives in dts/dtsi files with links to source
 # /include/ "file"
+# Example: u-boot/v2023.10/source/arch/powerpc/dts/t1023si-post.dtsi#L12
+class DtsiFilter(Filter):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.dtsi = []
 
-dtsi = []
+    def check_if_applies(self, ctx) -> bool:
+        return super().check_if_applies(ctx) and \
+                extension_matches(ctx.path, {'dts', 'dtsi'})
 
-def keep_dtsi(m):
-    dtsi.append(m.group(3))
-    return m.group(1) + '/include/' + m.group(2) + '"__KEEPDTSI__' + encode_number(len(dtsi)) + '"'
+    def transform_raw_code(self, ctx, code: str) -> str:
+        def keep_dtsi(m):
+            self.dtsi.append(m.group(3))
+            return f'{ m.group(1) }/include/{ m.group(2) }"__KEEPDTSI__{ encode_number(len(self.dtsi)) }"'
 
-def replace_dtsi(m):
-    w = dtsi[decode_number(m.group(1)) - 1]
-    return '<a href="/'+project+'/'+version+'/source'+os.path.dirname(path)+'/'+w+'">'+w+'</a>'
+        return re.sub('^(\s*)/include/(\s*)\"(.*?)\"', keep_dtsi, code, flags=re.MULTILINE)
 
-dtsi_filters = {
-                'case': 'extension',
-                'match': {'dts', 'dtsi'},
-                'prerex': '^(\s*)/include/(\s*)\"(.*?)\"',
-                'prefunc': keep_dtsi,
-                'postrex': '__KEEPDTSI__([A-J]+)',
-                'postfunc': replace_dtsi
-                }
+    def untransform_formatted_code(self, ctx: FilterContext, html: str) -> str:
+        def replace_dtsi(m):
+            w = self.dtsi[decode_number(m.group(1)) - 1]
+            return f'<a href="{ ctx.get_relative_source_url(w) }">{ w }</a>'
 
-filters.append(dtsi_filters)
+        return re.sub('__KEEPDTSI__([A-J]+)', replace_dtsi, html, flags=re.MULTILINE)
+
