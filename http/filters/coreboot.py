@@ -1,4 +1,6 @@
 # Elixir Python definitions for Coreboot
 
-exec(open('dtsi.py').read())
+from filters.dtsi import DtsiFilter
+
+new_filters.append(DtsiFilter())
 exec(open('commonkconfig.py').read())
