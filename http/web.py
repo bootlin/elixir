@@ -229,11 +229,35 @@ def format_code(filename, code):
     formatter = pygments.formatters.HtmlFormatter(linenos=True, anchorlinenos=True)
     return pygments.highlight(code, lexer, formatter)
 
+# Return true if filter can be applied to file based on path of the file
+def filter_applies(filter, path):
+    if 'path_exceptions' in filter:
+        for p in filter['path_exceptions']:
+            if re.match(p, path):
+                return False
+
+    dir, filename = os.path.split(path)
+    filename, extension = os.path.splitext(filename)
+
+    c = filter['case']
+    if c == 'any':
+        return True
+    elif c == 'filename':
+        return filename in filter['match']
+    elif c == 'extension':
+        return extension in filter['match']
+    elif c == 'path':
+        return dir.startswith(tuple(filter['match']))
+    elif c == 'filename_extension':
+        return filename.endswith(tuple(filter['match']))
+    else:
+        raise ValueError('Invalid filter case', filter['case'])
+
 def generate_source(q, path, version, tag, project):
     code = q.query('file', tag, path)
 
-    fdir, fname = os.path.split(path)
-    filename, extension = os.path.splitext(fname)
+    _, fname = os.path.split(path)
+    _, extension = os.path.splitext(fname)
     extension = extension[1:].lower()
     family = q.query('family', fname)
 
@@ -268,24 +292,8 @@ def generate_source(q, path, version, tag, project):
 
     # Apply filters
     for f in filters:
-        c = f['case']
-        if (c == 'any' or
-            (c == 'filename' and filename in f['match']) or
-            (c == 'extension' and extension in f['match']) or
-            (c == 'path' and fdir.startswith(tuple(f['match']))) or
-            (c == 'filename_extension' and filename.endswith(tuple(f['match'])))):
-
-            apply_filter = True
-
-            if 'path_exceptions' in f:
-                for p in f['path_exceptions']:
-                    if re.match(p, path):
-                        apply_filter = False
-                        break
-
-            if apply_filter:
-                code = sub(f ['prerex'], f ['prefunc'], code, flags=re.MULTILINE)
-
+        if filter_applies(f, path):
+            code = sub(f['prerex'], f['prefunc'], code, flags=re.MULTILINE)
 
     html_code_block = format_code(fname, code)
 
@@ -293,14 +301,8 @@ def generate_source(q, path, version, tag, project):
     html_code_block = sub('href="#-(\d+)', 'name="L\\1" id="L\\1" href="'+version+'/source'+path+'#L\\1', html_code_block)
 
     for f in filters:
-        c = f['case']
-        if (c == 'any' or
-            (c == 'filename' and filename in f['match']) or
-            (c == 'extension' and extension in f['match']) or
-            (c == 'path' and fdir.startswith(tuple(f['match']))) or
-            (c == 'filename_extension' and filename.endswith(tuple(f['match'])))):
-
-            html_code_block = sub(f ['postrex'], f ['postfunc'], html_code_block)
+        if filter_applies(f, path):
+            html_code_block = sub(f['postrex'], f['postfunc'], html_code_block)
 
     return html_code_block
 
