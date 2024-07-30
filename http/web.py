@@ -36,6 +36,7 @@ import jinja2
 sys.path = [ sys.path[0] + '/..' ] + sys.path
 from lib import validFamily
 from query import Query, SymbolInstance
+from filters.utils import FilterContext
 
 script_dir = os.path.dirname(os.path.realpath(__file__))
 templates_dir = os.path.join(script_dir, '../templates/')
@@ -359,6 +360,24 @@ def generate_source(q, project, version, path):
         "q": q,
     }
 
+    source_base_url = f'/{ project }/{ version }/source'
+
+    def get_ident_url(ident, ident_family=None):
+        if ident_family is None:
+            ident_family = family
+        ident = parse.quote(ident, safe='')
+        return f'/{ project }/{ version }/{ ident_family }/ident/{ ident }'
+
+    new_filter_ctx = FilterContext(
+        q,
+        version_unquoted,
+        family,
+        path,
+        get_ident_url,
+        lambda path: f'{ source_base_url }{ "/" if not path.startswith("/") else "" }{ path }',
+        lambda rel_path: f'{ source_base_url }{ os.path.dirname(path) }/{ rel_path }',
+    )
+
     # Source common filter definitions
     os.chdir('filters')
     exec(open("common.py").read(), filter_ctx)
@@ -370,11 +389,15 @@ def generate_source(q, project, version, path):
     os.chdir('..')
 
     filters = filter_ctx["filters"]
+    new_filters = [f for f in filter_ctx["new_filters"] if f.check_if_applies(new_filter_ctx)]
 
     # Apply filters
     for f in filters:
         if filter_applies(f, path):
             code = sub(f['prerex'], f['prefunc'], code, flags=re.MULTILINE)
+
+    for f in new_filters:
+        code = f.transform_raw_code(new_filter_ctx, code)
 
     html_code_block = format_code(fname, code)
 
@@ -384,6 +407,9 @@ def generate_source(q, project, version, path):
     for f in filters:
         if filter_applies(f, path):
             html_code_block = sub(f['postrex'], f['postfunc'], html_code_block)
+
+    for f in new_filters:
+        html_code_block = f.untransform_formatted_code(new_filter_ctx, html_code_block)
 
     return html_code_block
 
