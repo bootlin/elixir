@@ -20,6 +20,7 @@
 
 import cgi
 import cgitb
+import logging
 import os
 import re
 import sys
@@ -34,20 +35,6 @@ from query import Query, SymbolInstance
 from filters import get_filters
 from filters.utils import FilterContext
 
-script_dir = os.path.dirname(os.path.realpath(__file__))
-templates_dir = os.path.join(script_dir, '../templates/')
-loader = jinja2.FileSystemLoader(templates_dir)
-environment = jinja2.Environment(loader=loader)
-
-# Create /tmp/elixir-errors if not existing yet (could happen after a reboot)
-errdir = '/tmp/elixir-errors'
-
-if not(os.path.isdir(errdir)):
-    os.makedirs(errdir, exist_ok=True)
-
-# Enable CGI Trackback Manager for debugging (https://docs.python.org/fr/3/library/cgitb.html)
-cgitb.enable(display=0, logdir=errdir, format='text')
-
 
 # Returns a Query class instance or None if project data directory does not exist
 # basedir: absolute path to parent directory of all project data directories, ex. "/srv/elixir-data/"
@@ -61,9 +48,9 @@ def get_query(basedir, project):
 
     return Query(datadir, repodir)
 
-def get_error_page(basedir, title, details=None):
+def get_error_page(ctx, title, details=None):
     template_ctx = {
-        'projects': get_projects(basedir),
+        'projects': get_projects(ctx.config.project_dir),
         'topbar_families': TOPBAR_FAMILIES,
 
         'error_title': title,
@@ -72,7 +59,7 @@ def get_error_page(basedir, title, details=None):
     if details is not None:
         template_ctx['error_details'] = details
 
-    template = environment.get_template('error.html')
+    template = ctx.jinja_env.get_template('error.html')
     return template.render(template_ctx)
 
 # Represents a parsed `source` URL path
@@ -99,33 +86,30 @@ def redirect_on_trailing_slash(path):
         return (301, path.rstrip('/'))
 
 # Handles `source` URL, returns a response
-# path: string with URL path of the request
-def handle_source_url(path, _):
-    basedir = os.environ['LXR_PROJ_DIR']
-
-    status = redirect_on_trailing_slash(path)
+# ctx: RequestContext
+def handle_source_url(ctx):
+    status = redirect_on_trailing_slash(ctx.path)
     if status is not None:
         return status
 
-    parsed_path = parse_source_path(path)
+    parsed_path = parse_source_path(ctx.path)
     if parsed_path is None:
-        print("Error: failed to parse path in handle_source_url", path, file=sys.stderr)
-        return (404, get_error_page(basedir, "Failed to parse path"))
+        ctx.config.logger.error("Error: failed to parse path in handle_source_url %s", ctx.path)
+        return (404, get_error_page(ctx, "Failed to parse path"))
 
-    query = get_query(basedir, parsed_path.project)
+    query = get_query(ctx.config.project_dir, parsed_path.project)
     if not query:
-        return (404, get_error_page(basedir, "Unknown project"))
+        return (404, get_error_page(ctx, "Unknown project"))
 
     # Check if path contains only allowed characters
     if not search('^[A-Za-z0-9_/.,+-]*$', parsed_path.path):
-        return (400, get_error_page(basedir, "Path contains characters that are not allowed."))
+        return (400, get_error_page(ctx, "Path contains characters that are not allowed."))
 
     if parsed_path.version == 'latest':
         new_parsed_path = parsed_path._replace(version=parse.quote(query.query('latest')))
         return (301, stringify_source_path(new_parsed_path))
 
-    return generate_source_page(query, basedir, parsed_path)
-
+    return generate_source_page(ctx, query, parsed_path)
 
 # Represents a parsed `ident` URL path
 # project: name of the project, ex: musl
@@ -178,46 +162,43 @@ def handle_ident_post_form(parsed_path, form):
         return (302, stringify_ident_path(new_parsed_path))
 
 # Handles `ident` URL, returns a response
-# path: string with URL path
-# params: cgi.FieldStorage with request parameters
-def handle_ident_url(path, params):
-    basedir = os.environ['LXR_PROJ_DIR']
+# ctx: RequestContext
+def handle_ident_url(ctx):
+    parsed_path = parse_ident_path(ctx.path)
 
-    parsed_path = parse_ident_path(path)
+    parsed_path = parse_ident_path(ctx.path)
     if parsed_path is None:
-        print("Error: failed to parse path in handle_ident_url", path, file=sys.stderr)
-        return (404, get_error_page(basedir, "Invalid path."))
+        ctx.config.logger.error("Error: failed to parse path in handle_ident_url %s", ctx.path)
+        return (404, get_error_page(ctx, "Invalid path."))
 
-    status = handle_ident_post_form(parsed_path, params)
+    status = handle_ident_post_form(parsed_path, ctx.params)
     if status is not None:
         return status
 
-    query = get_query(basedir, parsed_path.project)
+    query = get_query(ctx.config.project_dir, parsed_path.project)
     if not query:
-        return (404, get_error_page(basedir, "Unknown project."))
+        return (404, get_error_page(ctx, "Unknown project."))
 
     # Check if identifier contains only allowed characters
     if not parsed_path.ident or not search('^[A-Za-z0-9_\$\.%-]*$', parsed_path.ident):
-        return (400, get_error_page(basedir, "Identifier is invalid."))
+        return (400, get_error_page(ctx, "Identifier is invalid."))
 
     if parsed_path.version == 'latest':
         new_parsed_path = parsed_path._replace(version=parse.quote(query.query('latest')))
         return (301, stringify_ident_path(new_parsed_path))
 
-    return generate_ident_page(query, basedir, parsed_path)
+    return generate_ident_page(ctx, query, parsed_path)
 
 
 # Calls proper handler functions based on URL path, returns 404 if path is unknown
-# path: path part of the URL
-# params: cgi.FieldStorage with request parameters
-def route(path, params):
-    if search('^/[^/]*/[^/]*/source.*$', path) is not None:
-        return handle_source_url(path, params)
-    elif search('^/[^/]*/[^/]*(?:/[^/])?/ident.*$', path) is not None:
-        return handle_ident_url(path, params)
+# ctx: RequestContext
+def route(ctx):
+    if search('^/[^/]*/[^/]*/source.*$', ctx.path) is not None:
+        return handle_source_url(ctx)
+    elif search('^/[^/]*/[^/]*(?:/[^/])?/ident.*$', ctx.path) is not None:
+        return handle_ident_url(ctx)
     else:
-        return (404, get_error_page(os.environ['LXR_PROJ_DIR'], "Unknown path."))
-
+        return (404, get_error_page(ctx, "Unknown path."))
 
 TOPBAR_FAMILIES = {
     'A': 'All symbols',
@@ -268,13 +249,13 @@ def get_versions(versions, get_url):
 
 # Retruns template context used by the layout template
 # q: Query object
-# base: directory with project
+# ctx: RequestContext object
 # get_url_with_new_version: see get_url parameter of get_versions
 # project: name of the project
 # version: version of the project
-def get_layout_template_context(q, basedir, get_url_with_new_version, project, version):
+def get_layout_template_context(q, ctx, get_url_with_new_version, project, version):
     return {
-        'projects': get_projects(basedir),
+        'projects': get_projects(ctx.config.project_dir),
         'versions': get_versions(q.query('versions'), get_url_with_new_version),
         'topbar_families': TOPBAR_FAMILIES,
 
@@ -386,10 +367,10 @@ def get_directory_entries(q, base_url, tag, path):
     return dir_entries
 
 # Generates response (status code and optionally HTML) of the `source` route
+# ctx: RequestContext
 # q: Query object
-# basedir: path to data directory, ex: "/srv/elixir-data"
 # parsed_path: ParsedSourcePath
-def generate_source_page(q, basedir, parsed_path):
+def generate_source_page(ctx, q, parsed_path):
     status = 200
 
     project = parsed_path.project
@@ -409,18 +390,18 @@ def generate_source_page(q, basedir, parsed_path):
             'dir_entries': get_directory_entries(q, source_base_url, version_unquoted, path),
             'back_url': f'{ source_base_url }{ back_path }' if path != '' else None,
         }
-        template = environment.get_template('tree.html')
+        template = ctx.jinja_env.get_template('tree.html')
     elif type == 'blob':
         template_ctx = {
             'code': generate_source(q, project, version, path),
         }
-        template = environment.get_template('source.html')
+        template = ctx.jinja_env.get_template('source.html')
     else:
         status = 404
         template_ctx = {
             'error_title': 'This file does not exist.',
         }
-        template = environment.get_template('error.html')
+        template = ctx.jinja_env.get_template('error.html')
 
 
     # Generate breadcrumbs
@@ -446,7 +427,7 @@ def generate_source_page(q, basedir, parsed_path):
 
     # Create template context
     data = {
-        **get_layout_template_context(q, basedir, get_url_with_new_version, project, version),
+        **get_layout_template_context(q, ctx, get_url_with_new_version, project, version),
 
         'title_path': title_path,
         'breadcrumb_links': breadcrumb_links,
@@ -482,10 +463,10 @@ def symbol_instance_to_entry(base_url, symbol):
     return SymbolEntry(symbol.type, symbol.path, lines)
 
 # Generates response (status code and optionally HTML) of the `ident` route
-# q: Query object
+# ctx: RequestContext
 # basedir: path to data directory, ex: "/srv/elixir-data"
 # parsed_path: ParsedIdentPath
-def generate_ident_page(q, basedir, parsed_path):
+def generate_ident_page(ctx, q, parsed_path):
     status = 200
 
     ident = parsed_path.ident
@@ -542,7 +523,7 @@ def generate_ident_page(q, basedir, parsed_path):
     get_url_with_new_version = lambda v: stringify_ident_path(parsed_path._replace(version=parse.quote(v, safe='')))
 
     data = {
-        **get_layout_template_context(q, basedir, get_url_with_new_version, project, version),
+        **get_layout_template_context(q, ctx, get_url_with_new_version, project, version),
 
         'searched_ident': ident,
         'current_family': family,
@@ -550,42 +531,80 @@ def generate_ident_page(q, basedir, parsed_path):
         'symbol_sections': symbol_sections,
     }
 
-    template = environment.get_template('ident.html')
+    template = ctx.jinja_env.get_template('ident.html')
     return (status, template.render(data))
 
-path = os.environ.get('REQUEST_URI') or os.environ.get('SCRIPT_URL')
+# Enables cgitb module based on global context
+def enable_cgitb():
+    # Create /tmp/elixir-errors if not existing yet (could happen after a reboot)
+    errdir = '/tmp/elixir-errors'
 
-# parses and stores request parameters, both query string and POST request form
-request_params = cgi.FieldStorage()
+    if not(os.path.isdir(errdir)):
+        os.makedirs(errdir, exist_ok=True)
 
-result = route(path, request_params)
+    # Enable CGI Trackback Manager for debugging (https://docs.python.org/fr/3/library/cgitb.html)
+    cgitb.enable(display=0, logdir=errdir, format='text')
 
-if result is not None:
-    if result[0] == 200:
-        print('Content-Type: text/html;charset=utf-8\n')
-        print(result[1], end='')
-    elif result[0] == 301:
-        print('Status: 301 Moved Permanently')
-        print('Location: '+ result[1] +'\n')
-    elif result[0] == 302:
-        print('Status: 302 Found')
-        print('Location: '+ result[1] +'\n')
-    elif result[0] == 400:
-        print('Status: 400 Bad Request')
-        print('Content-Type: text/html;charset=utf-8\n')
-        print(result[1], end='')
-    elif result[0] == 404:
-        print('Status: 404 Not Found')
-        print('Content-Type: text/html;charset=utf-8\n')
-        print(result[1], end='')
+# Elixir config, currently contains only path to directory with projects and a logger
+Config = namedtuple('Config', 'project_dir, logger')
+
+# Builds a Config instance from global context
+def get_config():
+    return Config(os.environ['LXR_PROJ_DIR'], logging.getLogger(__name__))
+
+# Basic information about handled request - current Elixir configuration, configured Jinja environment,
+# request path and parameters
+RequestContext = namedtuple('RequestContext', 'config, jinja_env, path, params')
+
+# Builds a RequestContext instance from global context
+def get_request_context():
+    script_dir = os.path.dirname(os.path.realpath(__file__))
+    templates_dir = os.path.join(script_dir, '../templates/')
+    loader = jinja2.FileSystemLoader(templates_dir)
+    environment = jinja2.Environment(loader=loader)
+
+    path = os.environ.get('REQUEST_URI') or os.environ.get('SCRIPT_URL')
+
+    # parses and stores request parameters, both query string and POST request form
+    request_params = cgi.FieldStorage()
+
+    return RequestContext(get_config(), environment, path, request_params)
+
+def handle_request():
+    enable_cgitb()
+    ctx = get_request_context()
+    result = route(ctx)
+
+    if result is not None:
+        if result[0] == 200:
+            print('Content-Type: text/html;charset=utf-8\n')
+            print(result[1], end='')
+        elif result[0] == 301:
+            print('Status: 301 Moved Permanently')
+            print('Location: '+ result[1] +'\n')
+        elif result[0] == 302:
+            print('Status: 302 Found')
+            print('Location: '+ result[1] +'\n')
+        elif result[0] == 400:
+            print('Status: 400 Bad Request')
+            print('Content-Type: text/html;charset=utf-8\n')
+            print(result[1], end='')
+        elif result[0] == 404:
+            print('Status: 404 Not Found')
+            print('Content-Type: text/html;charset=utf-8\n')
+            print(result[1], end='')
+        else:
+            print('Status: 500 Internal Server Error')
+            print('Content-Type: text/html;charset=utf-8\n')
+            ctx.config.logger.error('Error - route returned an unknown status code %s', str(result))
+            print('Unknown error - check error logs for details\n')
     else:
         print('Status: 500 Internal Server Error')
         print('Content-Type: text/html;charset=utf-8\n')
-        print('Error - route returned an unknown status code', result, file=sys.stderr)
+        ctx.config.logger.error('Error - route returned None')
         print('Unknown error - check error logs for details\n')
-else:
-    print('Status: 500 Internal Server Error')
-    print('Content-Type: text/html;charset=utf-8\n')
-    print('Error - route returned None', file=sys.stderr)
-    print('Unknown error - check error logs for details\n')
+
+
+if __name__ == '__main__':
+    handle_request()
 
