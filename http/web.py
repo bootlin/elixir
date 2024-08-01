@@ -319,7 +319,7 @@ def filter_applies(filter, path):
     elif c == 'filename':
         return filename in filter['match']
     elif c == 'extension':
-        return extension in filter['match']
+        return extension[1:] in filter['match']
     elif c == 'path':
         return dir.startswith(tuple(filter['match']))
     elif c == 'filename_extension':
