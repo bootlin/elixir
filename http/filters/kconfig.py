@@ -1,22 +1,30 @@
+import re
+from filters.utils import Filter, FilterContext, encode_number, decode_number, filename_without_ext_matches
+
 # Filters for Kconfig includes
+# Replaces KConfig includes (source keyword) with links to included files
+# `source "path/file"`
+# Example: u-boot/v2023.10/source/Kconfig#L10
+class KconfigFilter(Filter):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.kconfig = []
 
-kconfig = []
+    def check_if_applies(self, ctx) -> bool:
+        return super().check_if_applies(ctx) and \
+                filename_without_ext_matches(ctx.filepath, {'Kconfig'})
 
-def keep_kconfig(m):
-    kconfig.append(m.group(4))
-    return m.group(1) + m.group(2) + m.group(3) + '"__KEEPKCONFIG__' + encode_number(len(kconfig)) + '"'
+    def transform_raw_code(self, ctx, code: str) -> str:
+        def keep_kconfig(m):
+            self.kconfig.append(m.group(4))
+            return f'{ m.group(1) }{ m.group(2) }{ m.group(3) }"__KEEPKCONFIG__{ encode_number(len(self.kconfig)) }"'
 
-def replace_kconfig(m):
-    w = kconfig[decode_number(m.group(1)) - 1]
-    return '<a href="/'+project+'/'+version+'/source/'+w+'">'+w+'</a>'
+        return re.sub('^(\s*)(source)(\s*)\"([\w/_\.-]+)\"', keep_kconfig, code, flags=re.MULTILINE)
 
-kconfig_filters = {
-                'case': 'filename',
-                'match': {'Kconfig'},
-                'prerex': '^(\s*)(source)(\s*)\"([\w/_\.-]+)\"',
-                'prefunc': keep_kconfig,
-                'postrex': '__KEEPKCONFIG__([A-J]+)',
-                'postfunc': replace_kconfig
-                }
+    def untransform_formatted_code(self, ctx: FilterContext, html: str) -> str:
+        def replace_kconfig(m):
+            w = self.kconfig[decode_number(m.group(1)) - 1]
+            return f'<a href="{ ctx.get_absolute_source_url(w) }">{ w }</a>'
 
-filters.append(kconfig_filters)
+        return re.sub('__KEEPKCONFIG__([A-J]+)', replace_kconfig, html, flags=re.MULTILINE)
+

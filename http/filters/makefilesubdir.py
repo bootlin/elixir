@@ -1,29 +1,37 @@
+from os.path import dirname
+import re
+from filters.utils import Filter, FilterContext, decode_number, encode_number, filename_without_ext_matches
+
 # Filters for Makefile directory includes as follows:
 # subdir-y += dir
+# Example: u-boot/v2023.10/source/examples/Makefile#L9
+class MakefileSubdirFilter(Filter):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.makefilesubdir = []
 
-makefilesubdir = []
+    def check_if_applies(self, ctx) -> bool:
+        return super().check_if_applies(ctx) and \
+            filename_without_ext_matches(ctx.filepath, {'Makefile'})
 
-def keep_makefilesubdir(m):
-    makefilesubdir.append(m.group(5))
-    return m.group(1)+m.group(2)+m.group(3)+m.group(4)+'__KEEPMAKESUBDIR__' + encode_number(len(makefilesubdir)) + m.group(6)
+    def transform_raw_code(self, ctx, code: str) -> str:
+        def keep_makefilesubdir(m):
+            self.makefilesubdir.append(m.group(5))
+            n = encode_number(len(self.makefilesubdir))
+            return f'{ m.group(1) }{ m.group(2) }{ m.group(3) }{ m.group(4) }__KEEPMAKESUBDIR__{ n }{ m.group(6) }'
 
-def replace_makefilesubdir(m):
-    w = makefilesubdir[decode_number(m.group(1)) - 1]
+        return re.sub('(subdir-y)(\s+)(\+=|:=)(\s+)([-\w]+)(\s*|$)', keep_makefilesubdir, code, flags=re.MULTILINE)
 
-    dir_name = os.path.dirname(path)
-    
-    if dir_name != '/':
-        dir_name += '/'
+    def untransform_formatted_code(self, ctx: FilterContext, html: str) -> str:
+        def replace_makefilesubdir(m):
+            w = self.makefilesubdir[decode_number(m.group(1)) - 1]
+            filedir = dirname(ctx.filepath)
 
-    return '<a href="/'+project+'/'+version+'/source'+dir_name+w+'/Makefile">'+w+'</a>'
+            if filedir != '/':
+                filedir += '/'
 
-makefilesubdir_filters = {
-                'case': 'filename',
-                'match': {'Makefile'},
-                'prerex': '(subdir-y)(\s+)(\+=|:=)(\s+)([-\w]+)(\s*|$)',
-                'prefunc': keep_makefilesubdir,
-                'postrex': '__KEEPMAKESUBDIR__([A-J]+)',
-                'postfunc': replace_makefilesubdir
-                }
+            npath = f'{ filedir }{ w }/Makefile'
+            return f'<a href="{ ctx.get_absolute_source_url(npath) }">{ w }</a>'
 
-filters.append(makefilesubdir_filters)
+        return re.sub('__KEEPMAKESUBDIR__([A-J]+)', replace_makefilesubdir, html, flags=re.MULTILINE)
+

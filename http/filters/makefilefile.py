@@ -1,35 +1,44 @@
+from os.path import dirname
+import re
+from filters.utils import Filter, FilterContext, decode_number, encode_number, filename_without_ext_matches
+
 # Filters for files listed in Makefiles
+# path/file
+# Example: u-boot/v2023.10/source/Makefile#L1509
+class MakefileFileFilter(Filter):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.makefilefile = []
 
-makefilefile = []
+    def check_if_applies(self, ctx) -> bool:
+        return super().check_if_applies(ctx) and \
+                filename_without_ext_matches(ctx.filepath, {'Makefile'})
 
-def keep_makefilefile(m):
-    dir_name = os.path.dirname(path)
+    def transform_raw_code(self, ctx, code: str) -> str:
+        def keep_makefilefile(m):
+            filedir = dirname(ctx.filepath)
 
-    if dir_name != '/':
-        dir_name += '/'
+            if filedir != '/':
+                filedir += '/'
 
-    if q.query('exist', tag, dir_name + m.group(1)):
-        makefilefile.append(m.group(1))
-        return '__KEEPMAKEFILEFILE__' + encode_number(len(makefilefile)) + m.group(2)
-    else:
-        return m.group(0)
+            if ctx.query.query('exist', ctx.tag, filedir + m.group(1)):
+                self.makefilefile.append(m.group(1))
+                return f'__KEEPMAKEFILEFILE__{ encode_number(len(self.makefilefile)) }{ m.group(2) }'
+            else:
+                return m.group(0)
 
-def replace_makefilefile(m):
-    w = makefilefile[decode_number(m.group(1)) - 1]
-    dir_name = os.path.dirname(path)
-    
-    if dir_name != '/':
-        dir_name += '/'
+        return re.sub('(?:(?<=\s|=)|(?<=-I))(?!/)([-\w/]+/[-\w\.]+)(\s+|\)|$)', keep_makefilefile, code, flags=re.MULTILINE)
 
-    return '<a href="/'+project+'/'+version+'/source'+dir_name+w+'">'+w+'</a>'
+    def untransform_formatted_code(self, ctx: FilterContext, html: str) -> str:
+        def replace_makefilefile(m):
+            w = self.makefilefile[decode_number(m.group(1)) - 1]
+            filedir = dirname(ctx.filepath)
 
-makefilefile_filters = {
-                'case': 'filename',
-                'match': {'Makefile'},
-                'prerex': '(?:(?<=\s|=)|(?<=-I))(?!/)([-\w/]+/[-\w\.]+)(\s+|\)|$)',
-                'prefunc': keep_makefilefile,
-                'postrex': '__KEEPMAKEFILEFILE__([A-J]+)',
-                'postfunc': replace_makefilefile
-                }
+            if filedir != '/':
+                filedir += '/'
 
-filters.append(makefilefile_filters)
+            npath = filedir + w
+            return f'<a href="{ ctx.get_absolute_source_url(npath) }">{ w }</a>'
+
+        return re.sub('__KEEPMAKEFILEFILE__([A-J]+)', replace_makefilefile, html, flags=re.MULTILINE)
+
