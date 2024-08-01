@@ -1,3 +1,6 @@
 # Elixir Python definitions for arm-trusted-firmware
 
-exec(open('cpppathinc.py').read())
+from filters.cpppathinc import CppPathIncFilter
+
+new_filters.append(CppPathIncFilter())
+
