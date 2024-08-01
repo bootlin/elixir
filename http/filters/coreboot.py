@@ -2,9 +2,15 @@
 
 from filters.dtsi import DtsiFilter
 
-exec(open('commonkconfig.py').read())
+from filters.kconfig import KconfigFilter
+from filters.kconfigidents import KconfigIdentsFilter
+from filters.defconfig import DefConfigIdentsFilter
 
 new_filters.extend([
     DtsiFilter(),
+
+    KconfigFilter(),
+    KconfigIdentsFilter(),
+    DefConfigIdentsFilter(),
 ])
 
