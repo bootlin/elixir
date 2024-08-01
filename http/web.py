@@ -18,11 +18,6 @@
 #  You should have received a copy of the GNU Affero General Public License
 #  along with Elixir.  If not, see <http://www.gnu.org/licenses/>.
 
-# prepare a default globals dict to be later used for filter context
-default_globals = {
-    **globals(),
-}
-
 import cgi
 import cgitb
 import os
@@ -36,6 +31,7 @@ import jinja2
 sys.path = [ sys.path[0] + '/..' ] + sys.path
 from lib import validFamily
 from query import Query, SymbolInstance
+from filters import get_filters
 from filters.utils import FilterContext
 
 script_dir = os.path.dirname(os.path.realpath(__file__))
@@ -304,30 +300,6 @@ def format_code(filename, code):
     formatter = pygments.formatters.HtmlFormatter(linenos=True, anchorlinenos=True)
     return pygments.highlight(code, lexer, formatter)
 
-# Return true if filter can be applied to file based on path of the file
-def filter_applies(filter, path):
-    if 'path_exceptions' in filter:
-        for p in filter['path_exceptions']:
-            if re.match(p, path):
-                return False
-
-    dir, filename = os.path.split(path)
-    filename, extension = os.path.splitext(filename)
-
-    c = filter['case']
-    if c == 'any':
-        return True
-    elif c == 'filename':
-        return filename in filter['match']
-    elif c == 'extension':
-        return extension[1:] in filter['match']
-    elif c == 'path':
-        return dir.startswith(tuple(filter['match']))
-    elif c == 'filename_extension':
-        return filename.endswith(tuple(filter['match']))
-    else:
-        raise ValueError('Invalid filter case', filter['case'])
-
 # Generate formatted HTML of a file, apply filters (for ex. to add identifier links)
 # q: Query object
 # project: name of the requested project
@@ -342,24 +314,6 @@ def generate_source(q, project, version, path):
     extension = extension[1:].lower()
     family = q.query('family', fname)
 
-    # globals required by filters
-    # this dict is also modified by filters - most introduce new, global variables 
-    # that are later used by prefunc/postfunc
-    filter_ctx = {
-        **default_globals,
-        "os": os,
-        "parse": parse,
-        "re": re,
-        "dts_comp_support": q.query('dts-comp'),
-
-        "version": version,
-        "family": family,
-        "project": project,
-        "path": path,
-        "tag": version_unquoted,
-        "q": q,
-    }
-
     source_base_url = f'/{ project }/{ version }/source'
 
     def get_ident_url(ident, ident_family=None):
@@ -368,7 +322,7 @@ def generate_source(q, project, version, path):
         ident = parse.quote(ident, safe='')
         return f'/{ project }/{ version }/{ ident_family }/ident/{ ident }'
 
-    new_filter_ctx = FilterContext(
+    filter_ctx = FilterContext(
         q,
         version_unquoted,
         family,
@@ -378,26 +332,11 @@ def generate_source(q, project, version, path):
         lambda rel_path: f'{ source_base_url }{ os.path.dirname(path) }/{ rel_path }',
     )
 
-    # Source common filter definitions
-    os.chdir('filters')
-    exec(open("common.py").read(), filter_ctx)
-
-    # Source project specific filters
-    f = project + '.py'
-    if os.path.isfile(f):
-        exec(open(f).read(), filter_ctx)
-    os.chdir('..')
-
-    filters = filter_ctx["filters"]
-    new_filters = [f for f in filter_ctx["new_filters"] if f.check_if_applies(new_filter_ctx)]
+    filters = get_filters(filter_ctx, project)
 
     # Apply filters
     for f in filters:
-        if filter_applies(f, path):
-            code = sub(f['prerex'], f['prefunc'], code, flags=re.MULTILINE)
-
-    for f in new_filters:
-        code = f.transform_raw_code(new_filter_ctx, code)
+        code = f.transform_raw_code(filter_ctx, code)
 
     html_code_block = format_code(fname, code)
 
@@ -405,11 +344,7 @@ def generate_source(q, project, version, path):
     html_code_block = sub('href="#-(\d+)', 'name="L\\1" id="L\\1" href="#L\\1', html_code_block)
 
     for f in filters:
-        if filter_applies(f, path):
-            html_code_block = sub(f['postrex'], f['postfunc'], html_code_block)
-
-    for f in new_filters:
-        html_code_block = f.untransform_formatted_code(new_filter_ctx, html_code_block)
+        html_code_block = f.untransform_formatted_code(filter_ctx, html_code_block)
 
     return html_code_block
 

@@ -22,6 +22,7 @@ class FilterContext:
     get_relative_source_url: Callable[[str], str]
 
 # Filter interface/base class
+# path_exceptions: list of regexes, disables filter if path of the filtered file matches a regex from the list
 class Filter:
     def __init__(self, path_exceptions: List[str] = []):
         self.path_exceptions = path_exceptions
