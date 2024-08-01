@@ -2,5 +2,9 @@
 
 from filters.dtsi import DtsiFilter
 
-new_filters.append(DtsiFilter())
 exec(open('commonkconfig.py').read())
+
+new_filters.extend([
+    DtsiFilter(),
+])
+

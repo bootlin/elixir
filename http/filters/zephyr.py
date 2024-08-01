@@ -2,7 +2,13 @@
 
 from filters.dtsi import DtsiFilter
 
-new_filters.append(DtsiFilter())
+from filters.cpppathinc import CppPathIncFilter
 
 exec(open('commonkconfig.py').read())
-exec(open('cpppathinc.py').read())
+
+new_filters.extend([
+    DtsiFilter(),
+
+    CppPathIncFilter(),
+])
+

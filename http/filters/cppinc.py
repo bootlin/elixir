@@ -1,23 +1,31 @@
+import re
+from filters.utils import Filter, FilterContext, encode_number, decode_number, extension_matches
+
 # Filters for cpp includes like these:
 # #include "file"
+# Example: musl/v1.2.5/source/src/dirent/dirfd.c#L2
+# #include "__dirent.h"
+class CppIncFilter(Filter):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.cppinc = []
 
-cppinc = []
+    def check_if_applies(self, ctx) -> bool:
+        return super().check_if_applies(ctx) and \
+                extension_matches(ctx.path, {'dts', 'dtsi', 'c', 'cc', 'cpp', 'c++', 'cxx', 'h', 's'})
 
-def keep_cppinc(m):
-    cppinc.append(m.group(3))
-    return m.group(1) + '#include' + m.group(2) + '"__KEEPCPPINC__' + encode_number(len(cppinc)) + '"'
+    def transform_raw_code(self, ctx, code: str) -> str:
+        def keep_cppinc(m):
+            self.cppinc.append(m.group(3))
+            return f'{ m.group(1) }#include{ m.group(2) }"__KEEPCPPINC__{ encode_number(len(self.cppinc)) }"'
 
-def replace_cppinc(m):
-    w = cppinc[decode_number(m.group(1)) - 1]
-    return '<a href="/'+project+'/'+version+'/source'+os.path.dirname(path)+'/'+w+'">'+w+'</a>'
+        return re.sub('^(\s*)#include(\s*)\"(.*?)\"', keep_cppinc, code, flags=re.MULTILINE)
 
-cppinc_filters = {
-                'case': 'extension',
-                'match': {'dts', 'dtsi', 'c', 'cc', 'cpp', 'c++', 'cxx', 'h', 's'},
-                'prerex': '^(\s*)#include(\s*)\"(.*?)\"',
-                'prefunc': keep_cppinc,
-                'postrex': '__KEEPCPPINC__([A-J]+)',
-                'postfunc': replace_cppinc
-                }
+    def untransform_formatted_code(self, ctx: FilterContext, html: str) -> str:
+        def replace_cppinc(m):
+            w = self.cppinc[decode_number(m.group(1)) - 1]
+            url = ctx.get_relative_source_url(w)
+            return f'<a href="{ url }">{ w }</a>'
 
-filters.append(cppinc_filters)
+        return re.sub('__KEEPCPPINC__([A-J]+)', replace_cppinc, html, flags=re.MULTILINE)
+
