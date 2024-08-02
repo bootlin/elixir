@@ -22,6 +22,12 @@ class FilterContext:
     get_relative_source_url: Callable[[str], str]
 
 # Filter interface/base class
+# Filters are used to add extra information, like links, to code formatted into HTML by Pygments.
+# Filters consist of two parts: the first part runs on unformatted code, transforming it
+# to mark interesting identifiers, for example keywords. How the identifiers are marked is
+# up to the filter, but it's important to be careful to not break formatting.
+# The second part runs on HTML, replacing markings left by the first part with HTML code.
+# path_exceptions: list of regexes, disables filter if path of the filtered file matches a regex from the list
 class Filter:
     def __init__(self, path_exceptions: List[str] = []):
         self.path_exceptions = path_exceptions
@@ -35,7 +41,8 @@ class Filter:
         return True
 
     # Add information required by filter by transforming raw source code.
-    # Known identifiers are marked by '\033[31m' and '\033[0m'
+    # Known identifiers are marked by '\033[31m' and '\033[0m'. Note that these marked
+    # identifiers are usually handled by IdentFilter or KconfigIdentsFilter.
     def transform_raw_code(self, ctx: FilterContext, code: str) -> str:
         return code
 
