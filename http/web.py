@@ -534,7 +534,8 @@ def generate_ident_page(q, basedir, parsed_path):
     project = parsed_path.project
     source_base_url = f'/{ project }/{ version }/source'
 
-    symbol_definitions, symbol_references, symbol_doccomments = q.query('ident', version_unquoted, ident, family)
+    ident_unquoted = parse.unquote(ident)
+    symbol_definitions, symbol_references, symbol_doccomments = q.query('ident', version_unquoted, ident_unquoted, family)
 
     symbol_sections = []
 
@@ -583,7 +584,7 @@ def generate_ident_page(q, basedir, parsed_path):
     data = {
         **get_layout_template_context(q, basedir, get_url_with_new_version, project, version),
 
-        'searched_ident': ident,
+        'searched_ident': ident_unquoted,
         'current_family': family,
 
         'symbol_sections': symbol_sections,
