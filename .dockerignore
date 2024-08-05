@@ -1,0 +1,22 @@
+# Generated files
+**/__pycache__
+tags
+/.cache/
+.idea/
+env
+venv/
+.venv/
+**/*.py[cod]
+
+**/*.db
+**/repo
+**/data
+
+.git
+.gitignore
+.gitattributes
+
+# Editor and other backup files
+**/*.swp
+**/*~
+**/~*

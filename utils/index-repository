@@ -1,0 +1,16 @@
+#!/bin/sh
+
+if [ "$#" -ne 2 ]; then
+    echo "Usage: $0 repo_name repo_url"
+    exit 1
+fi
+
+dir=/srv/elixir-data/$1
+
+mkdir -p $dir/data
+git clone --bare $2 $dir/repo
+git config --system --add safe.directory $dir/repo
+
+export LXR_REPO_DIR=$dir/repo
+export LXR_DATA_DIR=$dir/data
+python3 /usr/local/elixir/update.py

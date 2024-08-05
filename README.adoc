@@ -357,20 +357,50 @@ where all repositories are found.
 
 = Building Docker images
 
-Docker files are provided in the `docker/` directory. To generate a Docker image
-for indexing the sources of a project, first fetch the Elixir repository. Then
-pick the project you want to index (Musl is nice test data being not too slow
-to index) and your target distribution (`debian` currently), and
-run:
+Dockerfiles are provided in the `docker/` directory. To build the image, run the following commands:
 
- $ docker build -t elixir-debian --build-arg GIT_REPO_URL=git://git.musl-libc.org/musl --build-arg PROJECT=musl ./docker/debian/
+ # git clone https://github.com/bootlin/elixir.git ./elixir
+ # docker build -t elixir -f ./elixir/docker/Dockerfile ./elixir
 
-Then you can use your new container as follows (you get the container id from the output of `docker build`):
+You can then run the image using `docker run`.
+It is recommended to mount a volume or a host directory into the Elixir data directory.
+This allows you to easily replace the container with a new version without losing indexing data.
 
- $ docker run <container-id>
+ # mkdir ./elixir-data
+ # docker run -v ./elixir-data/:/srv/elixir-data -d --name elixir-container elixir
 
-You can the open the below URL in a browser on your host: http://172.17.0.2/musl/latest/source
-(change the container IP address if you don't get the default one)
+The Docker image does not contain any repositories. To index a repository, you can use a utility script - index-repository.
+For example, to add musl repository, run:
+
+ # docker exec -it elixir-container /usr/local/elixir/utils/index-repository musl https://git.musl-libc.org/git/musl
+
+Or, to run indexing in a separate container:
+
+ # docker run -v ./elixir-data/:/srv/elixir-data --entrypoint /usr/local/elixir/utils/index-repository elixir musl https://git.musl-libc.org/git/musl
+
+You can also use utils/index-all-repositories to start indexing all officially supported repositories.
+
+After indexing is done, Elixir should be available under the following URL on your host:
+http://172.17.0.2/musl/latest/source
+
+If 172.17.0.2 does not answer, you can check the IP address of the container by running:
+
+ # docker inspect elixir-container | grep IPAddress
+
+== Automatic repository updates
+
+The Docker image does not automatically update repositories by itself.
+You can, for example, start `utils/update-elixir-data` in the container (or in a separate container, with Elixir data volume/directory mounted)
+from cron on the host to periodically update repositories.
+
+== Using Docker image as a development server
+
+You can easily use the Docker image as a development server by following the steps above, but mounting Elixir source directory from the host
+into `/usr/local/elixir/` in the container when running `docker run elixir`.
+
+Changes in the code made on the host should be automatically reflected in the container.
+You can use `apache2ctl` to restart Apache.
+Error logs are available in `/var/log/apache2/error.log` and `/tmp/elixir-errors` within the container.
 
 = Hardware requirements
 
