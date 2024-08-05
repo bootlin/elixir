@@ -32,9 +32,7 @@ RUN mkdir -p /srv/elixir-data/
 # make apache less stricter about cgitb spam headers
 COPY ./docker/000-default.conf /etc/apache2/sites-available/000-default.conf
 
-RUN \
-  echo -e "\nHttpProtocolOptions Unsafe" >> /etc/apache2/apache.conf && \
-  a2enmod cgi rewrite
+RUN a2enmod cgi rewrite
 
 EXPOSE 80
 
