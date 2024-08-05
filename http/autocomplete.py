@@ -18,74 +18,88 @@
 #  You should have received a copy of the GNU Affero General Public License
 #  along with Elixir.  If not, see <http://www.gnu.org/licenses/>.
 
-import cgi
+import falcon
 from urllib import parse
 import sys
 import os
 
-# Get values from http GET
-form = cgi.FieldStorage()
-query_string = form.getvalue('q')
-query_family = form.getvalue('f')
-query_project = form.getvalue('p')
+ELIXIR_DIR = os.path.dirname(os.path.realpath(__file__)) + '/..'
 
-# Get project dirs
-basedir = os.environ['LXR_PROJ_DIR']
-datadir = basedir + '/' + query_project + '/data'
-repodir = basedir + '/' + query_project + '/repo'
+if ELIXIR_DIR not in sys.path:
+    sys.path = [ ELIXIR_DIR ] + sys.path
 
-# Import query
-sys.path = [ sys.path[0] + '/..' ] + sys.path
-from query import Query
-q = Query(datadir, repodir)
+import query
 
-# Create tmp directory for autocomplete
-tmpdir = '/tmp/autocomplete/' + query_project
-if not(os.path.isdir(tmpdir)):
-    os.makedirs(tmpdir, exist_ok=True)
+class AutocompleteResource:
+    def on_get(self, req, resp):
+        # Get values from http GET
+        query_string = req.get_param('q')
+        query_family = req.get_param('f')
+        query_project = req.get_param('p')
 
-latest = q.query('latest')
+        # Get project dirs
+        basedir = req.env['LXR_PROJ_DIR']
+        datadir = basedir + '/' + query_project + '/data'
+        repodir = basedir + '/' + query_project + '/repo'
 
-# Define some specific values for some families
-if query_family == 'B':
-    name = 'comps'
-    process = lambda x: parse.unquote(x)
-else:
-    name = 'defs'
-    process = lambda x: x
+        q = query.Query(datadir, repodir)
 
-# Init values for tmp files
-filename = tmpdir + '/' + name
-mode = 'r+' if os.path.exists(filename) else 'w+'
+        # Create tmp directory for autocomplete
+        tmpdir = '/tmp/autocomplete/' + query_project
+        if not(os.path.isdir(tmpdir)):
+            os.makedirs(tmpdir, exist_ok=True)
 
-# Open tmp file
-# Fill it with the keys of the database only
-# if the file is older than the database
-f = open(filename, mode)
-if not f.readline()[:-1] == latest:
-    f.seek(0)
-    f.truncate()
-    f.write(latest + "\n")
-    f.write('\n'.join([process(x.decode()) for x in q.query('keys', name)]))
-    f.seek(0)
-    f.readline() # Skip first line that store the version number
+        latest = q.query('latest')
 
-# Prepare http response
-response = 'Content-Type: text/html;charset=utf-8\n\n[\n'
+        # Define some specific values for some families
+        if query_family == 'B':
+            name = 'comps'
+            process = lambda x: parse.unquote(x)
+        else:
+            name = 'defs'
+            process = lambda x: x
 
-# Search for the 10 first matching elements in the tmp file
-index = 0
-for i in f:
-    if i.startswith(query_string):
-        response += '"' + i[:-1] + '",'
-        index += 1
+        # Init values for tmp files
+        filename = tmpdir + '/' + name
+        mode = 'r+' if os.path.exists(filename) else 'w+'
 
-    if index == 10:
-        break
+        # Open tmp file
+        # Fill it with the keys of the database only
+        # if the file is older than the database
+        f = open(filename, mode)
+        if not f.readline()[:-1] == latest:
+            f.seek(0)
+            f.truncate()
+            f.write(latest + "\n")
+            f.write('\n'.join([process(x.decode()) for x in q.query('keys', name)]))
+            f.seek(0)
+            f.readline() # Skip first line that store the version number
 
-# Complete and send response
-response = response[:-1] + ']'
-print(response)
+        # Prepare http response
+        response = '['
 
-# Close tmp file
-f.close()
+        # Search for the 10 first matching elements in the tmp file
+        index = 0
+        for i in f:
+            if i.startswith(query_string):
+                response += '"' + i[:-1] + '",'
+                index += 1
+
+            if index == 10:
+                break
+
+        # Complete and send response
+        response = response[:-1] + ']'
+        resp.text = response
+        resp.status = falcon.HTTP_200
+
+        # Close tmp file
+        f.close()
+
+def get_application():
+    app = falcon.App()
+    app.add_route('/', AutocompleteResource())
+    return app
+
+application = get_application()
+
