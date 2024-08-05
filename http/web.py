@@ -122,7 +122,7 @@ def handle_source_url(path, _):
 
     if parsed_path.version == 'latest':
         new_parsed_path = parsed_path._replace(version=parse.quote(query.query('latest')))
-        return (301, stringify_source_path(new_parsed_path))
+        return (302, stringify_source_path(new_parsed_path))
 
     return generate_source_page(query, basedir, parsed_path)
 
@@ -202,7 +202,7 @@ def handle_ident_url(path, params):
 
     if parsed_path.version == 'latest':
         new_parsed_path = parsed_path._replace(version=parse.quote(query.query('latest')))
-        return (301, stringify_ident_path(new_parsed_path))
+        return (302, stringify_ident_path(new_parsed_path))
 
     return generate_ident_page(query, basedir, parsed_path)
 
@@ -570,7 +570,8 @@ if result is not None:
         print('Location: '+ result[1] +'\n')
     elif result[0] == 302:
         print('Status: 302 Found')
-        print('Location: '+ result[1] +'\n')
+        print('Location: '+ result[1])
+        print('Cache-Control: max-age=86400\n')  # 24 hours
     elif result[0] == 400:
         print('Status: 400 Bad Request')
         print('Content-Type: text/html;charset=utf-8\n')
