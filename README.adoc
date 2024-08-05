@@ -198,7 +198,6 @@ Note: If using apache2 (Ubuntu/Debian) instead of httpd (RedHat/Centos),
 the default config file to edit is: `/etc/apache2/sites-enabled/000-default.conf`
 
 ----
-HttpProtocolOptions Unsafe
 # Required for HTTP
 <Directory /usr/local/elixir/http/>
     Options +ExecCGI
