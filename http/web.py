@@ -18,41 +18,30 @@
 #  You should have received a copy of the GNU Affero General Public License
 #  along with Elixir.  If not, see <http://www.gnu.org/licenses/>.
 
-import cgi
-import cgitb
+import logging
 import os
 import re
 import sys
 from collections import OrderedDict, namedtuple
 from re import search, sub
 from urllib import parse
+import falcon
 import jinja2
 
-sys.path = [ sys.path[0] + '/..' ] + sys.path
+ELIXIR_DIR = os.path.dirname(os.path.realpath(__file__)) + '/..'
+
+if ELIXIR_DIR not in sys.path:
+    sys.path = [ ELIXIR_DIR ] + sys.path
+
+HTTP_DIR = os.path.dirname(os.path.realpath(__file__))
+
+if HTTP_DIR not in sys.path:
+    sys.path = [ HTTP_DIR ] + sys.path
+
 from lib import validFamily
 from query import Query, SymbolInstance
 from filters import get_filters
 from filters.utils import FilterContext
-
-HTTP_STATUS_OK = 200
-HTTP_STATUS_MOVED_PERMANENTLY = 301
-HTTP_STATUS_FOUND = 302
-HTTP_STATUS_BAD_REQUEST = 400
-HTTP_STATUS_NOT_FOUND = 404
-
-script_dir = os.path.dirname(os.path.realpath(__file__))
-templates_dir = os.path.join(script_dir, '../templates/')
-loader = jinja2.FileSystemLoader(templates_dir)
-environment = jinja2.Environment(loader=loader)
-
-# Create /tmp/elixir-errors if not existing yet (could happen after a reboot)
-errdir = '/tmp/elixir-errors'
-
-if not(os.path.isdir(errdir)):
-    os.makedirs(errdir, exist_ok=True)
-
-# Enable CGI Trackback Manager for debugging (https://docs.python.org/fr/3/library/cgitb.html)
-cgitb.enable(display=0, logdir=errdir, format='text')
 
 
 # Returns a Query class instance or None if project data directory does not exist
@@ -67,9 +56,10 @@ def get_query(basedir, project):
 
     return Query(datadir, repodir)
 
-def get_error_page(basedir, title, details=None):
+# Generated a Elixir error page
+def get_error_page(ctx, title, details=None):
     template_ctx = {
-        'projects': get_projects(basedir),
+        'projects': get_projects(ctx.config.project_dir),
         'topbar_families': TOPBAR_FAMILIES,
         'current_version_path': (None, None, None),
 
@@ -79,155 +69,129 @@ def get_error_page(basedir, title, details=None):
     if details is not None:
         template_ctx['error_details'] = details
 
-    template = environment.get_template('error.html')
+    template = ctx.jinja_env.get_template('error.html')
     return template.render(template_ctx)
 
-# Represents a parsed `source` URL path
-# project: name of the project, ex: "musl"
-# version: tagged commit of the project, ex: "v1.2.5"
-# path: path to the requested file, starts with a slash, ex: "/src/prng/lrand48.c"
-ParsedSourcePath = namedtuple('ParsedSourcePath', 'project, version, path')
 
-# Parse `source` route URL path into parts
-# NOTE: All parts are unquoted
-def parse_source_path(path):
-    m = search('^/([^/]*)/([^/]*)/[^/]*(.*)$', path)
-    if m:
-        return ParsedSourcePath(m.group(1), m.group(2), m.group(3))
+# Returns base url of source pages
+# project and version assumed unquoted
+def get_source_base_url(project, version):
+    return f'/{ parse.quote(project, safe="") }/{ parse.quote(version, safe="") }/source'
 
 # Converts ParsedSourcePath to a string with corresponding URL path
-def stringify_source_path(ppath):
-    path = f'/{ppath.project}/{ppath.version}/source{ppath.path}'
+def stringify_source_path(project, version, path):
+    if not path.startswith('/'):
+        path = '/' + path
+    path = f'{ get_source_base_url(project, version) }{ path }'
     return path.rstrip('/')
 
-# Returns 301 redirect to path with trailing slashes removed if path has a trailing slash
-def redirect_on_trailing_slash(path):
-    if path[-1] == '/':
-        return (HTTP_STATUS_MOVED_PERMANENTLY, path.rstrip('/'))
+# Handles source URLs
+# Path parameters are asssumed to be unquoted by converters
+class SourceResource:
+    def on_get(self, req, resp, project, version, path):
+        if not path.startswith('/') and len(path) != 0:
+            path = f'/{ path }'
 
-# Handles `source` URL, returns a response
-# path: string with URL path of the request
-def handle_source_url(path, _):
-    basedir = os.environ['LXR_PROJ_DIR']
+        if path.endswith('/'):
+            resp.status = falcon.HTTP_MOVED_PERMANENTLY
+            resp.location = stringify_source_path(project, version, path)
+            return
 
-    status = redirect_on_trailing_slash(path)
-    if status is not None:
-        return status
+        query = get_query(req.context.config.project_dir, project)
+        if not query:
+            resp.status = falcon.HTTP_NOT_FOUND
+            resp.content_type = falcon.MEDIA_HTML
+            resp.text = get_error_page(req.context, "Unknown project")
+            return
 
-    parsed_path = parse_source_path(path)
-    if parsed_path is None:
-        print("Error: failed to parse path in handle_source_url", path, file=sys.stderr)
-        return (HTTP_STATUS_NOT_FOUND, get_error_page(basedir, "Failed to parse path"))
+        # Check if path contains only allowed characters
+        if not search('^[A-Za-z0-9_/.,+-]*$', path):
+            resp.status = falcon.HTTP_BAD_REQUEST
+            resp.content_type  = falcon.MEDIA_HTML
+            resp.text = get_error_page(req.context, "Path contains characters that are not allowed.")
+            return
 
-    query = get_query(basedir, parsed_path.project)
-    if not query:
-        return (HTTP_STATUS_NOT_FOUND, get_error_page(basedir, "Unknown project"))
+        if version == 'latest':
+            version = parse.quote(query.query('latest'))
+            resp.status = falcon.HTTP_FOUND
+            resp.location = stringify_source_path(project, version, path)
+            return
 
-    # Check if path contains only allowed characters
-    if not search('^[A-Za-z0-9_/.,+-]*$', parsed_path.path):
-        return (HTTP_STATUS_BAD_REQUEST,
-            get_error_page(basedir, "Path contains characters that are not allowed."))
+        resp.content_type = falcon.MEDIA_HTML
+        resp.status, resp.text = generate_source_page(req.context, query, project, version, path)
 
-    if parsed_path.version == 'latest':
-        new_parsed_path = parsed_path._replace(version=parse.quote(query.query('latest')))
-        return (HTTP_STATUS_FOUND, stringify_source_path(new_parsed_path))
-
-    return generate_source_page(query, basedir, parsed_path)
+# Handles source URLs without a path, ex. '/u-boot/v2023.10/source'.
+# Note lack of trailing slash
+class SourceWithoutPathResource(SourceResource):
+    def on_get(self, req, resp, project, version):
+        return super().on_get(req, resp, project, version, '')
 
 
-# Represents a parsed `ident` URL path
-# project: name of the project, ex: musl
-# version: tagged commit of the project, ex: v1.2.5
-# family: searched symbol family, replaced with C if unknown, ex: A
-# ident: searched identificator, ex: fpathconf
-ParsedIdentPath = namedtuple('ParsedIdentPath', 'project, version, family, ident')
-
-# Parse `ident` route URL path into parts
-# NOTE: All parts are unquoted
-def parse_ident_path(path):
-    m = search('^/([^/]*)/([^/]*)(?:/([^/]))?/[^/]*(.*)$', path)
-
-    if m:
-        family = str(m.group(3)).upper()
-        # If identifier family extracted from the path is unknown,
-        # replace it with C - the default family.
-        # This also handles ident paths without a family,
-        # ex: https://elixir.bootlin.com/linux/v6.10/ident/ROOT_DEV
-        if not validFamily(family):
-            family = 'C'
-
-        parsed_path = ParsedIdentPath(
-            m.group(1),
-            m.group(2),
-            family,
-            m.group(4)[1:]
-        )
-
-        return parsed_path
+# Returns base url of ident pages
+# project and version assumed unquoted
+def get_ident_base_url(project, version, family=None):
+    project = parse.quote(project, safe="")
+    version = parse.quote(version, safe="")
+    if family is not None:
+        return f'/{ project }/{ version }/{ parse.quote(family, safe="") }/ident'
+    else:
+        return f'/{ project }/{ version }/ident'
 
 # Converts ParsedIdentPath to a string with corresponding URL path
-def stringify_ident_path(ppath):
-    path = f'/{ppath.project}/{ppath.version}/{ppath.family}/ident/{ppath.ident}'
+def stringify_ident_path(project, version, family, ident):
+    path = f'{ get_ident_base_url(project, version, family) }/{ parse.quote(ident, safe="") }'
     return path.rstrip('/')
 
-# Handles `ident` URL post request, returns a permanent redirect to ident/$ident_name
-# parsed_path: ParsedIdentPath
-# form: cgi.FieldStorage with parsed POST request form
-def handle_ident_post_form(parsed_path, form):
-    post_ident = form.getvalue('i')
-    post_family = str(form.getvalue('f')).upper()
+# Handles redirect on a POST to ident resource
+class IdentPostRedirectResource:
+    def on_post(self, req, resp, project, version, family=None, ident=None):
+        form = req.get_media()
+        post_ident = form.get('i')
+        post_family = form.get('f')
 
-    if parsed_path.ident == '' and post_ident:
-        post_ident = parse.quote(post_ident.strip(), safe='/')
-        new_parsed_path = parsed_path._replace(
-            family=post_family,
-            ident=post_ident
-        )
-        return (HTTP_STATUS_FOUND, stringify_ident_path(new_parsed_path))
+        if not validFamily(post_family):
+            post_family = 'C'
 
-# Handles `ident` URL, returns a response
-# path: string with URL path
-# params: cgi.FieldStorage with request parameters
-def handle_ident_url(path, params):
-    basedir = os.environ['LXR_PROJ_DIR']
+        if not post_ident:
+            resp.status = falcon.HTTP_BAD_REQUEST
+            resp.content_type = falcon.MEDIA_HTML
+            resp.text = get_error_page(req.context, "Invalid identifier")
+            return
 
-    parsed_path = parse_ident_path(path)
-    if parsed_path is None:
-        print("Error: failed to parse path in handle_ident_url", path, file=sys.stderr)
-        return (HTTP_STATUS_NOT_FOUND, get_error_page(basedir, "Invalid path."))
+        post_ident = post_ident.strip()
+        resp.status = falcon.HTTP_MOVED_PERMANENTLY
+        resp.location = stringify_ident_path(project, version, post_family, post_ident)
 
-    status = handle_ident_post_form(parsed_path, params)
-    if status is not None:
-        return status
+# Handles ident URLs when family is specified in the URL, both POST and GET
+# See IdentPostRedirectResource for behavior on POST
+# Path parameters are asssumed to be unquoted by converters
+class IdentResource(IdentPostRedirectResource):
+    def on_get(self, req, resp, project, version, family, ident):
+        query = get_query(req.context.config.project_dir, project)
+        if not query:
+            resp.status = falcon.HTTP_NOT_FOUND
+            resp.content_type = falcon.MEDIA_HTML
+            resp.text = get_error_page(req.context, "Unknown project.")
+            return
 
-    query = get_query(basedir, parsed_path.project)
-    if not query:
-        return (HTTP_STATUS_NOT_FOUND, get_error_page(basedir, "Unknown project."))
+        if version == 'latest':
+            version = parse.quote(query.query('latest'))
+            resp.status = falcon.HTTP_FOUND
+            resp.location = stringify_ident_path(project, version, family, ident)
+            return
 
-    # Check if identifier contains only allowed characters
-    if not parsed_path.ident or not search('^[A-Za-z0-9_\$\.%-]*$', parsed_path.ident):
-        return (HTTP_STATUS_BAD_REQUEST, get_error_page(basedir, "Identifier is invalid."))
+        resp.content_type = falcon.MEDIA_HTML
+        resp.status, resp.text = generate_ident_page(req.context, query, project, version, family, ident)
 
-    if parsed_path.version == 'latest':
-        new_parsed_path = parsed_path._replace(version=parse.quote(query.query('latest')))
-        return (HTTP_STATUS_FOUND, stringify_ident_path(new_parsed_path))
-
-    return generate_ident_page(query, basedir, parsed_path)
-
-
-# Calls proper handler functions based on URL path, returns 404 if path is unknown
-# path: path part of the URL
-# params: cgi.FieldStorage with request parameters
-def route(path, params):
-    if search('^/[^/]*/[^/]*/source.*$', path) is not None:
-        return handle_source_url(path, params)
-    elif search('^/[^/]*/[^/]*(?:/[^/])?/ident.*$', path) is not None:
-        return handle_ident_url(path, params)
-    else:
-        return (HTTP_STATUS_NOT_FOUND,
-                get_error_page(os.environ['LXR_PROJ_DIR'], "Unknown path."))
+# Handles ident URLs when family is not specified in the URL
+# Also handles POST requests for ident URLs without family - IdentPostRedirectResource is
+# inherited from IdentResource
+class IdentWithoutFamilyResource(IdentResource):
+    def on_get(self, req, resp, project, version, ident):
+        super().on_get(req, resp, project, version, 'C', ident)
 
 
+# File families available in the dropdown next to search input in the topbar
 TOPBAR_FAMILIES = {
     'A': 'All symbols',
     'C': 'C/CPP/ASM',
@@ -284,24 +248,25 @@ def get_versions(versions, get_url, current_version):
 
 # Retruns template context used by the layout template
 # q: Query object
-# basedir: directory with projects
+# ctx: RequestContext object
 # get_url_with_new_version: see get_url parameter of get_versions
 # project: name of the project
 # version: version of the project
-def get_layout_template_context(q, basedir, get_url_with_new_version, project, version):
+def get_layout_template_context(q, ctx, get_url_with_new_version, project, version):
     versions, current_version_path = get_versions(q.query('versions'), get_url_with_new_version, version)
     return {
-        'projects': get_projects(basedir),
+        'projects': get_projects(ctx.config.project_dir),
         'versions': versions,
         'current_version_path': current_version_path,
         'topbar_families': TOPBAR_FAMILIES,
 
-        'source_base_url': f'/{ project }/{ version }/source',
-        'ident_base_url': f'/{ project }/{ version }/ident',
+        'source_base_url': get_source_base_url(project, version),
+        'ident_base_url': get_ident_base_url(project, version),
         'current_project': project,
         'current_tag': parse.unquote(version),
         'current_family': 'A',
     }
+
 
 # Guesses file format based on filename, returns code formatted as HTML
 def format_code(filename, code):
@@ -328,25 +293,23 @@ def format_code(filename, code):
 # version: requested version of the project
 # path: path to the file in the repository
 def generate_source(q, project, version, path):
-    version_unquoted = parse.unquote(version)
-    code = q.query('file', version_unquoted, path)
+    code = q.query('file', version, path)
 
     _, fname = os.path.split(path)
     _, extension = os.path.splitext(fname)
     extension = extension[1:].lower()
     family = q.query('family', fname)
 
-    source_base_url = f'/{ project }/{ version }/source'
+    source_base_url = get_source_base_url(project, version)
 
     def get_ident_url(ident, ident_family=None):
         if ident_family is None:
             ident_family = family
-        ident = parse.quote(ident, safe='')
-        return f'/{ project }/{ version }/{ ident_family }/ident/{ ident }'
+        return stringify_ident_path(project, version, ident_family, ident)
 
     filter_ctx = FilterContext(
         q,
-        version_unquoted,
+        version,
         family,
         path,
         get_ident_url,
@@ -408,19 +371,15 @@ def get_directory_entries(q, base_url, tag, path):
     return dir_entries
 
 # Generates response (status code and optionally HTML) of the `source` route
+# ctx: RequestContext
 # q: Query object
-# basedir: path to data directory, ex: "/srv/elixir-data"
 # parsed_path: ParsedSourcePath
-def generate_source_page(q, basedir, parsed_path):
-    status = HTTP_STATUS_OK
+def generate_source_page(ctx, q, project, version, path):
+    status = falcon.HTTP_OK
 
-    project = parsed_path.project
-    version = parsed_path.version
-    path = parsed_path.path
-    version_unquoted = parse.unquote(version)
-    source_base_url = f'/{ project }/{ version }/source'
+    source_base_url = get_source_base_url(project, version)
 
-    type = q.query('type', version_unquoted, path)
+    type = q.query('type', version, path)
 
     if type == 'tree':
         back_path = os.path.dirname(path[:-1])
@@ -428,22 +387,22 @@ def generate_source_page(q, basedir, parsed_path):
             back_path = ''
 
         template_ctx = {
-            'dir_entries': get_directory_entries(q, source_base_url, version_unquoted, path),
+            'dir_entries': get_directory_entries(q, source_base_url, version, path),
             'back_url': f'{ source_base_url }{ back_path }' if path != '' else None,
         }
-        template = environment.get_template('tree.html')
+        template = ctx.jinja_env.get_template('tree.html')
     elif type == 'blob':
         template_ctx = {
             'code': generate_source(q, project, version, path),
             'path': path,
         }
-        template = environment.get_template('source.html')
+        template = ctx.jinja_env.get_template('source.html')
     else:
-        status = HTTP_STATUS_NOT_FOUND
+        status = falcon.HTTP_NOT_FOUND
         template_ctx = {
             'error_title': 'This file does not exist.',
         }
-        template = environment.get_template('error.html')
+        template = ctx.jinja_env.get_template('error.html')
 
 
     # Generate breadcrumbs
@@ -465,11 +424,11 @@ def generate_source_page(q, basedir, parsed_path):
     else:
         title_path = f'{ path_split[-1] } - { "/".join(path_split) } - '
 
-    get_url_with_new_version = lambda v: stringify_source_path(parsed_path._replace(version=parse.quote(v, safe='')))
+    get_url_with_new_version = lambda v: stringify_source_path(project, v, path)
 
     # Create template context
     data = {
-        **get_layout_template_context(q, basedir, get_url_with_new_version, project, version),
+        **get_layout_template_context(q, ctx, get_url_with_new_version, project, version),
 
         'title_path': title_path,
         'path': path,
@@ -506,21 +465,15 @@ def symbol_instance_to_entry(base_url, symbol):
     return SymbolEntry(symbol.type, symbol.path, lines)
 
 # Generates response (status code and optionally HTML) of the `ident` route
-# q: Query object
+# ctx: RequestContext
 # basedir: path to data directory, ex: "/srv/elixir-data"
 # parsed_path: ParsedIdentPath
-def generate_ident_page(q, basedir, parsed_path):
-    status = HTTP_STATUS_OK
+def generate_ident_page(ctx, q, project, version, family, ident):
+    status = falcon.HTTP_OK
 
-    ident = parsed_path.ident
-    version = parsed_path.version
-    version_unquoted = parse.unquote(version)
-    family = parsed_path.family
-    project = parsed_path.project
-    source_base_url = f'/{ project }/{ version }/source'
+    source_base_url = get_source_base_url(project, version)
 
-    ident_unquoted = parse.unquote(ident)
-    symbol_definitions, symbol_references, symbol_doccomments = q.query('ident', version_unquoted, ident_unquoted, family)
+    symbol_definitions, symbol_references, symbol_doccomments = q.query('ident', version, ident, family)
 
     symbol_sections = []
 
@@ -562,56 +515,103 @@ def generate_ident_page(q, basedir, parsed_path):
 
     else:
         if ident != '':
-            status = HTTP_STATUS_NOT_FOUND
+            status = falcon.HTTP_NOT_FOUND
 
-    get_url_with_new_version = lambda v: stringify_ident_path(parsed_path._replace(version=parse.quote(v, safe='')))
+    get_url_with_new_version = lambda v: stringify_ident_path(project, v, family, ident)
 
     data = {
-        **get_layout_template_context(q, basedir, get_url_with_new_version, project, version),
+        **get_layout_template_context(q, ctx, get_url_with_new_version, project, version),
 
-        'searched_ident': ident_unquoted,
+        'searched_ident': ident,
         'current_family': family,
 
         'symbol_sections': symbol_sections,
     }
 
-    template = environment.get_template('ident.html')
+    template = ctx.jinja_env.get_template('ident.html')
     return (status, template.render(data))
 
-path = os.environ.get('REQUEST_URI') or os.environ.get('SCRIPT_URL')
 
-# parses and stores request parameters, both query string and POST request form
-request_params = cgi.FieldStorage()
+# Elixir config, currently contains only path to directory with projects
+Config = namedtuple('Config', 'project_dir')
 
-result = route(path, request_params)
+# Basic information about handled request - current Elixir configuration, configured Jinja environment
+# and logger
+RequestContext = namedtuple('RequestContext', 'config, jinja_env, logger')
 
-if result is not None:
-    if result[0] == HTTP_STATUS_OK:
-        print('Content-Type: text/html;charset=utf-8\n')
-        print(result[1], end='')
-    elif result[0] == HTTP_STATUS_MOVED_PERMANENTLY:
-        print('Status: 301 Moved Permanently')
-        print('Location: '+ result[1] +'\n')
-    elif result[0] == HTTP_STATUS_FOUND:
-        print('Status: 302 Found')
-        print('Location: '+ result[1])
-        print('Cache-Control: max-age=86400\n')  # 24 hours
-    elif result[0] == HTTP_STATUS_BAD_REQUEST:
-        print('Status: 400 Bad Request')
-        print('Content-Type: text/html;charset=utf-8\n')
-        print(result[1], end='')
-    elif result[0] == HTTP_STATUS_NOT_FOUND:
-        print('Status: 404 Not Found')
-        print('Content-Type: text/html;charset=utf-8\n')
-        print(result[1], end='')
-    else:
-        print('Status: 500 Internal Server Error')
-        print('Content-Type: text/html;charset=utf-8\n')
-        print('Error - route returned an unknown status code', result, file=sys.stderr)
-        print('Unknown error - check error logs for details\n')
-else:
-    print('Status: 500 Internal Server Error')
-    print('Content-Type: text/html;charset=utf-8\n')
-    print('Error - route returned None', file=sys.stderr)
-    print('Unknown error - check error logs for details\n')
+# Builds a RequestContext instance from global context
+def get_request_context(environ):
+    script_dir = os.path.dirname(os.path.realpath(__file__))
+    templates_dir = os.path.join(script_dir, '../templates/')
+    loader = jinja2.FileSystemLoader(templates_dir)
+    environment = jinja2.Environment(loader=loader)
+
+    # TODO - config should probably be read from a file and passed to resource classes,
+    # not read from apache config environment that's passed to each request
+    return RequestContext(Config(environ['LXR_PROJ_DIR']), environment, logging.getLogger(__name__))
+
+
+# see https://falcon.readthedocs.io/en/v3.1.2/user/recipes/raw-url-path.html
+# Replaces the default, unquoted URL with a quoted version
+# NOTE: this is non-standard and it's not guaranteed to work on all WSGI servers
+class RawPathComponent:
+    def process_request(self, req, resp):
+        raw_uri = req.env.get('RAW_URI') or req.env.get('REQUEST_URI')
+        if raw_uri:
+            req.path, _, _ = raw_uri.partition('?')
+
+# Adds request context to all requests
+class RequestContextMiddleware:
+    def process_request(self, req, resp):
+        req.context = get_request_context(req.env)
+
+# Validates and unquotes project parameter
+class ProjectConverter(falcon.routing.BaseConverter):
+    def convert(self, value: str):
+        value = parse.unquote(value)
+        if re.match(r'^[a-zA-Z0-9-]+$', value):
+            return value.strip()
+
+# Validates and unquotes version parameter
+class VersionConverter(falcon.routing.BaseConverter):
+    def convert(self, value: str):
+        value = parse.unquote(value)
+        if re.match(r'^[a-zA-Z0-9_.,:/-]+$', value):
+            return value.strip()
+
+# Validates and unquotes identifier parameter
+class IdentConverter(falcon.routing.BaseConverter):
+    def convert(self, value: str):
+        value = parse.unquote(value)
+        if re.match(r'^[A-Za-z0-9_,.+?#-]+$', value):
+            return value.strip()
+
+# Returns default family if family is not valid
+class FamilyConverter(falcon.routing.BaseConverter):
+    def convert(self, value: str):
+        value = parse.unquote(value)
+        if not validFamily(value):
+            value = 'C'
+        return value
+
+# Builds and returns the Falcon application
+def get_application():
+    app = falcon.App(middleware=[
+        RawPathComponent(),
+        RequestContextMiddleware(),
+    ])
+    app.router_options.converters['project'] = ProjectConverter
+    app.router_options.converters['version'] = VersionConverter
+    app.router_options.converters['ident'] = IdentConverter
+    app.router_options.converters['family'] = FamilyConverter
+
+    app.add_route('/{project:project}/{version:version}/source/{path:path}', SourceResource())
+    app.add_route('/{project:project}/{version:version}/source', SourceWithoutPathResource())
+    app.add_route('/{project:project}/{version:version}/ident', IdentPostRedirectResource())
+    app.add_route('/{project:project}/{version:version}/ident/{ident:ident}', IdentWithoutFamilyResource())
+    app.add_route('/{project:project}/{version:version}/{family:family}/ident/{ident:ident}', IdentResource())
+
+    return app
+
+application = get_application()
 
