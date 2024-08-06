@@ -34,6 +34,12 @@ from query import Query, SymbolInstance
 from filters import get_filters
 from filters.utils import FilterContext
 
+HTTP_STATUS_OK = 200
+HTTP_STATUS_MOVED_PERMANENTLY = 301
+HTTP_STATUS_FOUND = 302
+HTTP_STATUS_BAD_REQUEST = 400
+HTTP_STATUS_NOT_FOUND = 404
+
 script_dir = os.path.dirname(os.path.realpath(__file__))
 templates_dir = os.path.join(script_dir, '../templates/')
 loader = jinja2.FileSystemLoader(templates_dir)
@@ -96,7 +102,7 @@ def stringify_source_path(ppath):
 # Returns 301 redirect to path with trailing slashes removed if path has a trailing slash
 def redirect_on_trailing_slash(path):
     if path[-1] == '/':
-        return (301, path.rstrip('/'))
+        return (HTTP_STATUS_MOVED_PERMANENTLY, path.rstrip('/'))
 
 # Handles `source` URL, returns a response
 # path: string with URL path of the request
@@ -110,19 +116,20 @@ def handle_source_url(path, _):
     parsed_path = parse_source_path(path)
     if parsed_path is None:
         print("Error: failed to parse path in handle_source_url", path, file=sys.stderr)
-        return (404, get_error_page(basedir, "Failed to parse path"))
+        return (HTTP_STATUS_NOT_FOUND, get_error_page(basedir, "Failed to parse path"))
 
     query = get_query(basedir, parsed_path.project)
     if not query:
-        return (404, get_error_page(basedir, "Unknown project"))
+        return (HTTP_STATUS_NOT_FOUND, get_error_page(basedir, "Unknown project"))
 
     # Check if path contains only allowed characters
     if not search('^[A-Za-z0-9_/.,+-]*$', parsed_path.path):
-        return (400, get_error_page(basedir, "Path contains characters that are not allowed."))
+        return (HTTP_STATUS_BAD_REQUEST,
+            get_error_page(basedir, "Path contains characters that are not allowed."))
 
     if parsed_path.version == 'latest':
         new_parsed_path = parsed_path._replace(version=parse.quote(query.query('latest')))
-        return (302, stringify_source_path(new_parsed_path))
+        return (HTTP_STATUS_FOUND, stringify_source_path(new_parsed_path))
 
     return generate_source_page(query, basedir, parsed_path)
 
@@ -175,7 +182,7 @@ def handle_ident_post_form(parsed_path, form):
             family=post_family,
             ident=post_ident
         )
-        return (302, stringify_ident_path(new_parsed_path))
+        return (HTTP_STATUS_FOUND, stringify_ident_path(new_parsed_path))
 
 # Handles `ident` URL, returns a response
 # path: string with URL path
@@ -186,7 +193,7 @@ def handle_ident_url(path, params):
     parsed_path = parse_ident_path(path)
     if parsed_path is None:
         print("Error: failed to parse path in handle_ident_url", path, file=sys.stderr)
-        return (404, get_error_page(basedir, "Invalid path."))
+        return (HTTP_STATUS_NOT_FOUND, get_error_page(basedir, "Invalid path."))
 
     status = handle_ident_post_form(parsed_path, params)
     if status is not None:
@@ -194,15 +201,15 @@ def handle_ident_url(path, params):
 
     query = get_query(basedir, parsed_path.project)
     if not query:
-        return (404, get_error_page(basedir, "Unknown project."))
+        return (HTTP_STATUS_NOT_FOUND, get_error_page(basedir, "Unknown project."))
 
     # Check if identifier contains only allowed characters
     if not parsed_path.ident or not search('^[A-Za-z0-9_\$\.%-]*$', parsed_path.ident):
-        return (400, get_error_page(basedir, "Identifier is invalid."))
+        return (HTTP_STATUS_BAD_REQUEST, get_error_page(basedir, "Identifier is invalid."))
 
     if parsed_path.version == 'latest':
         new_parsed_path = parsed_path._replace(version=parse.quote(query.query('latest')))
-        return (302, stringify_ident_path(new_parsed_path))
+        return (HTTP_STATUS_FOUND, stringify_ident_path(new_parsed_path))
 
     return generate_ident_page(query, basedir, parsed_path)
 
@@ -216,7 +223,8 @@ def route(path, params):
     elif search('^/[^/]*/[^/]*(?:/[^/])?/ident.*$', path) is not None:
         return handle_ident_url(path, params)
     else:
-        return (404, get_error_page(os.environ['LXR_PROJ_DIR'], "Unknown path."))
+        return (HTTP_STATUS_NOT_FOUND,
+                get_error_page(os.environ['LXR_PROJ_DIR'], "Unknown path."))
 
 
 TOPBAR_FAMILIES = {
@@ -390,7 +398,7 @@ def get_directory_entries(q, base_url, tag, path):
 # basedir: path to data directory, ex: "/srv/elixir-data"
 # parsed_path: ParsedSourcePath
 def generate_source_page(q, basedir, parsed_path):
-    status = 200
+    status = HTTP_STATUS_OK
 
     project = parsed_path.project
     version = parsed_path.version
@@ -416,7 +424,7 @@ def generate_source_page(q, basedir, parsed_path):
         }
         template = environment.get_template('source.html')
     else:
-        status = 404
+        status = HTTP_STATUS_NOT_FOUND
         template_ctx = {
             'error_title': 'This file does not exist.',
         }
@@ -486,7 +494,7 @@ def symbol_instance_to_entry(base_url, symbol):
 # basedir: path to data directory, ex: "/srv/elixir-data"
 # parsed_path: ParsedIdentPath
 def generate_ident_page(q, basedir, parsed_path):
-    status = 200
+    status = HTTP_STATUS_OK
 
     ident = parsed_path.ident
     version = parsed_path.version
@@ -538,7 +546,7 @@ def generate_ident_page(q, basedir, parsed_path):
 
     else:
         if ident != '':
-            status = 404
+            status = HTTP_STATUS_NOT_FOUND
 
     get_url_with_new_version = lambda v: stringify_ident_path(parsed_path._replace(version=parse.quote(v, safe='')))
 
@@ -562,21 +570,21 @@ request_params = cgi.FieldStorage()
 result = route(path, request_params)
 
 if result is not None:
-    if result[0] == 200:
+    if result[0] == HTTP_STATUS_OK:
         print('Content-Type: text/html;charset=utf-8\n')
         print(result[1], end='')
-    elif result[0] == 301:
+    elif result[0] == HTTP_STATUS_MOVED_PERMANENTLY:
         print('Status: 301 Moved Permanently')
         print('Location: '+ result[1] +'\n')
-    elif result[0] == 302:
+    elif result[0] == HTTP_STATUS_FOUND:
         print('Status: 302 Found')
         print('Location: '+ result[1])
         print('Cache-Control: max-age=86400\n')  # 24 hours
-    elif result[0] == 400:
+    elif result[0] == HTTP_STATUS_BAD_REQUEST:
         print('Status: 400 Bad Request')
         print('Content-Type: text/html;charset=utf-8\n')
         print(result[1], end='')
-    elif result[0] == 404:
+    elif result[0] == HTTP_STATUS_NOT_FOUND:
         print('Status: 404 Not Found')
         print('Content-Type: text/html;charset=utf-8\n')
         print(result[1], end='')
