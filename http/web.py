@@ -425,6 +425,7 @@ def generate_source_page(q, basedir, parsed_path):
     elif type == 'blob':
         template_ctx = {
             'code': generate_source(q, project, version, path),
+            'path': path,
         }
         template = environment.get_template('source.html')
     else:
@@ -461,6 +462,7 @@ def generate_source_page(q, basedir, parsed_path):
         **get_layout_template_context(q, basedir, get_url_with_new_version, project, version),
 
         'title_path': title_path,
+        'path': path,
         'breadcrumb_links': breadcrumb_links,
 
         **template_ctx,
