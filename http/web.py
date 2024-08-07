@@ -44,18 +44,7 @@ from filters import get_filters
 from filters.utils import FilterContext
 from autocomplete import AutocompleteResource
 from api import ApiIdentGetterResource
-
-# Returns a Query class instance or None if project data directory does not exist
-# basedir: absolute path to parent directory of all project data directories, ex. "/srv/elixir-data/"
-# project: name of the project, directory in basedir, ex. "linux"
-def get_query(basedir, project):
-    datadir = basedir + '/' + project + '/data'
-    repodir = basedir + '/' + project + '/repo'
-
-    if not(os.path.exists(datadir)) or not(os.path.exists(repodir)):
-        return None
-
-    return Query(datadir, repodir)
+from query import get_query
 
 # Generated a Elixir error page
 def get_error_page(ctx, title, details=None):

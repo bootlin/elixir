@@ -29,19 +29,14 @@ ELIXIR_DIR = os.path.dirname(os.path.realpath(__file__)) + '/..'
 if ELIXIR_DIR not in sys.path:
     sys.path = [ ELIXIR_DIR ] + sys.path
 
-import query
+from query import get_query
 
 class ApiIdentGetterResource:
     def on_get(self, req, resp, project, ident):
-        try:
-            basedir = req.env['LXR_PROJ_DIR']
-        except KeyError:
-            basedir = os.environ['LXR_PROJ_DIR']
-
-        data_dir = basedir + '/' + project + '/data'
-        repo_dir = basedir + '/' + project + '/repo'
-
-        q = query.Query(data_dir, repo_dir)
+        query = get_query(req.context.config.project_dir, project)
+        if not query:
+            resp.status = falcon.HTTP_NOT_FOUND
+            return
 
         if 'version' in req.params:
             version = req.params['version']
@@ -49,14 +44,14 @@ class ApiIdentGetterResource:
             raise falcon.HTTPMissingParam('version')
 
         if version == 'latest':
-            version = q.query('latest')
+            version = query.query('latest')
 
         if 'family' in req.params:
             family = req.params['family']
         else:
             family = 'C'
 
-        symbol_definitions, symbol_references, symbol_doccomments = q.query('ident', version, ident, family)
+        symbol_definitions, symbol_references, symbol_doccomments = query.query('ident', version, ident, family)
 
         resp.status = falcon.HTTP_200
         resp.content_type = falcon.MEDIA_JSON
@@ -66,5 +61,5 @@ class ApiIdentGetterResource:
             'documentations': [sym.__dict__ for sym in symbol_doccomments]
         }
 
-        q.close()
+        query.close()
 

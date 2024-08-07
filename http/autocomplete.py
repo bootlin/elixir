@@ -30,8 +30,8 @@ ELIXIR_DIR = os.path.dirname(os.path.realpath(__file__)) + '/..'
 if ELIXIR_DIR not in sys.path:
     sys.path = [ ELIXIR_DIR ] + sys.path
 
-import query
 from lib import autoBytes
+from query import get_query
 
 class AutocompleteResource:
     def on_get(self, req, resp):
@@ -40,22 +40,20 @@ class AutocompleteResource:
         query_family = req.get_param('f')
         query_project = req.get_param('p')
 
-        # Get project dirs
-        basedir = req.env['LXR_PROJ_DIR']
-        datadir = basedir + '/' + query_project + '/data'
-        repodir = basedir + '/' + query_project + '/repo'
+        query = get_query(req.context.config.project_dir, query_project)
+        if not query:
+            resp.status = falcon.HTTP_NOT_FOUND
+            return
 
-        q = query.Query(datadir, repodir)
-
-        latest = q.query('latest')
+        latest = query.query('latest')
 
         if query_family == 'B':
             # DTS identifiers are stored quoted
             process = lambda x: parse.unquote(x)
-            db = q.db.comps
+            db = query.db.comps
         else:
             process = lambda x: x
-            db = q.db.defs
+            db = query.db.defs
 
         response = []
 

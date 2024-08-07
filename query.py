@@ -43,6 +43,18 @@ class SymbolInstance(object):
     def __str__(self):
         return self.__repr__()
 
+# Returns a Query class instance or None if project data directory does not exist
+# basedir: absolute path to parent directory of all project data directories, ex. "/srv/elixir-data/"
+# project: name of the project, directory in basedir, ex. "linux"
+def get_query(basedir, project):
+    datadir = basedir + '/' + project + '/data'
+    repodir = basedir + '/' + project + '/repo'
+
+    if not os.path.exists(datadir) or not os.path.exists(repodir):
+        return None
+
+    return Query(datadir, repodir)
+
 class Query:
     def __init__(self, data_dir, repo_dir):
         self.repo_dir = repo_dir
