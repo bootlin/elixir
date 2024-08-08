@@ -31,6 +31,6 @@ my $tenv = TestEnvironment->new;
 $tenv->build_repo(sibling_abs_path('tree'))->build_db->update_env;
 
 # Test the api using pytest. Prints the test results
-run_produces_ok('api pytest suite', ["pytest", "-v"], [], MUST_SUCCEED, 1);
+run_produces_ok('api pytest suite', ["pytest", "-v", "t"], [], MUST_SUCCEED, 1);
 
 done_testing;
