@@ -298,9 +298,13 @@ def format_code(filename, code):
     import pygments
     import pygments.lexers
     import pygments.formatters
+    from pygments.lexers.asm import GasLexer
+    from pygments.lexers.r import SLexer
 
     try:
         lexer = pygments.lexers.guess_lexer_for_filename(filename, code)
+        if filename.endswith('.S') and isinstance(lexer, SLexer):
+            lexer = GasLexer()
     except pygments.util.ClassNotFound:
         lexer = pygments.lexers.get_lexer_by_name('text')
 
