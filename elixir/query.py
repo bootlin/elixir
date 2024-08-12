@@ -61,6 +61,7 @@ class Query:
         self.data_dir = data_dir
         self.dts_comp_support = int(self.script('dts-comp'))
         self.db = data.DB(data_dir, readonly=True, dtscomp=self.dts_comp_support)
+        self.file_cache = {}
 
     def script(self, *args):
         return script(*args, env=self.getEnv())
@@ -136,22 +137,22 @@ class Query:
             return decode(self.script('get-type', version, path)).strip()
 
         elif cmd == 'exist':
-
-            # Returns True if the requested file exists, otherwise returns False
-
             version = args[0]
             path = args[1]
 
-            dirname, filename = os.path.split(path)
+            if version not in self.file_cache:
+                version_cache = set()
+                last_dir = None
+                for _, path in self.db.vers.get(version).iter():
+                    dirname, filename = os.path.split(path)
+                    if dirname != last_dir:
+                        last_dir = dirname
+                        version_cache.add(dirname)
+                    version_cache.add(path)
 
-            entries = decode(self.script('get-dir', version, dirname)).split("\n")[:-1]
-            for entry in entries:
-                fname = entry.split(" ")[1]
+                self.file_cache[version] = version_cache
 
-                if fname == filename:
-                    return True
-
-            return False
+            return path.strip('/') in self.file_cache[version]
 
         elif cmd == 'dir':
 
