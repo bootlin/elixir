@@ -31,7 +31,7 @@ if ELIXIR_DIR not in sys.path:
 
 import query
 
-class IdentGetter:
+class ApiIdentGetterResource:
     def on_get(self, req, resp, project, ident):
         try:
             basedir = req.env['LXR_PROJ_DIR']
@@ -68,10 +68,3 @@ class IdentGetter:
 
         q.close()
 
-def create_ident_getter():
-    application = falcon.App()
-    idents = IdentGetter()
-    application.add_route('/ident/{project}/{ident}', idents)
-    return application
-
-application = create_ident_getter()

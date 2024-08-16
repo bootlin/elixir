@@ -43,6 +43,7 @@ from query import Query, SymbolInstance
 from filters import get_filters
 from filters.utils import FilterContext
 from autocomplete import AutocompleteResource
+from api import ApiIdentGetterResource
 
 # Returns a Query class instance or None if project data directory does not exist
 # basedir: absolute path to parent directory of all project data directories, ex. "/srv/elixir-data/"
@@ -612,6 +613,8 @@ def get_application():
     app.add_route('/{project:project}/{version:version}/{family:family}/ident/{ident:ident}', IdentResource())
 
     app.add_route('/acp', AutocompleteResource())
+
+    app.add_route('/api/ident/{project}/{ident}', ApiIdentGetterResource())
 
     return app
 
