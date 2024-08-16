@@ -1,5 +1,5 @@
 import re
-from filters.utils import Filter, FilterContext, encode_number, decode_number, extension_matches
+from .utils import Filter, FilterContext, encode_number, decode_number, extension_matches
 
 # Filters for dts includes as follows:
 # Replaces include directives in dts/dtsi files with links to source

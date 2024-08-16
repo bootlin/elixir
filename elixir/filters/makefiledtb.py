@@ -1,6 +1,6 @@
 from os.path import dirname
 import re
-from filters.utils import Filter, FilterContext, decode_number, encode_number, filename_without_ext_matches
+from .utils import Filter, FilterContext, decode_number, encode_number, filename_without_ext_matches
 
 # Filters for Makefile file includes like these:
 # dtb-y += file.dtb

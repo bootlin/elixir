@@ -288,7 +288,7 @@ h2 {
   text-decoration: none;
 
   background-color: #aaa;
-  background-image: url("/img/arrow-dropdown-16.svg");
+  background-image: url("/static/img/arrow-dropdown-16.svg");
   background-position: right 2px center;
   background-repeat: no-repeat;
 
@@ -810,8 +810,8 @@ h2 {
 
 @font-face {
   font-family: "lxr";
-  src: url("/fonts/lxr.svg") format("svg"),
-       url("/fonts/lxr.ttf") format("truetype");
+  src: url("/static/fonts/lxr.svg") format("svg"),
+       url("/static/fonts/lxr.ttf") format("truetype");
   font-weight: normal;
   font-style: normal;
 }

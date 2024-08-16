@@ -1,5 +1,5 @@
 import re
-from filters.utils import Filter, FilterContext, encode_number, decode_number, filename_without_ext_matches
+from .utils import Filter, FilterContext, encode_number, decode_number, filename_without_ext_matches
 
 # Filters for Kconfig includes
 # Replaces KConfig includes (source keyword) with links to included files

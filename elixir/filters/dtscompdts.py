@@ -1,5 +1,5 @@
 import re
-from filters.utils import Filter, FilterContext, encode_number, decode_number, extension_matches
+from .utils import Filter, FilterContext, encode_number, decode_number, extension_matches
 
 # Filter for DT compatible strings in DTS (D family) files
 # compatible = "device"

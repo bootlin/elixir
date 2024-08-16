@@ -24,12 +24,7 @@ import falcon
 from urllib import parse
 import sys
 
-ELIXIR_DIR = os.path.dirname(os.path.realpath(__file__)) + '/..'
-
-if ELIXIR_DIR not in sys.path:
-    sys.path = [ ELIXIR_DIR ] + sys.path
-
-from query import get_query
+from .query import get_query
 
 class ApiIdentGetterResource:
     def on_get(self, req, resp, project, ident):

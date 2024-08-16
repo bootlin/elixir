@@ -1,5 +1,5 @@
 import re
-from filters.utils import Filter, FilterContext, encode_number, decode_number, extension_matches
+from .utils import Filter, FilterContext, encode_number, decode_number, extension_matches
 
 # Filter for DT compatible strings in code (C family) files
 # Finds assigments to properties and variables named 'compatible' and recognized by the Query.query('file')

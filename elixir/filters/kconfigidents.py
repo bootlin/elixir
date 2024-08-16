@@ -1,5 +1,5 @@
 import re
-from filters.utils import Filter, FilterContext, encode_number, decode_number
+from .utils import Filter, FilterContext, encode_number, decode_number
 
 # Filter for kconfig identifier links
 # Replaces KConfig identifiers with links to definitions and references

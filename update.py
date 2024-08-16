@@ -25,10 +25,10 @@
 from sys import argv
 from threading import Thread, Lock, Event, Condition
 
-import lib
-from lib import script, scriptLines
-import data
-from data import PathList
+import elixir.lib as lib
+from elixir.lib import script, scriptLines
+import elixir.data as data
+from elixir.data import PathList
 from find_compatible_dts import FindCompatibleDTS
 
 verbose = False

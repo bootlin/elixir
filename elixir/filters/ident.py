@@ -1,5 +1,5 @@
 import re
-from filters.utils import Filter, FilterContext, encode_number, decode_number
+from .utils import Filter, FilterContext, encode_number, decode_number
 
 # Filter for identifier links
 # Replaces identifiers marked by Query.query('file') with links to ident page.

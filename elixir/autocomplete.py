@@ -25,13 +25,8 @@ from urllib import parse
 from bsddb3.db import DB_SET_RANGE
 import falcon
 
-ELIXIR_DIR = os.path.dirname(os.path.realpath(__file__)) + '/..'
-
-if ELIXIR_DIR not in sys.path:
-    sys.path = [ ELIXIR_DIR ] + sys.path
-
-from lib import autoBytes
-from query import get_query
+from .lib import autoBytes
+from .query import get_query
 
 class AutocompleteResource:
     def on_get(self, req, resp):

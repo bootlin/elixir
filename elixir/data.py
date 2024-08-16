@@ -20,7 +20,7 @@
 
 import bsddb3
 import re
-from lib import autoBytes
+from .lib import autoBytes
 import os
 import os.path
 import errno

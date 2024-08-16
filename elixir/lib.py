@@ -20,7 +20,7 @@
 
 import subprocess, os
 
-CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
+CURRENT_DIR = os.path.abspath(os.path.dirname(os.path.abspath(__file__)) + '/..')
 
 def script(*args, env=None):
     args = (os.path.join(CURRENT_DIR, 'script.sh'),) + args

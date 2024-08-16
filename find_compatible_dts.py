@@ -20,7 +20,7 @@
 
 import re
 from urllib import parse
-from lib import decode
+from elixir.lib import decode
 
 class FindCompatibleDTS:
     def __init__(self):

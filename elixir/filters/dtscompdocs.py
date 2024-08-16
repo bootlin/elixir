@@ -1,6 +1,6 @@
 import re
 from urllib.parse import quote
-from filters.utils import Filter, FilterContext, encode_number, decode_number
+from .utils import Filter, FilterContext, encode_number, decode_number
 
 # Filter for DT compatible strings in documentation (B family) files
 # syscon

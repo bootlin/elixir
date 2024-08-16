@@ -2,7 +2,7 @@ import re
 import os
 from dataclasses import dataclass
 from typing import Callable, List
-from query import Query
+from ..query import Query
 
 # Context data used by Filters
 # tag: browsed version, unqoted

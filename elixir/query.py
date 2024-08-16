@@ -18,9 +18,9 @@
 #  You should have received a copy of the GNU Affero General Public License
 #  along with Elixir.  If not, see <http://www.gnu.org/licenses/>.
 
-from lib import script, scriptLines, decode
-import lib
-import data
+from .lib import script, scriptLines, decode
+from . import lib
+from . import data
 import os
 from collections import OrderedDict
 from urllib import parse
