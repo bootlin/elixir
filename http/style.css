@@ -460,7 +460,7 @@ h2 {
   max-height: 50vh;
   max-width: 75vw;
 
-  @media only screen and (max-width: 769px) {
+  @media only screen and (max-width: 1000px) {
     min-width: 100vw;
   }
 }
@@ -1070,7 +1070,7 @@ main {
 }
 
 /* desktop */
-@media screen and (min-width: 769px) {
+@media screen and (min-width: 1000px) {
   .open-menu,
   .close-menu {
     display: none;
@@ -1149,7 +1149,7 @@ main {
   }
 
   /* desktop */
-  @media screen and (min-width: 769px) {
+  @media screen and (min-width: 1000px) {
     .js .linenos {
       left: 235px;
     }
