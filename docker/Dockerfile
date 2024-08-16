@@ -1,3 +1,20 @@
+FROM debian:bookworm AS build
+
+RUN \
+  apt-get update && \
+  apt-get --no-install-recommends -y install \
+    python3 \
+    python3-pip \
+    python3-dev \
+    libdb-dev \
+    build-essential
+
+WORKDIR /build/
+
+# TODO switch to berkeleydb
+# NOTE wheel version MUST be sycnhronized with requirements.txt
+RUN pip wheel bsddb3==6.2.9
+
 FROM debian:bookworm
 
 RUN \
@@ -5,12 +22,9 @@ RUN \
   apt-get --no-install-recommends -y install \
     python3 \
     python3-pip \
-    python3-falcon \
-    python3-jinja2 \
-    python3-bsddb3 \
-    python3-pytest \
-    python3-pygments \
+    python3-venv \
     universal-ctags \
+    libdb5.3 \
     perl \
     git \
     apache2 \
@@ -21,13 +35,20 @@ RUN \
 
 COPY . /usr/local/elixir/
 
+WORKDIR /usr/local/elixir/
+
+COPY --from=build /build/bsddb3-6.2.9-*.whl /tmp/build/
+
+RUN python3 -m venv venv && \
+    . ./venv/bin/activate && \
+    pip install /tmp/build/bsddb3-6.2.9-*.whl && \
+    pip install -r requirements.txt
+
 RUN mkdir -p /srv/elixir-data/
 
-# apache elixir config, see elixir README
-# make apache less stricter about cgitb spam headers
 COPY ./docker/000-default.conf /etc/apache2/sites-available/000-default.conf
 
-RUN a2enmod cgi rewrite
+RUN a2enmod rewrite
 
 EXPOSE 80
 

@@ -4,5 +4,8 @@ Pygments==2.11.2
 # appears in a release (NOTE: it's not in 3.1.3).
 Falcon @ git+https://github.com/falconry/falcon.git@cbca63dc7739720eab856f48b32f9e782438be7a
 pytest==7.2.1
-# TODO use debian package for now
-#bsddb3==6.2.9
+
+# NOTE binary wheels of bsddb3 are not distributed - on Debian this may
+# require installing build-essentials, python3-dev and libdb-dev
+# NOTE keep in sync with wheel version in the Dockerfile
+bsddb3==6.2.9
