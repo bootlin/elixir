@@ -11,9 +11,8 @@ RUN \
 
 WORKDIR /build/
 
-# TODO switch to berkeleydb
 # NOTE wheel version MUST be sycnhronized with requirements.txt
-RUN pip wheel bsddb3==6.2.9
+RUN pip wheel berkeleydb==18.1.10
 
 FROM debian:bookworm
 
@@ -37,11 +36,11 @@ COPY . /usr/local/elixir/
 
 WORKDIR /usr/local/elixir/
 
-COPY --from=build /build/bsddb3-6.2.9-*.whl /tmp/build/
+COPY --from=build /build/berkeleydb-*.whl /tmp/build/
 
 RUN python3 -m venv venv && \
     . ./venv/bin/activate && \
-    pip install /tmp/build/bsddb3-6.2.9-*.whl && \
+    pip install /tmp/build/berkeleydb-*.whl && \
     pip install -r requirements.txt
 
 RUN mkdir -p /srv/elixir-data/

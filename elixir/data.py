@@ -18,7 +18,7 @@
 #  You should have received a copy of the GNU Affero General Public License
 #  along with Elixir.  If not, see <http://www.gnu.org/licenses/>.
 
-import bsddb3
+import berkeleydb
 import re
 from .lib import autoBytes
 import os
@@ -147,15 +147,15 @@ class RefList:
 class BsdDB:
     def __init__(self, filename, readonly, contentType, shared=False):
         self.filename = filename
-        self.db = bsddb3.db.DB()
-        flags = bsddb3.db.DB_THREAD if shared else 0
+        self.db = berkeleydb.db.DB()
+        flags = berkeleydb.db.DB_THREAD if shared else 0
 
         if readonly:
-            flags |= bsddb3.db.DB_RDONLY
+            flags |= berkeleydb.db.DB_RDONLY
             self.db.open(filename, flags=flags)
         else:
-            flags |= bsddb3.db.DB_CREATE
-            self.db.open(filename, flags=flags, mode=0o644, dbtype=bsddb3.db.DB_BTREE)
+            flags |= berkeleydb.db.DB_CREATE
+            self.db.open(filename, flags=flags, mode=0o644, dbtype=berkeleydb.db.DB_BTREE)
         self.ctype = contentType
 
     def exists(self, key):
