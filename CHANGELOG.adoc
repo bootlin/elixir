@@ -1,0 +1,14 @@
+= Elixir Changelog
+
+== 2024-08 - WSGI update
+
+* Migrated Elixir from a CGI-based architecture to a WSGI-based architecture. This should improve performance.
+* Python files were moved from `./http` to `./elixir`.
+* Made autocomplete use a prefix search that's native for the database. This should massively improve autocomplete performance.
+
+Changes to configuration of most HTTP servers will be required.
+Some HTTP servers may not support WSGI natively and may require a separate WSGI server to proxy to
+(for example, lighthttpd and nginx do not support WSGI, but you can proxy requests to uWSGI).
+We also recommend using Python virtual environments to manage dependencies.
+Check "Manual Installation" section of README for details.
+

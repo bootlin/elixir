@@ -4,8 +4,6 @@
 :toc:
 :toc-placement!:
 
-image::https://travis-ci.com/bootlin/elixir.svg?branch=master[Build Status,link=https://travis-ci.com/bootlin/elixir]
-
 Elixir is a source code cross-referencer inspired by
 https://en.wikipedia.org/wiki/LXR_Cross_Referencer[LXR]. It's written
 in Python and its main purpose is to index every release of a C or C{pp}
@@ -18,13 +16,13 @@ duplicating work and data. It has a straightforward data structure
 
 You can see it in action on https://elixir.bootlin.com/
 
-NOTE: this documentation applies to version 2.0 of Elixir.
+link:CHANGELOG.adoc[Changelog]
 
 toc::[]
 
 = Requirements
 
-* Python >= 3.6
+* Python >= 3.8
 * Git >= 1.9
 * The Jinja2 and Pygments (>= 2.7) Python libraries
 * Berkeley DB (and its Python binding)
@@ -34,60 +32,28 @@ toc::[]
 
 = Architecture
 
-Elixir has the following architecture:
-
- .---------------.----------------.
- | CGI interface | REST interface |
- |---------------|----------------.
- | Query command | Update command |
- |---------------|----------------|
- |          Shell script          |
- '--------------------------------'
-
 The shell script (`script.sh`) is the lower layer and provides commands
 to interact with Git and other Unix utilities. The Python commands use
 the shell script's services to provide access to the annotated source
 code and identifier lists (`query.py`) or to create and update the
-databases (`update.py`). Finally, the CGI interface (`web.py`) and
-the REST interface (`api.py`) use the query interface to generate HTML
-pages and to answer REST queries, respectively.
+databases (`update.py`). Finally, the web interface (`web.py`) and
+uses the query interface to generate HTML pages and to answer REST
+queries, respectively.
 
 When installing the system, you should test each layer manually and make
 sure it works correctly before moving on to the next one.
-
-== Database design
-
-`./update.py` stores a bidirectionnal mapping between git object hashes ("blobs") and a sequential key.
-The goal of indexing such hashes is to reduce their storage footprint (20 bytes for a SHA-1 hash
-versus 4 bytes for a 32 bit integer).
-
-A detailed diagram of the databases will be provided. Until then, just use the Source, Luke.
 
 = Manual Installation
 
 == Install Dependencies
 
 ____
-For RedHat/Fedora/AlmaLinux
-____
-
-----
-sudo dnf install python36-pip python36-pytest python36-jinja2 python36-bsddb3 python36-falcon python3-pygments git httpd perl perl-autodie jansson libyaml rh-python36-mod_wsgi
-----
-
-____
 For Debian
 ____
 
 ----
-sudo apt install python3-jinja2 python3-bsddb3 python3-falcon python3-pytest python3-pygments universal-ctags perl git apache2 libapache2-mod-wsgi-py3 libjansson4
+sudo apt install python3-pip python3-venv libdb-dev python3-dev build-essential universal-ctags perl git apache2 libapache2-mod-wsgi-py3 libjansson4
 ----
-
-To enable the REST API, follow the installation instructions on https://github.com/GrahamDumpleton/mod_wsgi[`mod_wsgi`]
-and connect it to the apache installation as detailed in https://github.com/GrahamDumpleton/mod_wsgi#connecting-into-apache-installation.
-
-To know which packages to install, you can also read the Docker files in the `docker/` directory
-to know what packages Elixir needs in your favorite distribution.
 
 == Download Elixir Project
 
@@ -95,7 +61,15 @@ to know what packages Elixir needs in your favorite distribution.
 git clone https://github.com/bootlin/elixir.git /usr/local/elixir/
 ----
 
-== Create Directory
+== Create a virtualenv for Elixir
+
+---
+python -m venv /usr/local/elixir/venv
+. /usr/local/elixir/venv/bin/activate
+pip install -r /usr/local/elixir/requirements.txt
+---
+
+== Create directories for project data
 
 ----
 mkdir -p /path/elixir-data/linux/repo
@@ -156,6 +130,7 @@ cd /usr/local/elixir/
 == Create Database
 
 ----
+. ./venv/bin/activate
 ./update.py <number of threads>
 ----
 
@@ -167,10 +142,11 @@ ____
 
 Verify that the queries work:
 
- $ ./query.py v4.10 ident raw_spin_unlock_irq C
- $ ./query.py v4.10 file /kernel/sched/clock.c
+ $ ./elixir/query.py v4.10 ident raw_spin_unlock_irq C
+ $ ./elixir/query.py v4.10 file /kernel/sched/clock.c
 
 NOTE: `v4.10` can be replaced with any other tag.
+NOTE: Don't forget to activate the virtual environment!
 
 == Configure httpd
 
@@ -193,56 +169,14 @@ directory with a specific structure:
 It will then generate the other two variables upon calling the query
 command.
 
-Now open `/etc/httpd/conf.d/elixir.conf` and write the following content.
-Note: If using apache2 (Ubuntu/Debian) instead of httpd (RedHat/Centos),
-the default config file to edit is: `/etc/apache2/sites-enabled/000-default.conf`
-
-----
-# Required for HTTP
-<Directory /usr/local/elixir/http/>
-    Options +ExecCGI
-    AllowOverride None
-    Require all granted
-    SetEnv PYTHONIOENCODING utf-8
-    SetEnv LXR_PROJ_DIR /path/elixir-data
-</Directory>
-
-# Required for the REST API
-<Directory /usr/local/elixir/api/>
-    SetHandler wsgi-script
-    Require all granted
-    SetEnv PYTHONIOENCODING utf-8
-    SetEnv LXR_PROJ_DIR /path/elixir-data
-</Directory>
-
-AddHandler cgi-script .py
-#Listen 80
-<VirtualHost *:80>
-    ServerName xxx
-    DocumentRoot /usr/local/elixir/http
-
-    # To enable REST api after installing mod_wsgi: Fill path and uncomment:
-    #WSGIScriptAlias /api /usr/local/elixir/api/api.py
-
-    AllowEncodedSlashes On
-
-    RewriteEngine on
-    RewriteRule "^/$" "/linux/latest/source" [R]
-    RewriteRule "^/(?!api|acp).*/(source|ident|search)" "/web.py" [PT]
-    RewriteRule "^/acp" "/autocomplete.py" [PT]
-</VirtualHost>
-----
-
-cgi and rewrite support has been enabled by default in RHEL/CentOS, but you should enable it manually if your distribution is Debian/Ubuntu.
-
-----
-a2enmod cgi rewrite
-----
+Now replace `/etc/apache2/sites-enabled/000-default.conf` with `docker/000-default.conf`.
+Note: If using httpd (RedHat/Centos) instead of apache2 (Ubuntu/Debian),
+the default config file to edit is `/etc/httpd/conf.d/elixir.conf`.
 
 Finally, start the httpd server.
 
 ----
-systemctl start httpd
+systemctl restart apache2
 ----
 
 
@@ -276,18 +210,14 @@ If you want to disable it, configure httpd.service with the following attribute:
 PrivateTmp=false
 ----
 
-== Configure lighthttpd
+== Configuration for other servers
 
-Here's a sample configuration for lighthttpd:
+Other HTTP servers (like nginx or lighthttpd) may not support WSGI and may require a separate WSGI server, like uWSGI.
 
-----
-server.document-root = server_root + "/elixir/http"
-url.redirect = ( "^/$" => "/linux/latest/source" )
-url.rewrite  = ( "^/(?!api|acp).*/(source|ident|search)" =>  "/web.py/$1")
-url.rewrite  = ( "^/acp" =>  "/autocomplete.py")
-setenv.add-environment = ( "PYTHONIOENCODING" => "utf-8",
-    "LXR_PROJ_DIR" => "/path/to/elixir-data" )
-----
+Information about how to configure uWSGI with Lighthttpd can be found here:
+https://redmine.lighttpd.net/projects/lighttpd/wiki/HowToPythonWSGI#Python-WSGI-apps-via-uwsgi-SCGI-FastCGI-or-HTTP-using-the-uWSGI-server
+
+Pull requests with example uWSGI configuration for Elixir are welcome.
 
 = REST API usage
 
@@ -359,7 +289,7 @@ where all repositories are found.
 Dockerfiles are provided in the `docker/` directory. To build the image, run the following commands:
 
  # git clone https://github.com/bootlin/elixir.git ./elixir
- # docker build -t elixir -f ./elixir/docker/Dockerfile ./elixir
+ # docker build -t elixir -f ./elixir/Dockerfile ./elixir
 
 You can then run the image using `docker run`.
 It is recommended to mount a volume or a host directory into the Elixir data directory.
@@ -401,7 +331,7 @@ into `/usr/local/elixir/` in the container when running `docker run elixir`.
 
 Changes in the code made on the host should be automatically reflected in the container.
 You can use `apache2ctl` to restart Apache.
-Error logs are available in `/var/log/apache2/error.log` and `/tmp/elixir-errors` within the container.
+Error logs are available in `/var/log/apache2/error.log` within the container.
 
 = Hardware requirements
 
