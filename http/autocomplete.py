@@ -83,11 +83,3 @@ class AutocompleteResource:
         resp.content_type = falcon.MEDIA_JSON
         resp.media = response
 
-
-def get_application():
-    app = falcon.App()
-    app.add_route('/', AutocompleteResource())
-    return app
-
-application = get_application()
-
