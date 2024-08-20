@@ -25,26 +25,26 @@ from urllib import parse
 import sys
 
 from .query import get_query
+from .lib import validFamily
+from .web_utils import validate_version
 
 class ApiIdentGetterResource:
     def on_get(self, req, resp, project, ident):
+        version = validate_version(req.get_param('version'))
+        if version is None:
+            raise falcon.HTTPInvalidParam('', 'version')
+
+        family = req.get_param('family')
+        if not validFamily(family):
+            family = 'C'
+
         query = get_query(req.context.config.project_dir, project)
         if not query:
             resp.status = falcon.HTTP_NOT_FOUND
             return
 
-        if 'version' in req.params:
-            version = req.params['version']
-        else:
-            raise falcon.HTTPMissingParam('version')
-
         if version == 'latest':
             version = query.query('latest')
-
-        if 'family' in req.params:
-            family = req.params['family']
-        else:
-            family = 'C'
 
         symbol_definitions, symbol_references, symbol_doccomments = query.query('ident', version, ident, family)
 
