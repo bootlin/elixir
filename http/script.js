@@ -2,39 +2,10 @@
 
 var versions = document.querySelector('.versions')
 var dropdown = document.querySelector('.select-projects')
-
-var div = document.createElement('div')
-var button = document.createElement('button')
-var a = document.createElement('a')
-var span = document.createElement('span')
-var input = document.createElement('input')
-a.title = 'Close Menu'
-a.className = 'close-menu icon-cross'
-// a.innerText = 'Close Menu'
-div.className = 'filter'
-span.className = 'screenreader'
-button.className = 'icon-filter'
-input.placeholder = 'Filter tags'
-span.innerText = 'Filter tags'
-
-// As filtering happen on typing
-// the filter button is just for decoration
-button.tabIndex = -1
-
-button.appendChild(span)
-div.appendChild(input)
-div.appendChild(button)
-div.appendChild(a)
+var input = document.querySelector('.filter-input')
 var sidebar = document.querySelector('.sidebar')
-var detachDropdown = dropdown.parentElement.removeChild(dropdown)
-div.insertBefore(detachDropdown, div.firstChild)
-sidebar.insertBefore(div, sidebar.firstChild)
-
-
 var nav = document.querySelector('.sidebar nav')
-var results = document.createElement('div')
-results.className = 'filter-results'
-nav.appendChild(results)
+var results = document.querySelector('.filter-results')
 
 var tags = {}
 function getTags () {
@@ -100,21 +71,6 @@ versions.onclick = function (e) {
     e.target.classList.toggle('active')
   }
 }
-
-function expandVersion (version) {
-  var version = document.querySelector('.versions .active')
-  if (version && version.parentNode) {
-    var targ = version.parentNode.previousElementSibling
-    while (targ && targ.tagName === 'SPAN') {
-      targ.classList.add('active')
-      targ = targ.parentNode.parentNode
-      targ = targ.previousElementSibling
-    }
-  }
-}
-
-// Auto expand menu to display current version
-window.setTimeout(expandVersion, 1)
 
 var tag = document.querySelector('.version em')
 var openMenu = document.querySelector('.open-menu')

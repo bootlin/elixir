@@ -613,6 +613,19 @@ h2 {
   display: none;
 }
 
+.no-js .select-projects {
+  display: none;
+}
+
+.no-js .filter-input {
+  display: none;
+}
+
+.no-js .icon-filter {
+  display: none;
+}
+
+
 
 /* filter results */
 

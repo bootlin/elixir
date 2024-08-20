@@ -1,9 +1,14 @@
 <aside class="sidebar" id="menu">
-    <select class="select-projects" onchange="window.location.href=this.value">
-    {%- for p in projects %}
-        <option {% if p.name == current_project -%} selected {%- endif %} value="{{ p.url }}">{{ p.name }}</option>
-    {%- endfor %}
-    </select>
+    <div class="filter">
+        <select class="select-projects" onchange="window.location.href=this.value">
+        {%- for p in projects %}
+            <option {% if p.name == current_project -%} selected {%- endif %} value="{{ p.url }}">{{ p.name }}</option>
+        {%- endfor %}
+        </select>
+        <input class="filter-input" placeholder="Filter tags">
+        <button class="icon-filter" tabindex="-1"><span class="screenreader">Filter tags</span></button>
+        <a title="Close Menu" class="close-menu icon-cross"></a>
+    </div>
     <nav>
         <h3 class="screenreader">Projects</h3>
         <ul class="projects">
@@ -14,18 +19,19 @@
 
         <h3 class="screenreader">Versions</h3>
         <ul class="versions">
+            {% set current_major, current_minor, current_version = current_version_path %}
             {% for major, major_versions in (versions|default({})).items() %}
             <li>
-                <span>{{ major }}</span>
+                <span class="{{ 'active' if current_major == major else '' }}">{{ major }}</span>
                 <ul>
                 {% for minor, minor_versions in major_versions.items() %}
                     {% if minor == minor_versions[0] and minor_versions|length == 1 %}
-                        <li class="li-link {{ 'active' if minor == current_tag else '' }}">
+                        <li class="li-link">
                             <a href="{{ minor_versions[0].url }}">{{ minor_versions[0].version }}</a>
                         </li>
                     {% else %}
                         <li>
-                            <span>{{ minor }}</span>
+                            <span class="{{ 'active' if minor == current_minor else '' }}">{{ minor }}</span>
                             <ul>
                                 {% for v in minor_versions %}
                                     <li class="li-link {{ 'active' if v.version == current_tag else '' }}">
@@ -43,5 +49,6 @@
         {% endfor %}
         </ul>
 
+        <div class="filter-results"></div>
     </nav>
 </aside>

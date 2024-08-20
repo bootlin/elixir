@@ -71,6 +71,7 @@ def get_error_page(basedir, title, details=None):
     template_ctx = {
         'projects': get_projects(basedir),
         'topbar_families': TOPBAR_FAMILIES,
+        'current_version_path': (None, None, None),
 
         'error_title': title,
     }
@@ -256,13 +257,18 @@ def get_projects(basedir):
 # Used to render version list in the sidebar
 VersionEntry = namedtuple('VersionEntry', 'version, url')
 
-# Takes result of Query.query('version') and prepares it for the sidebar template
+# Takes result of Query.query('version') and prepares it for the sidebar template.
+#  Returns an OrderedDict with version information and optionally a triple with
+#  (major, minor, version) of current_version. The triple is useful, because sometimes
+#  the major or minor of a version (in this context) is a custom string (ex. FIXME).
 # versions: OrderedDict with major parts of versions as keys, values are OrderedDicts
 #   with minor version parts as keys and complete version strings as values
 # get_url: function that takes a version string and returns the URL
 #   for that version. Meaning of the URL can depend on the context
-def get_versions(versions, get_url):
+# current_version: string with currently browsed version
+def get_versions(versions, get_url, current_version):
     result = OrderedDict()
+    current_version_path = (None, None, None)
     for major, minor_verions in versions.items():
         for minor, patch_versions in minor_verions.items():
             for v in patch_versions:
@@ -271,19 +277,23 @@ def get_versions(versions, get_url):
                 if minor not in result[major]:
                     result[major][minor] = []
                 result[major][minor].append(VersionEntry(v, get_url(v)))
+                if v == current_version:
+                    current_version_path = (major, minor, v)
 
-    return result
+    return result, current_version_path
 
 # Retruns template context used by the layout template
 # q: Query object
-# base: directory with project
+# basedir: directory with projects
 # get_url_with_new_version: see get_url parameter of get_versions
 # project: name of the project
 # version: version of the project
 def get_layout_template_context(q, basedir, get_url_with_new_version, project, version):
+    versions, current_version_path = get_versions(q.query('versions'), get_url_with_new_version, version)
     return {
         'projects': get_projects(basedir),
-        'versions': get_versions(q.query('versions'), get_url_with_new_version),
+        'versions': versions,
+        'current_version_path': current_version_path,
         'topbar_families': TOPBAR_FAMILIES,
 
         'source_base_url': f'/{ project }/{ version }/source',
