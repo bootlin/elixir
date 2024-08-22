@@ -1,12 +1,23 @@
 {% extends "layout.html" %}
 
 {% block title %}
-    {{ searched_ident|e }} identifier - {{ current_project|capitalize }} source code {{ current_tag }} - Bootlin
+    {{ searched_ident|e }} identifier - {{ current_project|capitalize }} source code {{ current_tag }} - Bootlin Elixir Cross Referencer
 {% endblock %}
 
 {% block description -%}
-    Elixir Cross Referencer - identifier references search for {{ current_project|capitalize }} (version {{ current_tag }}). Searched identifier: {{ searched_ident|e }}
-{%- endblock %}
+    Elixir Cross Referencer - {{ searched_ident|e }} identifier references search for {{ current_project|capitalize }} {{ current_tag }}.
+    {%- for section in symbol_sections -%}
+        {%- if 'symbols' in section -%}
+            {%- for type, symbols in (section['symbols'].items()) -%}
+                {%- if (symbols|length) == 1 %}
+                    {{ section['title'] }} {{- ' as a '+type if type != '_unknown' else '' }} in {{ symbols[0].path }}.
+                {%- else %}
+                    {{ section['title'] }} in {{ symbols|length }} files {{- ' as a '+type if type != '_unknown' else '' -}}: {{ symbols[0].path }}...
+                {%- endif %}
+            {%- endfor -%}
+        {%- endif -%}
+    {%- endfor -%}
+{%- endblock -%}
 
 {% block main %}
 
