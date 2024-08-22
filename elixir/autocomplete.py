@@ -25,24 +25,33 @@ from urllib import parse
 from bsddb3.db import DB_SET_RANGE
 import falcon
 
-from .lib import autoBytes
+from .lib import autoBytes, validFamily
 from .query import get_query
+from .web_utils import validate_project, validate_ident
 
 class AutocompleteResource:
     def on_get(self, req, resp):
-        # Get values from http GET
-        query_string = req.get_param('q')
-        query_family = req.get_param('f')
-        query_project = req.get_param('p')
+        ident_prefix = req.get_param('q')
+        family = req.get_param('f')
+        project = req.get_param('p')
 
-        query = get_query(req.context.config.project_dir, query_project)
+        ident_prefix = validate_ident(ident_prefix)
+        if ident_prefix is None:
+            raise falcon.HTTPInvalidParam('', 'ident')
+
+        project = validate_project(project)
+        if project is None:
+            raise falcon.HTTPInvalidParam('', 'project')
+
+        if not validFamily(family):
+            family = 'C'
+
+        query = get_query(req.context.config.project_dir, project)
         if not query:
             resp.status = falcon.HTTP_NOT_FOUND
             return
 
-        latest = query.query('latest')
-
-        if query_family == 'B':
+        if family == 'B':
             # DTS identifiers are stored quoted
             process = lambda x: parse.unquote(x)
             db = query.db.comps
@@ -54,7 +63,7 @@ class AutocompleteResource:
 
         i = 0
         cur = db.db.cursor()
-        query_bytes = autoBytes(parse.quote(query_string))
+        query_bytes = autoBytes(parse.quote(ident_prefix))
         # Find "the smallest key greater than or equal to the specified key"
         # https://docs.oracle.com/cd/E17276_01/html/api_reference/C/dbcget.html
         # In practice this should mean "the key that starts with provided prefix"
