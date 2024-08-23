@@ -776,9 +776,17 @@ h2 {
   display: inline-block;
   padding: 0 1em;
   width: 100%;
+  scroll-margin: 15vh;
+  scroll-margin-top: 15vh;
 }
+.line-highlight {
+  background: #ccc;
+}
+.linenodiv pre a.line-highlight,
 .linenodiv pre a:target {
   color: #444;
+}
+.linenodiv pre a:target {
   background: #ccc;
   pointer-events: none;
 }
