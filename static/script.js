@@ -117,10 +117,127 @@ window.onhashchange = offsetAnchor
 // it can provide the offset in that case too.
 window.requestAnimationFrame(offsetAnchor)
 
+// Parses URL hash (anchor) in format La-Lb where a and b are line numbers,
+// highlights line numbers, scrolls to first line number in range
+function handleLineRange(hashStr) {
+  const hash = hashStr.substring(1).split("-");
+  if (hash.length != 2) {
+    return;
+  }
+
+  const firstLineElement = document.getElementById(hash[0]);
+  const lastLineElement = document.getElementById(hash[1]);
+  if (firstLineElement === undefined || lastLineElement === undefined) {
+    return;
+  }
+
+  highlightFromTo(firstLineElement, lastLineElement);
+  firstLineElement.scrollIntoView();
+}
+
+// Highlights line number elements from firstLineElement to lastLineElement
+function highlightFromTo(firstLineElement, lastLineElement) {
+  let line = firstLineElement.parentNode;
+  const afterLastLineElement = lastLineElement.parentNode.nextElementSibling;
+  while (line !== null && line != afterLastLineElement) {
+    line.firstChild.classList.add("line-highlight");
+    line = line.nextElementSibling;
+  }
+  return true;
+}
+
+// Sets up listeners element that contains line numbers to handle
+// shift-clicks for range highlighting
+function setupLineRangeHandlers() {
+  // Check if page contains the element with line numbers
+  // If not, then likely script is not executed in context of the source page
+  const linenodiv = document.querySelector(".linenodiv");
+  if (linenodiv === null) {
+    return;
+  }
+
+  let rangeStart, rangeEnd;
+  linenodiv.addEventListener("click", ev => {
+    if (ev.ctrlKey || ev.metaKey) {
+      return;
+    }
+    ev.preventDefault();
+
+    // Handler is set on the element that contains all line numbers, check if the
+    // event is directed at an actual line number element
+    const el = ev.target;
+    if (typeof(el.id) !== "string" || el.id[0] !== "L" || el.tagName !== "A") {
+      return;
+    }
+
+    // Remove range highlight
+    const highlightElements = Array.from(document.getElementsByClassName("line-highlight"));
+    for (let el of highlightElements) {
+      el.classList.remove("line-highlight");
+    }
+
+    if (rangeStart === undefined || !ev.shiftKey) {
+      rangeStart = el;
+      rangeStart.classList.add("line-highlight");
+      rangeEnd = undefined;
+      window.location.hash = rangeStart.id;
+    } else if(ev.shiftKey) {
+      if (rangeEnd === undefined) {
+        rangeEnd = el;
+        highlightFromTo(rangeStart, rangeEnd);
+        window.location.hash = `${rangeStart.id}-${rangeEnd.id}`;
+      } else {
+        let rangeStartNumber = parseInt(rangeStart.id.substring(1));
+        let rangeEndNumber = parseInt(rangeEnd.id.substring(1));
+        const elNumber = parseInt(el.id.substring(1));
+        console.assert(!isNaN(rangeStartNumber) && !isNaN(rangeEndNumber) && !isNaN(elNumber),
+          "Elements to highlight have invalid numbers in ids");
+
+        // Swap range elements to support "#L2-L1" format. Postel's law.
+        if (rangeStartNumber > rangeEndNumber) {
+          const rangeTmp = rangeStart;
+          rangeStart = rangeEnd;
+          rangeEnd = rangeTmp;
+
+          const numberTmp = rangeStartNumber;
+          rangeStartNumber = rangeEndNumber;
+          rangeEndNumber = numberTmp;
+        }
+
+        if (elNumber < rangeStartNumber) {
+          // Expand if element above range
+          rangeStart = el;
+        } else if (elNumber > rangeEndNumber) {
+          // Expand if element below range
+          rangeEnd = el;
+        } else {
+          // Shrink moving the edge that's closest to the selection.
+          // Move end if center was selected.
+          const distanceFromStart = Math.abs(rangeStartNumber-elNumber);
+          const distanceFromEnd = Math.abs(rangeEndNumber-elNumber);
+          if (distanceFromStart < distanceFromEnd) {
+            rangeStart = el;
+          } else if (distanceFromStart > distanceFromEnd) {
+            rangeEnd = el;
+          } else {
+            rangeEnd = el;
+          }
+        }
+
+        highlightFromTo(rangeStart, rangeEnd);
+        window.location.hash = `${rangeStart.id}-${rangeEnd.id}`;
+      }
+    }
+  });
+}
+
 // recalculate scroll when page is fully loaded
 // in case of slow rendering very long pages.
 window.onload = function () {
   window.requestAnimationFrame(offsetAnchor)
+
+  handleLineRange(window.location.hash);
+  setupLineRangeHandlers();
 
   // fix incorrectly issued 301 redirect
   // https://developer.mozilla.org/en-US/docs/Web/API/Request/cache
