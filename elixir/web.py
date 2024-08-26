@@ -95,8 +95,12 @@ class SourceResource:
             resp.location = stringify_source_path(project, version, path)
             return
 
-        resp.content_type = falcon.MEDIA_HTML
-        resp.status, resp.text = generate_source_page(req.context, query, project, version, path)
+        raw_param = req.get_param('raw')
+        if raw_param is not None and raw_param.strip() != '0':
+            generate_raw_source(resp, query, version, path)
+        else:
+            resp.content_type = falcon.MEDIA_HTML
+            resp.status, resp.text = generate_source_page(req.context, query, project, version, path)
 
 # Handles source URLs without a path, ex. '/u-boot/v2023.10/source'.
 # Note lack of trailing slash
@@ -255,6 +259,20 @@ def get_layout_template_context(q, ctx, get_url_with_new_version, project, versi
         'current_family': 'A',
     }
 
+# Generate raw source response
+def generate_raw_source(resp, query, version, path):
+    type = query.query('type', version, path)
+    if type != 'blob':
+        raise falcon.HTTPNotFound('Error', 'File not found')
+    else:
+        code = query.get_file_raw(version, path)
+        resp.content_type = 'application/octet-stream'
+        resp.text = code
+        resp.downloadable_as = path.split('/')[-1]
+        # Cache for 24 hours
+        resp.cache_control = ('max-age=86400',)
+        # Sandbox result just in case
+        resp.headers['Content-Security-Policy'] = "sandbox; default-src 'none'"
 
 # Guesses file format based on filename, returns code formatted as HTML
 def format_code(filename, code):
@@ -320,7 +338,6 @@ def generate_source(q, project, version, path):
         html_code_block = f.untransform_formatted_code(filter_ctx, html_code_block)
 
     return html_code_block
-
 
 # Represents a file entry in git tree
 # type: either tree (directory), blob (file) or symlink
