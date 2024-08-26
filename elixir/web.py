@@ -27,6 +27,7 @@ import time
 import datetime
 from collections import OrderedDict, namedtuple
 from re import search, sub
+from typing import Any, Callable, NamedTuple, Tuple
 from urllib import parse
 import falcon
 import jinja2
@@ -39,7 +40,7 @@ from .autocomplete import AutocompleteResource
 from .api import ApiIdentGetterResource
 from .query import get_query
 from .web_utils import ProjectConverter, IdentConverter, validate_version, validate_project, validate_ident, \
-        get_elixir_version_string, get_elixir_repo_link
+        get_elixir_version_string, get_elixir_repo_link, RequestContext, Config
 
 VERSION_CACHE_DURATION_SECONDS = 2 * 60  # 2 minutes
 ADD_ISSUE_LINK = "https://github.com/bootlin/elixir/issues/new"
@@ -187,12 +188,12 @@ def validate_project_and_version(ctx, project, version):
 
 
 # Returns base url of source pages
-# project and version assumed unquoted
-def get_source_base_url(project, version):
+# project and version are assumed to be unquoted
+def get_source_base_url(project: str, version: str) -> str:
     return f'/{ parse.quote(project, safe="") }/{ parse.quote(version, safe="") }/source'
 
 # Converts ParsedSourcePath to a string with corresponding URL path
-def stringify_source_path(project, version, path):
+def stringify_source_path(project: str, version: str, path: str) -> str:
     if not path.startswith('/'):
         path = '/' + path
     path = f'{ get_source_base_url(project, version) }{ path }'
@@ -217,7 +218,7 @@ class IndexResource:
 # Handles source URLs
 # Path parameters are asssumed to be unquoted by converters
 class SourceResource:
-    def on_get(self, req, resp, project, version, path):
+    def on_get(self, req, resp, project: str, version: str, path: str):
         project, version, query = validate_project_and_version(req.context, project, version)
 
         if not path.startswith('/') and len(path) != 0:
@@ -251,13 +252,13 @@ class SourceResource:
 # Handles source URLs without a path, ex. '/u-boot/v2023.10/source'.
 # Note lack of trailing slash
 class SourceWithoutPathResource(SourceResource):
-    def on_get(self, req, resp, project, version):
+    def on_get(self, req, resp, project: str, version: str):
         return super().on_get(req, resp, project, version, '')
 
 
 # Returns base url of ident pages
 # project and version assumed unquoted
-def get_ident_base_url(project, version, family=None):
+def get_ident_base_url(project: str, version: str, family: str|None = None) -> str:
     project = parse.quote(project, safe="")
     version = parse.quote(version, safe="")
     if family is not None:
@@ -266,7 +267,7 @@ def get_ident_base_url(project, version, family=None):
         return f'/{ project }/{ version }/ident'
 
 # Converts ParsedIdentPath to a string with corresponding URL path
-def stringify_ident_path(project, version, family, ident):
+def stringify_ident_path(project, version, family, ident) -> str:
     path = f'{ get_ident_base_url(project, version, family) }/{ parse.quote(ident, safe="") }'
     return path.rstrip('/')
 
@@ -277,7 +278,7 @@ class IdentPostRedirectResource:
         resp.status = falcon.HTTP_FOUND
         resp.location = stringify_source_path(project, version, "")
 
-    def on_post(self, req, resp, project, version, family=None, ident=None):
+    def on_post(self, req, resp, project: str, version: str, family: str|None = None, _ident: str|None = None):
         project, version, query = validate_project_and_version(req.context, project, version)
 
         form = req.get_media()
@@ -305,7 +306,7 @@ class IdentPostRedirectResource:
 # See IdentPostRedirectResource for behavior on POST
 # Path parameters are asssumed to be unquoted by converters
 class IdentResource(IdentPostRedirectResource):
-    def on_get(self, req, resp, project, version, family, ident):
+    def on_get(self, req, resp, project: str, version: str, family: str, ident: str):
         project, version, query = validate_project_and_version(req.context, project, version)
 
         family = parse.unquote(family)
@@ -339,7 +340,7 @@ class IdentResource(IdentPostRedirectResource):
 # Also handles POST requests for ident URLs without family - IdentPostRedirectResource is
 # inherited from IdentResource
 class IdentWithoutFamilyResource(IdentResource):
-    def on_get(self, req, resp, project, version, ident):
+    def on_get(self, req, resp, project: str, version: str, ident: str):
         super().on_get(req, resp, project, version, 'C', ident)
 
 
@@ -353,7 +354,7 @@ TOPBAR_FAMILIES = {
 }
 
 # Returns a list of names of top-level directories in basedir
-def get_directories(basedir):
+def get_directories(basedir: str) -> list[str]:
     directories = []
     for filename in os.listdir(basedir):
         filepath = os.path.join(basedir, filename)
@@ -366,7 +367,7 @@ def get_directories(basedir):
 ProjectEntry = namedtuple('ProjectEntry', 'name, url')
 
 # Returns a list of ProjectEntry tuples of projects stored in directory basedir
-def get_projects(basedir):
+def get_projects(basedir: str) -> list[ProjectEntry]:
     return [ProjectEntry(p, f"/{p}/latest/source") for p in get_directories(basedir)]
 
 # Tuple of version name and URL to chosen resource with that version
@@ -382,7 +383,10 @@ VersionEntry = namedtuple('VersionEntry', 'version, url')
 # get_url: function that takes a version string and returns the URL
 #   for that version. Meaning of the URL can depend on the context
 # current_version: string with currently browsed version
-def get_versions(versions, get_url, current_version):
+def get_versions(versions: OrderedDict[str, OrderedDict[str, str]],
+                 get_url: Callable[[str], str],
+                 current_version: str) -> Tuple[dict[str, dict[str, list[VersionEntry]]], Tuple[str|None, str|None, str|None]]:
+
     result = OrderedDict()
     current_version_path = (None, None, None)
     for major, minor_verions in versions.items():
@@ -413,12 +417,11 @@ def get_versions_cached(q, ctx, project):
         return cached_versions[1]
 
 # Retruns template context used by the layout template
-# q: Query object
-# ctx: RequestContext object
 # get_url_with_new_version: see get_url parameter of get_versions
 # project: name of the project
 # version: version of the project
-def get_layout_template_context(q, ctx, get_url_with_new_version, project, version):
+def get_layout_template_context(q: Query, ctx: RequestContext, get_url_with_new_version: Callable[[str], str],
+                                project: str, version: str) -> dict[str, Any]:
     versions_raw = get_versions_cached(q, ctx, project)
     versions, current_version_path = get_versions(versions_raw, get_url_with_new_version, version)
 
@@ -454,7 +457,7 @@ def generate_raw_source(resp, query, project, version, path):
         resp.headers['Content-Security-Policy'] = "sandbox; default-src 'none'"
 
 # Guesses file format based on filename, returns code formatted as HTML
-def format_code(filename, code):
+def format_code(filename: str, code: str) -> str:
     import pygments
     import pygments.lexers
     import pygments.formatters
@@ -484,7 +487,7 @@ def format_code(filename, code):
 # project: name of the requested project
 # version: requested version of the project
 # path: path to the file in the repository
-def generate_source(q, project, version, path):
+def generate_source(q: Query, project: str, version: str, path: str) -> str:
     code = q.query('file', version, path)
 
     _, fname = os.path.split(path)
@@ -526,7 +529,7 @@ def generate_source(q, project, version, path):
     return html_code_block
 
 # Represents a file entry in git tree
-# type: either tree (directory), blob (file) or symlink
+# type : either tree (directory), blob (file) or symlink
 # name: filename of the file
 # path: path of the file, path to the target in case of symlinks
 # url: absolute URL of the file
@@ -534,11 +537,10 @@ def generate_source(q, project, version, path):
 DirectoryEntry = namedtuple('DirectoryEntry', 'type, name, path, url, size')
 
 # Returns a list of DirectoryEntry objects with information about files in a directory
-# q: Query object
 # base_url: file URLs will be created by appending file path to this URL. It shouldn't end with a slash
 # tag: requested repository tag
 # path: path to the directory in the repository
-def get_directory_entries(q, base_url, tag, path):
+def get_directory_entries(q: Query, base_url, tag: str, path: str) -> list[DirectoryEntry]:
     dir_entries = []
     lines = q.query('dir', tag, path)
 
@@ -547,7 +549,7 @@ def get_directory_entries(q, base_url, tag, path):
         file_path = f"{ path }/{ name }"
 
         if type == 'tree':
-            dir_entries.append(('tree', name, file_path, f"{ base_url }{ file_path }", None))
+            dir_entries.append(DirectoryEntry('tree', name, file_path, f"{ base_url }{ file_path }", None))
         elif type == 'blob':
             # 120000 permission means it's a symlink
             if perm == '120000':
@@ -555,19 +557,17 @@ def get_directory_entries(q, base_url, tag, path):
                 link_contents = q.get_file_raw(tag, file_path)
                 link_target_path = os.path.abspath(dir_path + link_contents)
 
-                dir_entries.append(('symlink', name, link_target_path, f"{ base_url }{ link_target_path }", size))
+                dir_entries.append(DirectoryEntry('symlink', name, link_target_path, f"{ base_url }{ link_target_path }", size))
             else:
-                dir_entries.append(('blob', name, file_path, f"{ base_url }{ file_path }", size))
+                dir_entries.append(DirectoryEntry('blob', name, file_path, f"{ base_url }{ file_path }", size))
 
     return dir_entries
 
 # Generates response (status code and optionally HTML) of the `source` route
-# ctx: RequestContext
-# q: Query object
-# parsed_path: ParsedSourcePath
-def generate_source_page(ctx, q, project, version, path):
-    status = falcon.HTTP_OK
+def generate_source_page(ctx: RequestContext, q: Query,
+                         project: str, version: str, path: str) -> tuple[int, str]:
 
+    status = falcon.HTTP_OK
     source_base_url = get_source_base_url(project, version)
 
     type = q.query('type', version, path)
@@ -632,14 +632,14 @@ def generate_source_page(ctx, q, project, version, path):
 LineWithURL = namedtuple('LineWithURL', 'lineno, url')
 
 # Represents a symbol occurrence to be rendered by ident template
-# type: type of the symbol
+# type : type of the symbol
 # path: path of the file that contains the symbol
 # line: list of LineWithURL
 SymbolEntry = namedtuple('SymbolEntry', 'type, path, lines')
 
 # Converts SymbolInstance into SymbolEntry
 # path of SymbolInstance will be appended to base_url
-def symbol_instance_to_entry(base_url, symbol):
+def symbol_instance_to_entry(base_url: str, symbol: SymbolInstance) -> SymbolEntry:
     # TODO this should be a responsibility of Query
     if type(symbol.line) is str:
         line_numbers = symbol.line.split(',')
@@ -654,16 +654,13 @@ def symbol_instance_to_entry(base_url, symbol):
     return SymbolEntry(symbol.type, symbol.path, lines)
 
 # Generates response (status code and optionally HTML) of the `ident` route
-# ctx: RequestContext
 # basedir: path to data directory, ex: "/srv/elixir-data"
-# parsed_path: ParsedIdentPath
-def generate_ident_page(ctx, q, project, version, family, ident):
+def generate_ident_page(ctx: RequestContext, q: Query,
+                        project: str, version: str, family: str, ident: str) -> tuple[int, str]:
+
     status = falcon.HTTP_OK
-
     source_base_url = get_source_base_url(project, version)
-
     symbol_definitions, symbol_references, symbol_doccomments = q.query('ident', version, ident, family)
-
     symbol_sections = []
 
     if len(symbol_definitions) or len(symbol_references):
@@ -721,13 +718,6 @@ def generate_ident_page(ctx, q, project, version, family, ident):
     return (status, template.render(data))
 
 
-# Elixir config, currently contains only path to directory with projects
-Config = namedtuple('Config', 'project_dir, version_string, repo_link')
-
-# Basic information about handled request - current Elixir configuration, configured Jinja environment
-# and logger
-RequestContext = namedtuple('RequestContext', 'config, jinja_env, logger, versions_cache, versions_cache_lock')
-
 def get_jinja_env():
     script_dir = os.path.dirname(os.path.realpath(__file__))
     templates_dir = os.path.join(script_dir, '../templates/')
@@ -738,7 +728,7 @@ def get_jinja_env():
 # Replaces the default, unquoted URL with a quoted version
 # NOTE: this is non-standard and it's not guaranteed to work on all WSGI servers
 class RawPathComponent:
-    def process_request(self, req, resp):
+    def process_request(self, req, _):
         raw_uri = req.env.get('RAW_URI') or req.env.get('REQUEST_URI')
         if raw_uri:
             req.path, _, _ = raw_uri.partition('?')
@@ -750,7 +740,7 @@ class RequestContextMiddleware:
         self.versions_cache = {}
         self.versions_cache_lock = threading.Lock()
 
-    def process_request(self, req, resp):
+    def process_request(self, req, _resp):
         req.context = RequestContext(
             Config(req.env['LXR_PROJ_DIR'], ELIXIR_VERSION_STRING, ELIXIR_REPO_LINK),
             self.jinja_env,
