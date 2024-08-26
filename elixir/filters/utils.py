@@ -17,7 +17,7 @@ class FilterContext:
     tag: str
     family: str
     filepath: str
-    get_ident_url: str
+    get_ident_url: Callable[[str], str]
     get_absolute_source_url: Callable[[str], str]
     get_relative_source_url: Callable[[str], str]
 

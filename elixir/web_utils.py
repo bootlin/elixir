@@ -1,8 +1,11 @@
 import os
 import re
-from urllib import parse
 import logging
+import threading
+from urllib import parse
+from typing import Any, Dict, NamedTuple
 import falcon
+import jinja2
 
 from .lib import validFamily, run_cmd
 
@@ -36,30 +39,45 @@ def get_elixir_repo_link(version):
     else:
         return ELIXIR_REPO_LINK
 
-def validate_project(project):
+# Elixir config, currently contains only path to directory with projects
+class Config(NamedTuple):
+    project_dir: str
+    version_string: str
+    repo_link: str
+
+# Basic information about handled request - current Elixir configuration, configured Jinja environment
+# and logger
+class RequestContext(NamedTuple):
+    config: Config
+    jinja_env: jinja2.Environment
+    logger: logging.Logger
+    versions_cache: Dict[str, str]
+    versions_cache_lock: threading.Lock
+
+def validate_project(project: str) -> str|None:
     if project is not None and re.match(r'^[a-zA-Z0-9_.,:/-]+$', project):
         return project.strip()
 
 # Validates and unquotes project parameter
 class ProjectConverter(falcon.routing.BaseConverter):
-    def convert(self, value: str):
+    def convert(self, value: str) -> str:
         value = parse.unquote(value)
         project = validate_project(value)
         if project is None:
             raise falcon.HTTPBadRequest('Error', 'Invalid project name')
         return project
 
-def validate_version(version):
+def validate_version(version) -> str|None:
     if version is not None and re.match(r'^[a-zA-Z0-9_.,:/-]+$', version):
         return version.strip()
 
-def validate_ident(ident):
+def validate_ident(ident: str) -> str|None:
     if ident is not None and re.match(r'^[A-Za-z0-9_,.+?#-]+$', ident):
         return ident.strip()
 
 # Validates and unquotes identifier parameter
 class IdentConverter(falcon.routing.BaseConverter):
-    def convert(self, value: str):
+    def convert(self, value: str) -> str|None:
         value = parse.unquote(value)
         return validate_ident(value)
 
