@@ -80,17 +80,11 @@ class SourceResource:
 
         query = get_query(req.context.config.project_dir, project)
         if not query:
-            resp.status = falcon.HTTP_NOT_FOUND
-            resp.content_type = falcon.MEDIA_HTML
-            resp.text = get_error_page(req.context, "Unknown project")
-            return
+            raise falcon.HTTPNotFound('Error', 'Unknown project')
 
         # Check if path contains only allowed characters
         if not search('^[A-Za-z0-9_/.,+-]*$', path):
-            resp.status = falcon.HTTP_BAD_REQUEST
-            resp.content_type  = falcon.MEDIA_HTML
-            resp.text = get_error_page(req.context, "Path contains characters that are not allowed.")
-            return
+            raise falcon.HTTPBadRequest('Error', 'Path contains characters that are not allowed')
 
         if version == 'latest':
             version = parse.quote(query.query('latest'))
@@ -134,10 +128,7 @@ class IdentPostRedirectResource:
             post_family = 'C'
 
         if not post_ident:
-            resp.status = falcon.HTTP_BAD_REQUEST
-            resp.content_type = falcon.MEDIA_HTML
-            resp.text = get_error_page(req.context, "Invalid identifier")
-            return
+            raise falcon.HTTPBadRequest('Error', 'Invalid identifier')
 
         post_ident = post_ident.strip()
         resp.status = falcon.HTTP_MOVED_PERMANENTLY
@@ -150,10 +141,7 @@ class IdentResource(IdentPostRedirectResource):
     def on_get(self, req, resp, project, version, family, ident):
         query = get_query(req.context.config.project_dir, project)
         if not query:
-            resp.status = falcon.HTTP_NOT_FOUND
-            resp.content_type = falcon.MEDIA_HTML
-            resp.text = get_error_page(req.context, "Unknown project.")
-            return
+            raise falcon.HTTPNotFound('Error', 'Unknown project')
 
         if version == 'latest':
             version = parse.quote(query.query('latest'))
@@ -546,16 +534,34 @@ class RequestContextMiddleware:
     def process_request(self, req, resp):
         req.context = get_request_context(req.env)
 
+# Serialies caught exceptions to JSON or HTML
+# See https://falcon.readthedocs.io/en/stable/api/app.html#falcon.App.set_error_serializer
+def error_serializer(req, resp, exception):
+    preferred = req.client_prefers((falcon.MEDIA_HTML, falcon.MEDIA_JSON))
+
+    if preferred is not None:
+        if preferred == falcon.MEDIA_JSON:
+            resp.data = exception.to_json()
+            resp.content_type = falcon.MEDIA_JSON
+        else:
+            resp.text = get_error_page(req.context, exception.title, exception.description)
+            resp.content_type = falcon.MEDIA_HTML
+
+    resp.append_header('Vary', 'Accept')
+
 # Builds and returns the Falcon application
 def get_application():
     app = falcon.App(middleware=[
         RawPathComponent(),
         RequestContextMiddleware(),
     ])
+
     app.router_options.converters['project'] = ProjectConverter
     app.router_options.converters['version'] = VersionConverter
     app.router_options.converters['ident'] = IdentConverter
     app.router_options.converters['family'] = FamilyConverter
+
+    app.set_error_serializer(error_serializer)
 
     app.add_route('/{project:project}/{version:version}/source/{path:path}', SourceResource())
     app.add_route('/{project:project}/{version:version}/source', SourceWithoutPathResource())

@@ -12,7 +12,10 @@ def validate_project(project):
 class ProjectConverter(falcon.routing.BaseConverter):
     def convert(self, value: str):
         value = parse.unquote(value)
-        return validate_project(value)
+        project = validate_project(value)
+        if project is None:
+            raise falcon.HTTPBadRequest('Error', 'Invalid project name')
+        return project
 
 def validate_version(version):
     if version is not None and re.match(r'^[a-zA-Z0-9_.,:/-]+$', version):
@@ -22,7 +25,10 @@ def validate_version(version):
 class VersionConverter(falcon.routing.BaseConverter):
     def convert(self, value: str):
         value = parse.unquote(value)
-        return validate_version(value)
+        version = validate_version(value)
+        if version is None:
+            raise falcon.HTTPBadRequest('Error', 'Invalid version name')
+        return version
 
 def validate_ident(ident):
     if ident is not None and re.match(r'^[A-Za-z0-9_,.+?#-]+$', ident):
