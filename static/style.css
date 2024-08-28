@@ -1092,6 +1092,9 @@ main {
 
 /* desktop */
 @media screen and (min-width: 1000px) {
+  :root {
+    --is-widescreen: true;
+  }
   .close-menu {
     display: none;
   }

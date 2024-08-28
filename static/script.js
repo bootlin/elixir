@@ -76,7 +76,9 @@ var tag = document.querySelector('.version em')
 var openMenu = document.querySelector('.open-menu')
 var wrapper = document.querySelector('.wrapper')
 openMenu.onclick = tag.onclick = function (e) {
-  e.preventDefault()
+  e.preventDefault();
+  const hasShowMenu = document.documentElement.classList.contains('show-menu');
+  window.localStorage.setItem('show-sidebar', !hasShowMenu);
   document.documentElement.classList.toggle('show-menu');
 }
 sidebar.onclick = function (e) {

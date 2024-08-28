@@ -17,7 +17,18 @@
         <link rel="stylesheet" href="/static/style.css?v=7">
         <link rel="stylesheet" href="/static/banner.css">
         <link rel="stylesheet" href="/static/autocomplete.css">
-        <script>document.documentElement.className = 'js'</script>
+        <script>
+            document.documentElement.classList.remove('no-js');
+            document.documentElement.classList.add('js');
+
+            //NOTE: placing this here, instead of script.js makes the sidebar less likely to flash on navigation
+            const showSidebar = window.localStorage.getItem('show-sidebar');
+            const isWidescreen = getComputedStyle(document.documentElement).getPropertyValue('--is-widescreen') === 'true';
+            if (isWidescreen && (showSidebar === "true" || showSidebar === null)) {
+              // special class that opens the sidebar only on widescreen devices
+              document.documentElement.classList.add('show-menu');
+            }
+        </script>
     </head>
     <body>
         <!--[if lte IE 9]>
