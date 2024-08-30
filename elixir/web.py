@@ -508,17 +508,11 @@ Config = namedtuple('Config', 'project_dir')
 # and logger
 RequestContext = namedtuple('RequestContext', 'config, jinja_env, logger')
 
-# Builds a RequestContext instance from global context
-def get_request_context(environ):
+def get_jinja_env():
     script_dir = os.path.dirname(os.path.realpath(__file__))
     templates_dir = os.path.join(script_dir, '../templates/')
     loader = jinja2.FileSystemLoader(templates_dir)
-    environment = jinja2.Environment(loader=loader)
-
-    # TODO - config should probably be read from a file and passed to resource classes,
-    # not read from apache config environment that's passed to each request
-    return RequestContext(Config(environ['LXR_PROJ_DIR']), environment, logging.getLogger(__name__))
-
+    return jinja2.Environment(loader=loader)
 
 # see https://falcon.readthedocs.io/en/v3.1.2/user/recipes/raw-url-path.html
 # Replaces the default, unquoted URL with a quoted version
@@ -531,8 +525,15 @@ class RawPathComponent:
 
 # Adds request context to all requests
 class RequestContextMiddleware:
+    def __init__(self, jinja_env):
+        self.jinja_env = jinja_env
+
     def process_request(self, req, resp):
-        req.context = get_request_context(req.env)
+        req.context = RequestContext(
+            Config(req.env['LXR_PROJ_DIR']),
+            self.jinja_env,
+            logging.getLogger(__name__)
+        )
 
 # Serialies caught exceptions to JSON or HTML
 # See https://falcon.readthedocs.io/en/stable/api/app.html#falcon.App.set_error_serializer
@@ -553,7 +554,7 @@ def error_serializer(req, resp, exception):
 def get_application():
     app = falcon.App(middleware=[
         RawPathComponent(),
-        RequestContextMiddleware(),
+        RequestContextMiddleware(get_jinja_env()),
     ])
 
     app.router_options.converters['project'] = ProjectConverter
