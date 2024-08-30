@@ -38,6 +38,8 @@ from .api import ApiIdentGetterResource
 from .query import get_query
 from .web_utils import FamilyConverter, ProjectConverter, VersionConverter, IdentConverter, FamilyConverter
 
+VERSION_CACHE_DURATION_SECONDS = 2 * 60  # 2 minutes
+
 # Generated a Elixir error page
 def get_error_page(ctx, title, details=None):
     template_ctx = {
@@ -224,8 +226,7 @@ def get_versions_cached(q, ctx, project):
             cached_versions = ctx.versions_cache[project]
         else:
             cached_versions = ctx.versions_cache[project]
-            # cache for 30 minutes
-            if time.time()-cached_versions[0] > 60*30:
+            if time.time()-cached_versions[0] > VERSION_CACHE_DURATION_SECONDS:
                 ctx.versions_cache[project] = (time.time(), q.query('versions'))
                 cached_versions = ctx.versions_cache[project]
 
