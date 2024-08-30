@@ -20,8 +20,9 @@
 
 import logging
 import os
-import re
 import sys
+import threading
+import time
 from collections import OrderedDict, namedtuple
 from re import search, sub
 from urllib import parse
@@ -215,6 +216,21 @@ def get_versions(versions, get_url, current_version):
 
     return result, current_version_path
 
+# Caches get_versions result in a context object
+def get_versions_cached(q, ctx, project):
+    with ctx.versions_cache_lock:
+        if project not in ctx.versions_cache:
+            ctx.versions_cache[project] = (time.time(), q.query('versions'))
+            cached_versions = ctx.versions_cache[project]
+        else:
+            cached_versions = ctx.versions_cache[project]
+            # cache for 30 minutes
+            if time.time()-cached_versions[0] > 60*30:
+                ctx.versions_cache[project] = (time.time(), q.query('versions'))
+                cached_versions = ctx.versions_cache[project]
+
+        return cached_versions[1]
+
 # Retruns template context used by the layout template
 # q: Query object
 # ctx: RequestContext object
@@ -222,7 +238,9 @@ def get_versions(versions, get_url, current_version):
 # project: name of the project
 # version: version of the project
 def get_layout_template_context(q, ctx, get_url_with_new_version, project, version):
-    versions, current_version_path = get_versions(q.query('versions'), get_url_with_new_version, version)
+    versions_raw = get_versions_cached(q, ctx, project)
+    versions, current_version_path = get_versions(versions_raw, get_url_with_new_version, version)
+
     return {
         'projects': get_projects(ctx.config.project_dir),
         'versions': versions,
@@ -506,7 +524,7 @@ Config = namedtuple('Config', 'project_dir')
 
 # Basic information about handled request - current Elixir configuration, configured Jinja environment
 # and logger
-RequestContext = namedtuple('RequestContext', 'config, jinja_env, logger')
+RequestContext = namedtuple('RequestContext', 'config, jinja_env, logger, versions_cache, versions_cache_lock')
 
 def get_jinja_env():
     script_dir = os.path.dirname(os.path.realpath(__file__))
@@ -527,12 +545,16 @@ class RawPathComponent:
 class RequestContextMiddleware:
     def __init__(self, jinja_env):
         self.jinja_env = jinja_env
+        self.versions_cache = {}
+        self.versions_cache_lock = threading.Lock()
 
     def process_request(self, req, resp):
         req.context = RequestContext(
             Config(req.env['LXR_PROJ_DIR']),
             self.jinja_env,
-            logging.getLogger(__name__)
+            logging.getLogger(__name__),
+            self.versions_cache,
+            self.versions_cache_lock,
         )
 
 # Serialies caught exceptions to JSON or HTML
