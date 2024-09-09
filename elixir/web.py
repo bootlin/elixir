@@ -102,6 +102,8 @@ class SourceResource:
             resp.content_type = falcon.MEDIA_HTML
             resp.status, resp.text = generate_source_page(req.context, query, project, version, path)
 
+        query.close()
+
 # Handles source URLs without a path, ex. '/u-boot/v2023.10/source'.
 # Note lack of trailing slash
 class SourceWithoutPathResource(SourceResource):
@@ -158,6 +160,8 @@ class IdentResource(IdentPostRedirectResource):
 
         resp.content_type = falcon.MEDIA_HTML
         resp.status, resp.text = generate_ident_page(req.context, query, project, version, family, ident)
+
+        query.close()
 
 # Handles ident URLs when family is not specified in the URL
 # Also handles POST requests for ident URLs without family - IdentPostRedirectResource is
