@@ -1035,22 +1035,14 @@ main {
   width: 100%;
   height: auto;
   background: rgba(3, 8, 35, 0);
-  -webkit-transition: left 0.2s ease 0.2s, background 0.2s ease;
-  transition: left 0.2s ease 0.2s, background 0.2s ease;
 }
 .sidebar .filter,
 .sidebar nav {
   width: 60%;
   max-width: 330px;
 }
-.show-menu .sidebar {
-  background: rgba(3, 8, 35, 0.5);
-  left: 0;
-  -webkit-transition: left 0.2s ease, background 0.2s ease 0.2s;
-  transition: left 0.2s ease, background 0.2s ease 0.2s;
-}
 
-/* tablet */
+/* tablet and above */
 @media screen and (min-width: 600px) {
   .filter input,
   .search input {
@@ -1085,9 +1077,21 @@ main {
   }
 }
 
+/* tablet only */
+@media screen and (max-width: 1000px) {
+  .sidebar {
+    -webkit-transition: left 0.2s ease 0.2s, background 0.2s ease;
+    transition: left 0.2s ease 0.2s, background 0.2s ease;
+  }
+  .show-menu .sidebar {
+    position: fixed;
+    left: 0;
+    background: rgba(3, 8, 35, 0.5);
+  }
+}
+
 /* desktop */
 @media screen and (min-width: 1000px) {
-  .open-menu,
   .close-menu {
     display: none;
   }
@@ -1095,7 +1099,6 @@ main {
     position: absolute;
     top: -45px;
     bottom: -25px;
-    left: 0;
     -webkit-box-ordinal-group: 1;
         -ms-flex-order: 0;
             order: 0;
@@ -1107,28 +1110,34 @@ main {
   .sidebar .filter, .sidebar nav {
     width: 100%;
   }
+  .sidebar nav {
+    height: 100%;
+  }
   .workspace {
     -webkit-box-ordinal-group: 2;
         -ms-flex-order: 1;
             order: 1;
     padding-left: 235px;
   }
-  .topbar {
+  .show-menu .topbar, .no-js .topbar {
     padding-left: 235px;
   }
-  .footer {
+  .show-menu .footer, .no-js .footer {
     padding-left: calc(2.5rem + 235px);
+  }
+  .show-menu .sidebar {
+    position: -webkit-sticky;
+    position: sticky;
+    left: 0;
   }
   .linenos {
     left: 235px;
   }
   .no-js .sidebar {
-    left: auto;
-    height: auto;
-    overflow: visible;
+    left: 0;
+    height: 100%;
   }
 }
-
 
 /* if browser support position: sticky */
 @supports ((position: -webkit-sticky) or (position: sticky)) {
@@ -1166,17 +1175,14 @@ main {
 
   /* desktop */
   @media screen and (min-width: 1000px) {
-    .js .linenos {
+    .show-menu .js .linenos {
       left: 235px;
     }
     .js .workspace {
       padding-left: unset;
     }
     .js .sidebar {
-      position: -webkit-sticky;
-      position: sticky;
       top: 0;
-      left: 0;
       height: 100vh;
       margin-top: -45px;
       margin-bottom: -25px;
