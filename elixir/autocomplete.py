@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-
 #  This file is part of Elixir, a source code cross-referencer.
 #
 #  Copyright (C) 2017--2020 Maxime Chretien <maxime.chretien@bootlin.com>
@@ -84,4 +83,6 @@ class AutocompleteResource:
         resp.status = falcon.HTTP_200
         resp.content_type = falcon.MEDIA_JSON
         resp.media = response
+
+        query.close()
 
