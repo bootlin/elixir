@@ -27,6 +27,7 @@
             {% include 'header.html' %}
             {% include 'topbar.html' %}
             <main>
+                {% include "sidebar.html" %}
                 <div class="workspace">
                     <div id="reference-popup-wrapper">
                         <div id="reference-popup"></div>
@@ -35,7 +36,6 @@
                     {% block main %}
                     {% endblock %}
                 </div>
-                {% include "sidebar.html" %}
             </main>
             <footer class="footer">
                 <span class="version">
