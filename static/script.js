@@ -77,11 +77,12 @@ var openMenu = document.querySelector('.open-menu')
 var wrapper = document.querySelector('.wrapper')
 openMenu.onclick = tag.onclick = function (e) {
   e.preventDefault()
-  wrapper.classList.toggle('show-menu')
+  document.documentElement.classList.toggle('show-menu');
 }
 sidebar.onclick = function (e) {
   if (e.target === this || e.target.classList.contains('close-menu')) {
-    wrapper.classList.remove('show-menu')
+    document.documentElement.classList.remove('show-menu');
+    window.localStorage.setItem('show-sidebar', false);
   }
 }
 
