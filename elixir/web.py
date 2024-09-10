@@ -294,7 +294,14 @@ def format_code(filename, code):
         lexer = pygments.lexers.get_lexer_by_name('text')
 
     lexer.stripnl = False
-    formatter = pygments.formatters.HtmlFormatter(linenos=True, anchorlinenos=True)
+    formatter = pygments.formatters.HtmlFormatter(
+        # Adds line numbers column to output
+        linenos=True,
+        # Wraps line numbers in link (a) tags
+        anchorlinenos=True,
+        # Wraps each line in a span tag with id='codeline-{line_number}'
+        linespans='codeline'
+    )
     return pygments.highlight(code, lexer, formatter)
 
 # Generate formatted HTML of a file, apply filters (for ex. to add identifier links)

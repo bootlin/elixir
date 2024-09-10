@@ -767,6 +767,17 @@ h2 {
   height: 100%;
 }
 
+span[id^='codeline-'] {
+  display: block;
+  padding-left: 1em;
+}
+
+span[id^='codeline-'].line-highlight {
+  width: 100%;
+  height: 100%;
+  background: #f8edc3;
+}
+
 .linenodiv {
   background: #e9e9e9;
 }
@@ -783,6 +794,10 @@ h2 {
   background: #ccc;
 }
 .linenodiv pre a.line-highlight,
+.linenodiv pre span {
+  display: inline-block;
+}
+.linenodiv pre span.line-highlight > a,
 .linenodiv pre a:target {
   color: #444;
 }
@@ -801,9 +816,6 @@ h2 {
   outline: 1px;
   outline-style: dotted;
   outline-offset: -1px;
-}
-.highlight pre {
-  padding-left: 1em;
 }
 
 .highlight a {
