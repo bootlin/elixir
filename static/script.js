@@ -115,7 +115,8 @@ window.onhashchange = offsetAnchor
 window.requestAnimationFrame(offsetAnchor)
 
 // Parses URL hash (anchor) in format La-Lb where a and b are line numbers,
-// highlights line numbers, scrolls to first line number in range
+// highlights range between (and including) line numbers, scrolls to the
+// first line number in range.
 function handleLineRange(hashStr) {
   const hash = hashStr.substring(1).split("-");
   if (hash.length != 2) {
@@ -134,16 +135,30 @@ function handleLineRange(hashStr) {
 
 // Highlights line number elements from firstLineElement to lastLineElement
 function highlightFromTo(firstLineElement, lastLineElement) {
-  let line = firstLineElement.parentNode;
-  const afterLastLineElement = lastLineElement.parentNode.nextElementSibling;
-  while (line !== null && line != afterLastLineElement) {
-    line.firstChild.classList.add("line-highlight");
-    line = line.nextElementSibling;
-  }
-  return true;
+  let firstLine = parseInt(firstLineElement.id.substring(1));
+  let lastLine = parseInt(lastLineElement.id.substring(1));
+  console.assert(!isNaN(firstLine) && !isNaN(lastLine),
+    "Elements to highlight have invalid numbers in ids");
+
+  console.assert(firstLine < lastLine, "first highlight line is after last highlight line");
+
+  const firstCodeLine = document.getElementById(`codeline-${ firstLine }`);
+  const lastCodeLine = document.getElementById(`codeline-${ lastLine }`);
+
+  addClassToRangeOfElements(firstLineElement.parentNode, lastLineElement.parentNode, "line-highlight");
+  addClassToRangeOfElements(firstCodeLine, lastCodeLine, "line-highlight");
 }
 
-// Sets up listeners element that contains line numbers to handle
+function addClassToRangeOfElements(first, last, class_name) {
+  let element = first;
+  const elementAfterLast = last !== null ? last.nextElementSibling : null;
+  while (element !== null && element != elementAfterLast) {
+    element.classList.add(class_name);
+    element = element.nextElementSibling;
+  }
+}
+
+// Sets up listeners on element that contains line numbers to handle
 // shift-clicks for range highlighting
 function setupLineRangeHandlers() {
   // Check if page contains the element with line numbers
