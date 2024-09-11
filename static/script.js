@@ -199,49 +199,47 @@ function setupLineRangeHandlers() {
     } else if(ev.shiftKey) {
       if (rangeEnd === undefined) {
         rangeEnd = el;
-        highlightFromTo(rangeStart, rangeEnd);
-        window.location.hash = `${rangeStart.id}-${rangeEnd.id}`;
+      }
+
+      let rangeStartNumber = parseInt(rangeStart.id.substring(1));
+      let rangeEndNumber = parseInt(rangeEnd.id.substring(1));
+      const elNumber = parseInt(el.id.substring(1));
+      console.assert(!isNaN(rangeStartNumber) && !isNaN(rangeEndNumber) && !isNaN(elNumber),
+        "Elements to highlight have invalid numbers in ids");
+
+      // Swap range elements to support "#L2-L1" format. Postel's law.
+      if (rangeStartNumber > rangeEndNumber) {
+        const rangeTmp = rangeStart;
+        rangeStart = rangeEnd;
+        rangeEnd = rangeTmp;
+
+        const numberTmp = rangeStartNumber;
+        rangeStartNumber = rangeEndNumber;
+        rangeEndNumber = numberTmp;
+      }
+
+      if (elNumber < rangeStartNumber) {
+        // Expand if element above range
+        rangeStart = el;
+      } else if (elNumber > rangeEndNumber) {
+        // Expand if element below range
+        rangeEnd = el;
       } else {
-        let rangeStartNumber = parseInt(rangeStart.id.substring(1));
-        let rangeEndNumber = parseInt(rangeEnd.id.substring(1));
-        const elNumber = parseInt(el.id.substring(1));
-        console.assert(!isNaN(rangeStartNumber) && !isNaN(rangeEndNumber) && !isNaN(elNumber),
-          "Elements to highlight have invalid numbers in ids");
-
-        // Swap range elements to support "#L2-L1" format. Postel's law.
-        if (rangeStartNumber > rangeEndNumber) {
-          const rangeTmp = rangeStart;
-          rangeStart = rangeEnd;
-          rangeEnd = rangeTmp;
-
-          const numberTmp = rangeStartNumber;
-          rangeStartNumber = rangeEndNumber;
-          rangeEndNumber = numberTmp;
-        }
-
-        if (elNumber < rangeStartNumber) {
-          // Expand if element above range
+        // Shrink moving the edge that's closest to the selection.
+        // Move end if center was selected.
+        const distanceFromStart = Math.abs(rangeStartNumber-elNumber);
+        const distanceFromEnd = Math.abs(rangeEndNumber-elNumber);
+        if (distanceFromStart < distanceFromEnd) {
           rangeStart = el;
-        } else if (elNumber > rangeEndNumber) {
-          // Expand if element below range
+        } else if (distanceFromStart > distanceFromEnd) {
           rangeEnd = el;
         } else {
-          // Shrink moving the edge that's closest to the selection.
-          // Move end if center was selected.
-          const distanceFromStart = Math.abs(rangeStartNumber-elNumber);
-          const distanceFromEnd = Math.abs(rangeEndNumber-elNumber);
-          if (distanceFromStart < distanceFromEnd) {
-            rangeStart = el;
-          } else if (distanceFromStart > distanceFromEnd) {
-            rangeEnd = el;
-          } else {
-            rangeEnd = el;
-          }
+          rangeEnd = el;
         }
-
-        highlightFromTo(rangeStart, rangeEnd);
-        window.location.hash = `${rangeStart.id}-${rangeEnd.id}`;
       }
+
+      highlightFromTo(rangeStart, rangeEnd);
+      window.location.hash = `${rangeStart.id}-${rangeEnd.id}`;
     }
   });
 }
