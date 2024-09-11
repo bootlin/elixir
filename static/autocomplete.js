@@ -24,6 +24,7 @@ AutoComplete({
     Limit: 10,
     MinChars: 4,
     Delay: 500,
+    SelectCallback: _ => document.getElementById("search-form").requestSubmit(),
 }, "#search-input");
 
 },{"autocomplete-js":2}],2:[function(require,module,exports){
@@ -242,6 +243,7 @@ var AutoComplete = /** @class */ (function () {
         HttpMethod: "GET",
         QueryArg: "q",
         Url: null,
+        SelectCallback: null,
         KeyboardMappings: {
             "Enter": {
                 Conditions: [{
@@ -564,6 +566,9 @@ var AutoComplete = /** @class */ (function () {
                 this.Input.value = item.innerHTML;
             }
             this.Input.setAttribute("data-autocomplete-old-value", this.Input.value);
+            if (this.SelectCallback) {
+                this.SelectCallback();
+            }
         },
         /**
          * Handle HTTP error on the request
