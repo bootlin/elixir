@@ -22,9 +22,10 @@
             document.documentElement.classList.add('js');
 
             //NOTE: placing this here, instead of script.js makes the sidebar less likely to flash on navigation
-            const showSidebar = window.localStorage.getItem('show-sidebar');
+            const showSidebarStr = window.localStorage.getItem('show-sidebar');
+            const showSidebar = showSidebarStr == "true" || showSidebarStr == null;
             const isWidescreen = getComputedStyle(document.documentElement).getPropertyValue('--is-widescreen') === 'true';
-            if (isWidescreen && (showSidebar === "true" || showSidebar === null)) {
+            if (isWidescreen && showSidebar) {
               // special class that opens the sidebar only on widescreen devices
               document.documentElement.classList.add('show-menu');
             }
