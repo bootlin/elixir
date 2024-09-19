@@ -20,31 +20,29 @@
         <h3 class="screenreader">Versions</h3>
         <ul class="versions">
             {% set current_major, current_minor, current_version = current_version_path %}
+
             {%- for major, major_versions in (versions|default({})).items() -%}
             <li> {{- "" -}}
-                <span class="{{ 'active' if current_major == major else '' }}">{{ major }}</span> {{- "" -}}
+                <span {{ 'class=\"active\"' if current_major == major else '' }}>{{ major }}</span> {{- "" -}}
                 <ul>
                 {%- for minor, minor_versions in major_versions.items() -%}
                     {%- if minor == minor_versions[0] and minor_versions|length == 1 -%}
-                        <li class="li-link"> {{- "" -}}
-                            <a href="{{ minor_versions[0].url }}">{{ minor_versions[0].version }}</a> {{- "" -}}
-                        </li>
+                        <a class="ver-link" href="{{ minor_versions[0].url }}">{{ minor_versions[0].version }}</a> {{- "" -}}
                     {%- else -%}
                         <li> {{- "" -}}
-                            <span class="{{ 'active' if minor == current_minor else '' }}">{{ minor }}</span> {{- "" -}}
-                            <ul>
-                                {%- for v in minor_versions -%}
-                                    <li class="li-link {{ 'active' if v.version == current_tag else '' }}"> {{- "" -}}
-                                        <a href="{{ v.url }}">{{ v.version }}</a> {{- "" -}}
-                                    </li>
-                                {%- endfor -%}
-                            </ul> {{- "" -}}
+                            <span {{ 'class=\"active\"' if minor == current_minor else '' }}>{{ minor }}</span> {{- "" -}}
+                            <div class="ver-links">
+                            {%- for v in minor_versions -%}
+                                <a href="{{ v.url }}"{{ ' class=\"active\"' if v.version == current_tag else '' }}>{{- v.version -}}</a>
+                            {%- endfor -%}
+                            </div> {{- "" -}}
                         </li>
                     {%- endif -%}
                 {%- endfor -%}
                 </ul> {{- "" -}}
             </li>
             {%- endfor -%}
+
         </ul>
 
         <div class="filter-results"></div>

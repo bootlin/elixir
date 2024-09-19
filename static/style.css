@@ -433,7 +433,7 @@ h2 {
   list-style: none;
   margin: 0;
 }
-.sidebar nav li.active a {
+.sidebar nav a.active {
   color: #eee;
   color: #6d7dd2;
   font-weight: 700;
@@ -509,9 +509,9 @@ h2 {
           flex: 1;
 }
 
-.js .sidebar li li::before {
+.js .sidebar li li::before,
+.js .sidebar .ver-links a::before {
   color: #444;
-  font-family: 'Ubuntu Mono', monospace;
   font-size: 1.29em;
   line-height: 1;
 }
@@ -521,16 +521,16 @@ h2 {
 .js .sidebar li li:last-of-type::before {
   content: '└╴';
 }
-.js .sidebar li li li::before {
+.js .sidebar .ver-links a::before {
   content: '│\00a0├╴';
 }
-.js .sidebar li li li:last-of-type::before {
+.js .sidebar .ver-links a:last-of-type::before {
   content: '│\00a0└╴';
 }
-.js .sidebar li li:last-of-type li::before {
+.js .sidebar li li:last-of-type .ver-links a::before {
   content: '\00a0\00a0├╴';
 }
-.js .sidebar li li:last-of-type li:last-of-type::before {
+.js .sidebar li li:last-of-type .ver-links a:last-of-type::before {
   content: '\00a0\00a0└╴';
 }
 
@@ -540,7 +540,8 @@ h2 {
 .js .sidebar .versions {
   margin-left: -0.4em;
 }
-.js .sidebar li {
+.js .sidebar li,
+.js .sidebar .ver-links a {
   display: block;
   line-height: 1.5;
 }
@@ -571,17 +572,14 @@ h2 {
   content: '▾';
 }
 
-.js .sidebar .li-link {
+.js .sidebar .ver-link,
+.js .sidebar .ver-links a {
   display: -webkit-box;
   display: -ms-flexbox;
   display: flex;
 }
-.js .sidebar .li-link::before {
-  -webkit-box-flex: 0;
-      -ms-flex: 0;
-          flex: 0;
-}
-.js .sidebar .li-link a {
+.js .sidebar .ver-link,
+.js .sidebar .ver-links a {
   word-break: break-word;
   -webkit-box-flex: 1;
       -ms-flex: 1;
@@ -589,11 +587,13 @@ h2 {
 }
 
 /* tag menu tree closed */
+.js .sidebar nav ul .ver-links,
 .js .sidebar nav ul ul {
   display: none;
 }
 /* tag menu tree open */
-.js .sidebar li span.active + ul {
+.js .sidebar li span.active + ul,
+.js .sidebar li span.active + .ver-links {
   display: block;
 }
 
@@ -607,6 +607,9 @@ h2 {
 }
 .no-js .versions {
   margin-top: 1em;
+}
+.no-js .versions .ver-links a {
+  display: block;
 }
 
 .no-js .sub-header {
