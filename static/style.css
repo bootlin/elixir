@@ -1103,7 +1103,7 @@ main {
     -webkit-transition: left 0.2s ease 0.2s, background 0.2s ease;
     transition: left 0.2s ease 0.2s, background 0.2s ease;
   }
-  .show-menu .sidebar {
+  .show-menu-mobile .sidebar {
     position: fixed;
     left: 0;
     background: rgba(3, 8, 35, 0.5);

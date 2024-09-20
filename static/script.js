@@ -77,14 +77,21 @@ var openMenu = document.querySelector('.open-menu')
 var wrapper = document.querySelector('.wrapper')
 openMenu.onclick = tag.onclick = function (e) {
   e.preventDefault();
-  const hasShowMenu = document.documentElement.classList.contains('show-menu');
-  window.localStorage.setItem('show-sidebar', !hasShowMenu);
-  document.documentElement.classList.toggle('show-menu');
+  const isWidescreen = getComputedStyle(document.documentElement).getPropertyValue('--is-widescreen') === 'true';
+  if(isWidescreen) {
+    const hasShowMenu = document.documentElement.classList.contains('show-menu');
+    window.localStorage.setItem('show-sidebar', !hasShowMenu);
+    document.documentElement.classList.toggle('show-menu');
+  } else {
+    document.documentElement.classList.toggle('show-menu-mobile');
+  }
 }
 sidebar.onclick = function (e) {
-  if (e.target === this || e.target.classList.contains('close-menu')) {
+  if (e.target === this) {
     document.documentElement.classList.remove('show-menu');
     window.localStorage.setItem('show-sidebar', false);
+  } else if (e.target.classList.contains('close-menu')) {
+    document.documentElement.classList.remove('show-menu-mobile');
   }
 }
 
