@@ -72,6 +72,10 @@ versions.onclick = function (e) {
   }
 }
 
+function isWidescreen() {
+  return getComputedStyle(document.documentElement).getPropertyValue('--is-widescreen') === 'true';
+}
+
 var tag = document.querySelector('.version em')
 var openMenu = document.querySelector('.open-menu')
 var wrapper = document.querySelector('.wrapper')
