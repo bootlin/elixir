@@ -1,5 +1,5 @@
 Jinja2==3.1.2
-Pygments==2.11.2
+Pygments~=2.18.0
 # TODO replace with a pypi published version once https://github.com/falconry/falcon/pull/1945
 # appears in a release (NOTE: it's not in 3.1.3).
 Falcon @ git+https://github.com/falconry/falcon.git@cbca63dc7739720eab856f48b32f9e782438be7a
