@@ -1,9 +1,5 @@
 /* Tags menu filter */
 
-var dropdown = document.querySelector('.select-projects')
-var sidebar = document.querySelector('.sidebar')
-var nav = document.querySelector('.sidebar nav')
-
 // Get a dictionary of tag name -> tag link from HTML
 function getTags() {
   const tags = {};
@@ -60,19 +56,6 @@ function setupVersionsFilter() {
   });
 }
 
-// prevent chrome auto-scrolling to element
-var arr = []
-arr.forEach.call(document.querySelectorAll('input'), function(el) {
-  el.onkeydown = function (e) {
-    var before = wrapper.scrollTop
-    function reset() {
-      wrapper.scrollTop = before
-    }
-    window.requestAnimationFrame(reset)
-    setTimeout(reset, 0)
-  }
-})
-
 // Setup expanding/collapsing versions tree on click
 function setupVersionsTree() {
   const versions = document.querySelector('.versions');
@@ -127,28 +110,6 @@ function setupSidebarSwitch() {
     }
   });
 }
-
-// When using linenumbers's anchor
-// it jump the line a the top of the page
-// and it's hidden under the fixed topbar element.
-// To prevent this let's jump to a few lines behind the top
-
-// This will capture hash changes while on the page
-function offsetAnchor(e) {
-  if (e && e.preventDefault) e.preventDefault()
-  if (location.hash.length !== 0) {
-    var el = document.querySelector(location.hash)
-    if (el) {
-      var offsetTop = el.offsetTop
-      wrapper.scrollTop = offsetTop < 100 ? 200 : offsetTop + 100
-    }
-  }
-}
-window.onhashchange = offsetAnchor
-
-// This is here so that when you enter the page with a hash,
-// it can provide the offset in that case too.
-window.requestAnimationFrame(offsetAnchor)
 
 // Parses URL hash (anchor) in format La-Lb where a and b are line numbers,
 // highlights range between (and including) line numbers, scrolls to the
@@ -277,6 +238,41 @@ function setupLineRangeHandlers() {
   });
 }
 
+/* Other fixes */
+
+// prevent chrome from auto-scrolling to input elements
+function setupAutoscrollingPrevention() {
+  const wrapper = document.querySelector('.wrapper');
+  Array.prototype.forEach.call(document.querySelectorAll('input'), el => {
+    el.addEventListener('keydown', _ => {
+      const before = wrapper.scrollTop;
+      const reset = () => wrapper.scrollTop = before;
+      window.requestAnimationFrame(reset);
+      setTimeout(reset, 0);
+    });
+  });
+}
+
+// Scrolls the page after each anchor change to prevent selected line from
+// hiding under the topbar after a line number click.
+function setupAnchorOffsetHandler() {
+  const wrapper = document.querySelector('.wrapper');
+
+  const anchorChangeHandler = e => {
+    if (e && e.preventDefault) e.preventDefault();
+    if (location.hash.length !== 0) {
+      const el = document.querySelector(location.hash);
+      if (el) {
+        const offsetTop = el.offsetTop;
+        wrapper.scrollTop = offsetTop < 100 ? 200 : offsetTop + 100;
+      }
+    }
+  };
+
+  window.requestAnimationFrame(anchorChangeHandler);
+  window.addEventListener('hashchange', anchorChangeHandler);
+}
+
 function setupGoToTop() {
   const wrapper = document.querySelector('.wrapper');
   const goToTop = document.querySelector('.go-top');
@@ -287,24 +283,11 @@ function setupGoToTop() {
   });
 }
 
-// recalculate scroll when page is fully loaded
-// in case of slow rendering very long pages.
-window.onload = function () {
-  window.requestAnimationFrame(offsetAnchor)
-
-  setupVersionsFilter();
-  setupVersionsTree();
-  setupSidebarSwitch();
-
-  handleLineRange(window.location.hash);
-  setupLineRangeHandlers();
-
-  setupGoToTop();
-
-  // fix incorrectly issued 301 redirect
-  // https://developer.mozilla.org/en-US/docs/Web/API/Request/cache
-  // https://developer.mozilla.org/en-US/docs/Web/API/Request/redirect
-  // TODO: remove after 10.2024
+// fix incorrectly issued 301 redirect
+// https://developer.mozilla.org/en-US/docs/Web/API/Request/cache
+// https://developer.mozilla.org/en-US/docs/Web/API/Request/redirect
+// TODO: remove after 10.2024
+function fix301() {
   let path = location.pathname.split('/');
   if (path.length == 4) {
     path[2] = 'latest';
@@ -320,3 +303,17 @@ window.onload = function () {
       .catch(console.error);
   }
 }
+
+document.addEventListener('DOMContentLoaded', _ => {
+  setupVersionsFilter();
+  setupVersionsTree();
+  setupSidebarSwitch();
+
+  handleLineRange(window.location.hash);
+  setupLineRangeHandlers();
+
+  setupAutoscrollingPrevention();
+  setupAnchorOffsetHandler();
+  setupGoToTop();
+  fix301();
+});
