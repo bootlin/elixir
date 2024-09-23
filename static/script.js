@@ -128,14 +128,6 @@ function setupSidebarSwitch() {
   });
 }
 
-var wrapper = document.querySelector('.wrapper')
-
-/* Linenumbers navigation */
-document.querySelector('.go-top').onclick = function() {
-  wrapper.scrollTop = 0
-  wrapper.scrollLeft = 0
-}
-
 // When using linenumbers's anchor
 // it jump the line a the top of the page
 // and it's hidden under the fixed topbar element.
@@ -285,6 +277,16 @@ function setupLineRangeHandlers() {
   });
 }
 
+function setupGoToTop() {
+  const wrapper = document.querySelector('.wrapper');
+  const goToTop = document.querySelector('.go-top');
+
+  goToTop.addEventListener('click', e => {
+    wrapper.scrollTop = 0;
+    wrapper.scrollLeft = 0;
+  });
+}
+
 // recalculate scroll when page is fully loaded
 // in case of slow rendering very long pages.
 window.onload = function () {
@@ -296,6 +298,8 @@ window.onload = function () {
 
   handleLineRange(window.location.hash);
   setupLineRangeHandlers();
+
+  setupGoToTop();
 
   // fix incorrectly issued 301 redirect
   // https://developer.mozilla.org/en-US/docs/Web/API/Request/cache
