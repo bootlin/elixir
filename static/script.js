@@ -1,6 +1,5 @@
 /* Tags menu filter */
 
-var versions = document.querySelector('.versions')
 var dropdown = document.querySelector('.select-projects')
 var sidebar = document.querySelector('.sidebar')
 var nav = document.querySelector('.sidebar nav')
@@ -74,14 +73,14 @@ arr.forEach.call(document.querySelectorAll('input'), function(el) {
   }
 })
 
-
-/* Tags menu tree */
-
-// Expand/Collapse tree
-versions.onclick = function (e) {
-  if (e.target && e.target.nodeName == 'SPAN') {
-    e.target.classList.toggle('active')
-  }
+// Setup expanding/collapsing versions tree on click
+function setupVersionsTree() {
+  const versions = document.querySelector('.versions');
+  versions.addEventListener('click', e => {
+    if (e.target && e.target.nodeName == 'SPAN') {
+      e.target.classList.toggle('active')
+    }
+  });
 }
 
 function isWidescreen() {
@@ -272,6 +271,7 @@ window.onload = function () {
   window.requestAnimationFrame(offsetAnchor)
 
   setupVersionsFilter();
+  setupVersionsTree();
 
   handleLineRange(window.location.hash);
   setupLineRangeHandlers();
