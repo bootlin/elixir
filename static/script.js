@@ -2,51 +2,63 @@
 
 var versions = document.querySelector('.versions')
 var dropdown = document.querySelector('.select-projects')
-var input = document.querySelector('.filter-input')
 var sidebar = document.querySelector('.sidebar')
 var nav = document.querySelector('.sidebar nav')
-var results = document.querySelector('.filter-results')
 
-var tags = {}
-function getTags () {
-  var list = document.querySelectorAll('.versions a')
-  for (var i = 0, l = list.length; i < l; i++) {
-    tags[list[i].innerText] = list[i].href
+// Get a dictionary of tag name -> tag link from HTML
+function getTags() {
+  const tags = {};
+  const list = document.querySelectorAll('.versions a');
+  for (const el of list) {
+    tags[el.innerText.trim()] = el.href;
   }
+  return tags;
 }
-getTags()
 
-function displayFilter (filter) {
-  var filtered = document.createDocumentFragment()
-  var reg = new RegExp(filter, 'i')
-  for (var key in tags) {
+// Generate tag search results based on input
+// filter: current filter input text
+// tags: dictionary of tag name -> tag link
+function generateResults(filter, tags) {
+  const searchResults = document.createDocumentFragment();
+  const filterRegex = new RegExp(filter, 'i');
+
+  for (let key in tags) {
     if (tags.hasOwnProperty(key)) {
-      var ok = false
-      var h = key.replace(reg, function (_) {
-        if (_) ok = true
-        return '<strong>' + _ + '</strong>'
+      let tagFound = false;
+      const tagHighlight = key.replace(filterRegex, result => {
+        if (result) tagFound = true;
+        return '<strong>' + result + '</strong>';
       })
 
-      if (ok) {
-        var a = document.createElement('a')
-        a.href = tags[key]
-        a.innerHTML = h
-        filtered.appendChild(a)
+      if (tagFound) {
+        const tagLink = document.createElement('a');
+        tagLink.href = tags[key];
+        tagLink.innerHTML = tagHighlight;
+        searchResults.appendChild(tagLink);
       }
     }
   }
-  results.innerHTML = ''
-  results.appendChild(filtered)
+
+  return searchResults;
 }
 
-input.oninput = function () {
-  if (this.value === '') {
-    versions.classList.remove('hide')
-    results.innerHTML = ''
-  } else {
-    versions.classList.add('hide')
-    displayFilter(this.value)
-  }
+// Setup tags filter input
+function setupVersionsFilter() {
+  const input = document.querySelector('.filter-input');
+  const results = document.querySelector('.filter-results');
+  const versions = document.querySelector('.versions');
+  const tags = getTags();
+
+  input.addEventListener('input', e => {
+    if (e.target.value === '') {
+      versions.classList.remove('hide');
+      results.innerHTML = '';
+    } else {
+      versions.classList.add('hide');
+      results.innerHTML = '';
+      results.appendChild(generateResults(e.target.value, tags));
+    }
+  });
 }
 
 // prevent chrome auto-scrolling to element
@@ -258,6 +270,8 @@ function setupLineRangeHandlers() {
 // in case of slow rendering very long pages.
 window.onload = function () {
   window.requestAnimationFrame(offsetAnchor)
+
+  setupVersionsFilter();
 
   handleLineRange(window.location.hash);
   setupLineRangeHandlers();
