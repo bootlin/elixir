@@ -1,3 +1,5 @@
+"use strict";
+
 /* Tags menu filter */
 
 // Get a dictionary of tag name -> tag link from HTML
