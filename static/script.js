@@ -87,12 +87,10 @@ function isWidescreen() {
   return getComputedStyle(document.documentElement).getPropertyValue('--is-widescreen') === 'true';
 }
 
-var tag = document.querySelector('.version em')
-var openMenu = document.querySelector('.open-menu')
-var wrapper = document.querySelector('.wrapper')
-openMenu.onclick = tag.onclick = function (e) {
-  e.preventDefault();
-  if (isWidescreen()) {
+// Toggles sidebar visibility, handles widescreen and mobile layouts
+function toggleMenu() {
+  const isWidescreen = getComputedStyle(document.documentElement).getPropertyValue('--is-widescreen') === 'true';
+  if(isWidescreen) {
     const hasShowMenu = document.documentElement.classList.contains('show-menu');
     window.localStorage.setItem('show-sidebar', !hasShowMenu);
     document.documentElement.classList.toggle('show-menu');
@@ -100,15 +98,37 @@ openMenu.onclick = tag.onclick = function (e) {
     document.documentElement.classList.toggle('show-menu-mobile');
   }
 }
-sidebar.onclick = function (e) {
-  if (e.target === this && isWidescreen()) {
-    document.documentElement.classList.remove('show-menu');
-    window.localStorage.setItem('show-sidebar', false);
-  } else if (e.target === this || e.target.classList.contains('close-menu')) {
-    document.documentElement.classList.remove('show-menu-mobile');
-  }
+
+// Setup sidebar hamburger menu button, close button and mobile sidebar backdrop events
+function setupSidebarSwitch() {
+  const tag = document.querySelector('.version em');
+  const openMenu = document.querySelector('.open-menu');
+  const sidebar = document.querySelector('.sidebar');
+
+  // toggle on hamburger menu click
+  openMenu.addEventListener('click', e => {
+    e.preventDefault();
+    toggleMenu();
+  });
+
+  // toggle on footer tag icon click
+  tag.addEventListener('click', e => {
+    e.preventDefault();
+    toggleMenu();
+  });
+
+  // close on close-menu/backdrop click
+  sidebar.addEventListener('click', e => {
+    if (e.target === sidebar && isWidescreen()) {
+      document.documentElement.classList.remove('show-menu');
+      window.localStorage.setItem('show-sidebar', false);
+    } else if (e.target === sidebar || e.target.classList.contains('close-menu')) {
+      document.documentElement.classList.remove('show-menu-mobile');
+    }
+  });
 }
 
+var wrapper = document.querySelector('.wrapper')
 
 /* Linenumbers navigation */
 document.querySelector('.go-top').onclick = function() {
@@ -272,6 +292,7 @@ window.onload = function () {
 
   setupVersionsFilter();
   setupVersionsTree();
+  setupSidebarSwitch();
 
   handleLineRange(window.location.hash);
   setupLineRangeHandlers();
