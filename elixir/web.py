@@ -23,6 +23,7 @@ import os
 import sys
 import threading
 import time
+import datetime
 from collections import OrderedDict, namedtuple
 from re import search, sub
 from urllib import parse
@@ -39,6 +40,7 @@ from .query import get_query
 from .web_utils import ProjectConverter, IdentConverter, validate_version, validate_project, validate_ident
 
 VERSION_CACHE_DURATION_SECONDS = 2 * 60  # 2 minutes
+ADD_ISSUE_LINK = "https://github.com/bootlin/elixir/issues/new"
 
 # Error with extra information about browsed project,
 # to be used in project/version URLs
@@ -51,8 +53,28 @@ class ElixirProjectError(falcon.errors.HTTPError):
         self.extra_template_args = extra_template_args
         super().__init__(status, title=title, description=description, **kwargs)
 
+# Generate a summary of error details for a bug report
+def generate_error_details(req, resp, title, details):
+    return f"Request date: {datetime.datetime.now()}\n" + \
+           f"Path: {req.path}\n" + \
+           f"Query string: {req.query_string}\n" + \
+           f"Method: {req.method}\n" + \
+           f"Status code: {resp.status}\n" + \
+           f"Error title: {title}\n" + \
+           f"Error details: {details}\n"
+
+def get_github_issue_link(details: str):
+    body = "TODO: add information on how you reached the error here. Please make sure details below are correct and what you want to share.\n" + \
+           "---\n" + \
+           details
+
+    return ADD_ISSUE_LINK + "?body=" + parse.quote(body)
+
+
 # Generate an error page from ElixirProjectError
 def get_project_error_page(req, resp, exception: ElixirProjectError):
+    report_error_details = generate_error_details(req, resp, exception.title, exception.description)
+
     template_ctx = {
         'projects': get_projects(req.context.config.project_dir),
         'topbar_families': TOPBAR_FAMILIES,
@@ -60,7 +82,8 @@ def get_project_error_page(req, resp, exception: ElixirProjectError):
         'current_family': 'A',
         'source_base_url': '/',
 
-        'referer': req.referer,
+        'referer': req.referer if req.referer != req.uri else None,
+        'bug_report_link': get_github_issue_link(report_error_details),
 
         'error_title': exception.title,
     }
@@ -112,7 +135,9 @@ def get_project_error_page(req, resp, exception: ElixirProjectError):
     return result
 
 # Generate an error page from falcon exceptions
-def get_error_page(req, exception: ElixirProjectError):
+def get_error_page(req, resp, exception: ElixirProjectError):
+    report_error_details = generate_error_details(req, resp, exception.title, exception.description)
+
     template_ctx = {
         'projects': get_projects(req.context.config.project_dir),
         'topbar_families': TOPBAR_FAMILIES,
@@ -121,6 +146,7 @@ def get_error_page(req, exception: ElixirProjectError):
         'source_base_url': '/',
 
         'referer': req.referer,
+        'bug_report_link': ADD_ISSUE_LINK + parse.quote(report_error_details),
 
         'error_title': exception.title,
     }
@@ -711,7 +737,7 @@ def error_serializer(req, resp, exception):
             if isinstance(exception, ElixirProjectError):
                 resp.text = get_project_error_page(req, resp, exception)
             else:
-                resp.text = get_error_page(req, exception)
+                resp.text = get_error_page(req, resp, exception)
             resp.content_type = falcon.MEDIA_HTML
 
     resp.append_header('Vary', 'Accept')

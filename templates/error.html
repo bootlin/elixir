@@ -8,7 +8,19 @@
 
 <div class="lxrerror">
     <h2>{{ error_title }}</h2>
-    {{ error_details|default('') }}
+    <div id="error-details">
+        {{ error_details|default('') }}
+    </div>
+    <span>You might want to:</span>
+    <ul>
+        {% if referer is not none -%}
+            <li><a class="link" href="{{ referer }}">Go back</a></li>
+        {%- endif %}
+        <li><a class="link" href="/">Go to home page</a></li>
+        {% if bug_report_link is not none -%}
+            <li><a class="link" href="{{ bug_report_link }}">Report a bug</a></li>
+        {%- endif %}
+    </ul>
 </div>
 
 {% endblock %}
