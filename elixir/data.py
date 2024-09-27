@@ -145,14 +145,20 @@ class RefList:
         return self.data
 
 class BsdDB:
-    def __init__(self, filename, readonly, contentType):
+    def __init__(self, filename, readonly, contentType, shared=False):
         self.filename = filename
         self.db = bsddb3.db.DB()
+        flags = 0
+        if shared:
+            flags |= bsddb3.db.DB_THREAD
         if readonly:
-            self.db.open(filename, flags=bsddb3.db.DB_RDONLY)
+            flags |= bsddb3.db.DB_RDONLY
+
+        if readonly:
+            self.db.open(filename, flags=flags)
         else:
             self.db.open(filename,
-                flags=bsddb3.db.DB_CREATE,
+                flags=flags | bsddb3.db.DB_CREATE,
                 mode=0o644,
                 dbtype=bsddb3.db.DB_BTREE)
         self.ctype = contentType
@@ -183,7 +189,7 @@ class BsdDB:
         self.db.close()
 
 class DB:
-    def __init__(self, dir, readonly=True, dtscomp=False):
+    def __init__(self, dir, readonly=True, dtscomp=False, shared=False):
         if os.path.isdir(dir):
             self.dir = dir
         else:
@@ -191,22 +197,22 @@ class DB:
 
         ro = readonly
 
-        self.vars = BsdDB(dir + '/variables.db', ro, lambda x: int(x.decode()) )
+        self.vars = BsdDB(dir + '/variables.db', ro, lambda x: int(x.decode()), shared=shared)
             # Key-value store of basic information
-        self.blob = BsdDB(dir + '/blobs.db', ro, lambda x: int(x.decode()) )
+        self.blob = BsdDB(dir + '/blobs.db', ro, lambda x: int(x.decode()), shared=shared)
             # Map hash to sequential integer serial number
-        self.hash = BsdDB(dir + '/hashes.db', ro, lambda x: x )
+        self.hash = BsdDB(dir + '/hashes.db', ro, lambda x: x, shared=shared)
             # Map serial number back to hash
-        self.file = BsdDB(dir + '/filenames.db', ro, lambda x: x.decode() )
+        self.file = BsdDB(dir + '/filenames.db', ro, lambda x: x.decode(), shared=shared)
             # Map serial number to filename
-        self.vers = BsdDB(dir + '/versions.db', ro, PathList)
-        self.defs = BsdDB(dir + '/definitions.db', ro, DefList)
-        self.refs = BsdDB(dir + '/references.db', ro, RefList)
-        self.docs = BsdDB(dir + '/doccomments.db', ro, RefList)
+        self.vers = BsdDB(dir + '/versions.db', ro, PathList, shared=shared)
+        self.defs = BsdDB(dir + '/definitions.db', ro, DefList, shared=shared)
+        self.refs = BsdDB(dir + '/references.db', ro, RefList, shared=shared)
+        self.docs = BsdDB(dir + '/doccomments.db', ro, RefList, shared=shared)
         self.dtscomp = dtscomp
         if dtscomp:
-            self.comps = BsdDB(dir + '/compatibledts.db', ro, RefList)
-            self.comps_docs = BsdDB(dir + '/compatibledts_docs.db', ro, RefList)
+            self.comps = BsdDB(dir + '/compatibledts.db', ro, RefList, shared=shared)
+            self.comps_docs = BsdDB(dir + '/compatibledts_docs.db', ro, RefList, shared=shared)
             # Use a RefList in case there are multiple doc comments for an identifier
 
     def close(self):
