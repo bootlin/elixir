@@ -404,4 +404,8 @@ document.addEventListener('DOMContentLoaded', _ => {
   setupAutoscrollingPrevention();
   setupAnchorOffsetHandler();
   setupGoToTop();
+
+  document.getElementById('clear-search').addEventListener('click',
+    _ => document.getElementById('search-input').value = ''
+  );
 });
