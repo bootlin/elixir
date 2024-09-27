@@ -245,6 +245,11 @@ def stringify_ident_path(project, version, family, ident):
 
 # Handles redirect on a POST to ident resource
 class IdentPostRedirectResource:
+    def on_get(self, req, resp, project, version, family=None, ident=None):
+        project, version, _ = validate_project_and_version(req.context, project, version)
+        resp.status = falcon.HTTP_FOUND
+        resp.location = stringify_source_path(project, version, "")
+
     def on_post(self, req, resp, project, version, family=None, ident=None):
         project, version, query = validate_project_and_version(req.context, project, version)
 
