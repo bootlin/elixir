@@ -84,6 +84,7 @@ def get_project_error_page(req, resp, exception: ElixirProjectError):
 
         'referer': req.referer if req.referer != req.uri else None,
         'bug_report_link': get_github_issue_link(report_error_details),
+        'report_error_details': report_error_details,
 
         'error_title': exception.title,
     }
@@ -147,6 +148,7 @@ def get_error_page(req, resp, exception: ElixirProjectError):
 
         'referer': req.referer,
         'bug_report_link': ADD_ISSUE_LINK + parse.quote(report_error_details),
+        'report_error_details': report_error_details,
 
         'error_title': exception.title,
     }
