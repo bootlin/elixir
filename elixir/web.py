@@ -511,6 +511,14 @@ def generate_source_page(ctx, q, project, version, path):
 
     type = q.query('type', version, path)
 
+    # Generate breadcrumbs
+    path_split = path.split('/')[1:]
+    path_temp = ''
+    breadcrumb_links = []
+    for p in path_split:
+        path_temp += '/'+p
+        breadcrumb_links.append((p, f'{ source_base_url }{ path_temp }'))
+
     if type == 'tree':
         back_path = os.path.dirname(path[:-1])
         if back_path == '/':
@@ -530,16 +538,8 @@ def generate_source_page(ctx, q, project, version, path):
     else:
         raise ElixirProjectError('File not found', 'This file does not exist.',
                                  status=falcon.HTTP_NOT_FOUND,
-                                 query=q, project=project, version=version)
-
-
-    # Generate breadcrumbs
-    path_split = path.split('/')[1:]
-    path_temp = ''
-    breadcrumb_links = []
-    for p in path_split:
-        path_temp += '/'+p
-        breadcrumb_links.append((p, f'{ source_base_url }{ path_temp }'))
+                                 query=q, project=project, version=version,
+                                 extra_template_args={'breadcrumb_links': breadcrumb_links})
 
     # Create titles like this:
     # root path: "Linux source code (v5.5.6) - Bootlin"
