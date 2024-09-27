@@ -668,6 +668,9 @@ h2 {
   margin: 0;
 }
 
+#report-error-details-header {
+  color: gray;
+}
 
 /* ident */
 

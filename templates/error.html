@@ -21,6 +21,12 @@
             <li><a class="link" href="{{ bug_report_link }}">Report a bug</a></li>
         {%- endif %}
     </ul>
+    {% if report_error_details is not none -%}
+    <details>
+        <summary id="report-error-details-header">Error details for a bug report</summary>
+        <pre>{{ report_error_details }}</pre>
+    </details>
+    {% endif -%}
 </div>
 
 {% endblock %}
