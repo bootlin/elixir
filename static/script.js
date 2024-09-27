@@ -122,6 +122,11 @@ function handleLineRange(hashStr) {
     return;
   }
 
+  // Check if hash format is valid
+  if (hash[0][0] != "L" || hash[1][0] != "L") {
+      return;
+  }
+
   const firstLineElement = document.getElementById(hash[0]);
   const lastLineElement = document.getElementById(hash[1]);
   if (firstLineElement === undefined || lastLineElement === undefined) {
@@ -130,6 +135,8 @@ function handleLineRange(hashStr) {
 
   highlightFromTo(firstLineElement, lastLineElement);
   firstLineElement.scrollIntoView();
+
+  return [firstLineElement, lastLineElement];
 }
 
 // Highlights line number elements from firstLineElement to lastLineElement
@@ -139,7 +146,15 @@ function highlightFromTo(firstLineElement, lastLineElement) {
   console.assert(!isNaN(firstLine) && !isNaN(lastLine),
     "Elements to highlight have invalid numbers in ids");
 
-  console.assert(firstLine < lastLine, "first highlight line is after last highlight line");
+  if (firstLine > lastLine) {
+    const elementTmp = firstLineElement;
+    firstLineElement = lastLineElement;
+    lastLineElement = elementTmp;
+
+    const lineTmp = firstLine;
+    firstLine = lastLine;
+    lastLine = lineTmp;
+  }
 
   const firstCodeLine = document.getElementById(`codeline-${ firstLine }`);
   const lastCodeLine = document.getElementById(`codeline-${ lastLine }`);
@@ -168,6 +183,20 @@ function setupLineRangeHandlers() {
   }
 
   let rangeStart, rangeEnd;
+
+  const highlightedRange = handleLineRange(window.location.hash);
+  // Set range start/end to elements from hash
+  if (highlightedRange !== undefined) {
+    rangeStart = highlightedRange[0];
+    rangeEnd = highlightedRange[1];
+  } else if (location.hash !== "" && location.hash[1] === "L") {
+    const lineNum = parseInt(location.hash.substring(2));
+    const hashElement = document.getElementById(location.hash.substring(1));
+    if (hashElement !== null && hashElement.tagName === "A" && !isNaN(lineNum)) {
+      rangeStart = hashElement;
+    }
+  }
+
   linenodiv.addEventListener("click", ev => {
     if (ev.ctrlKey || ev.metaKey) {
       return;
@@ -311,7 +340,6 @@ document.addEventListener('DOMContentLoaded', _ => {
   setupVersionsTree();
   setupSidebarSwitch();
 
-  handleLineRange(window.location.hash);
   setupLineRangeHandlers();
 
   setupAutoscrollingPrevention();
