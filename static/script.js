@@ -426,4 +426,8 @@ document.addEventListener('DOMContentLoaded', _ => {
   setupAnchorOffsetHandler();
   setupGoToTop();
   fix301();
+
+  document.getElementById('clear-search').addEventListener('click',
+    _ => document.getElementById('search-input').value = ''
+  );
 });

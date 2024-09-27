@@ -17,9 +17,12 @@
             {% endfor %}
             </select>
 
-            <input placeholder="Search Identifier" type="text" id="search-input" name="i" 
-                value="{{ searched_ident|default('')|e }}" autofocus required />
-            <button class="icon-search"><span class="screenreader">Go get it</span></button>
+            <div class="search-controls">
+                <input placeholder="Search Identifier" type="text" id="search-input" name="i"
+                    value="{{ searched_ident|default('')|e }}" autofocus/>
+                <button type="button" id="clear-search" class="visible-if-js icon-cross"><span class="screenreader">Clear</span></button>
+                <button type="submit" class="icon-search"><span class="screenreader">Go get it</span></button>
+            </div>
         </form>
     </div>
 </header>
