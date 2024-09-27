@@ -36,7 +36,7 @@ from .filters.utils import FilterContext
 from .autocomplete import AutocompleteResource
 from .api import ApiIdentGetterResource
 from .query import get_query
-from .web_utils import FamilyConverter, ProjectConverter, VersionConverter, IdentConverter, FamilyConverter
+from .web_utils import ProjectConverter, IdentConverter, validate_version, validate_project, validate_ident
 
 VERSION_CACHE_DURATION_SECONDS = 2 * 60  # 2 minutes
 
@@ -56,6 +56,21 @@ def get_error_page(ctx, title, details=None):
     template = ctx.jinja_env.get_template('error.html')
     return template.render(template_ctx)
 
+def validate_project_and_version(ctx, project, version):
+    project = validate_project(parse.unquote(project))
+    if project is None:
+        raise falcon.HTTPBadRequest('Error', 'Invalid project name')
+
+    query = get_query(ctx.config.project_dir, project)
+    if not query:
+        raise falcon.HTTPNotFound('Error', 'Unknown project')
+
+    version = validate_version(parse.unquote(version))
+    if version is None:
+        raise falcon.HTTPBadRequest('Error', 'Invalid version name')
+
+    return project, version, query
+
 
 # Returns base url of source pages
 # project and version assumed unquoted
@@ -73,6 +88,8 @@ def stringify_source_path(project, version, path):
 # Path parameters are asssumed to be unquoted by converters
 class SourceResource:
     def on_get(self, req, resp, project, version, path):
+        project, version, query = validate_project_and_version(req.context, project, version)
+
         if not path.startswith('/') and len(path) != 0:
             path = f'/{ path }'
 
@@ -80,10 +97,6 @@ class SourceResource:
             resp.status = falcon.HTTP_MOVED_PERMANENTLY
             resp.location = stringify_source_path(project, version, path)
             return
-
-        query = get_query(req.context.config.project_dir, project)
-        if not query:
-            raise falcon.HTTPNotFound('Error', 'Unknown project')
 
         # Check if path contains only allowed characters
         if not search('^[A-Za-z0-9_/.,+-]*$', path):
@@ -129,6 +142,8 @@ def stringify_ident_path(project, version, family, ident):
 # Handles redirect on a POST to ident resource
 class IdentPostRedirectResource:
     def on_post(self, req, resp, project, version, family=None, ident=None):
+        project, version, _ = validate_project_and_version(req.context, project, version)
+
         form = req.get_media()
         post_ident = form.get('i')
         post_family = form.get('f')
@@ -148,9 +163,17 @@ class IdentPostRedirectResource:
 # Path parameters are asssumed to be unquoted by converters
 class IdentResource(IdentPostRedirectResource):
     def on_get(self, req, resp, project, version, family, ident):
-        query = get_query(req.context.config.project_dir, project)
-        if not query:
-            raise falcon.HTTPNotFound('Error', 'Unknown project')
+        project, version, query = validate_project_and_version(req.context, project, version)
+
+        family = parse.unquote(family)
+        if not validFamily(family):
+            family = 'C'
+
+        validated_ident = validate_ident(ident)
+        if validated_ident is None:
+            raise falcon.HTTPBadRequest('Error', 'Invalid identifier')
+
+        ident = validated_ident
 
         if version == 'latest':
             version = parse.quote(query.query('latest'))
@@ -609,17 +632,15 @@ def get_application():
     ])
 
     app.router_options.converters['project'] = ProjectConverter
-    app.router_options.converters['version'] = VersionConverter
     app.router_options.converters['ident'] = IdentConverter
-    app.router_options.converters['family'] = FamilyConverter
 
     app.set_error_serializer(error_serializer)
 
-    app.add_route('/{project:project}/{version:version}/source/{path:path}', SourceResource())
-    app.add_route('/{project:project}/{version:version}/source', SourceWithoutPathResource())
-    app.add_route('/{project:project}/{version:version}/ident', IdentPostRedirectResource())
-    app.add_route('/{project:project}/{version:version}/ident/{ident:ident}', IdentWithoutFamilyResource())
-    app.add_route('/{project:project}/{version:version}/{family:family}/ident/{ident:ident}', IdentResource())
+    app.add_route('/{project}/{version}/source/{path:path}', SourceResource())
+    app.add_route('/{project}/{version}/source', SourceWithoutPathResource())
+    app.add_route('/{project}/{version}/ident', IdentPostRedirectResource())
+    app.add_route('/{project}/{version}/ident/{ident}', IdentWithoutFamilyResource())
+    app.add_route('/{project}/{version}/{family}/ident/{ident}', IdentResource())
 
     app.add_route('/acp', AutocompleteResource())
     app.add_route('/api/ident/{project:project}/{ident:ident}', ApiIdentGetterResource())
