@@ -40,34 +40,111 @@ from .web_utils import ProjectConverter, IdentConverter, validate_version, valid
 
 VERSION_CACHE_DURATION_SECONDS = 2 * 60  # 2 minutes
 
-# Generated a Elixir error page
-def get_error_page(ctx, title, details=None):
+# Error with extra information about browsed project,
+# to be used in project/version URLs
+class ElixirProjectError(falcon.errors.HTTPError):
+    def __init__(self, title, description, project=None, version=None, query=None,
+                 status=falcon.HTTP_BAD_REQUEST, extra_template_args={}, **kwargs):
+        self.project = project
+        self.version = version
+        self.query = query
+        self.extra_template_args = extra_template_args
+        super().__init__(status, title=title, description=description, **kwargs)
+
+# Generate an error page from ElixirProjectError
+def get_project_error_page(req, resp, exception: ElixirProjectError):
     template_ctx = {
-        'projects': get_projects(ctx.config.project_dir),
+        'projects': get_projects(req.context.config.project_dir),
         'topbar_families': TOPBAR_FAMILIES,
         'current_version_path': (None, None, None),
+        'current_family': 'A',
+        'source_base_url': '/',
 
-        'error_title': title,
+        'referer': req.referer,
+
+        'error_title': exception.title,
     }
 
-    if details is not None:
-        template_ctx['error_details'] = details
+    if exception.project is not None and exception.query is not None:
+        # Add details about current project
+        query = exception.query
+        project = exception.project
+        version = exception.version
 
-    template = ctx.jinja_env.get_template('error.html')
+        versions_raw = get_versions_cached(query, req.context, project)
+        get_url_with_new_version = lambda v: stringify_source_path(project, v, '/')
+        versions, current_version_path = get_versions(versions_raw, get_url_with_new_version, version)
+
+        template_ctx = {
+            **template_ctx,
+
+            'current_project': project,
+            'versions': versions,
+            'current_version_path': current_version_path,
+        }
+
+
+        if version is None:
+            # If details about current version are not available, make base links
+            # point to latest.
+            # current_tag is not set to latest to avoid latest being highlighted in the sidebar
+            version = query.query('latest')
+        else:
+            template_ctx['current_tag'] = version
+
+        template_ctx['source_base_url'] = get_source_base_url(project, version)
+        template_ctx['ident_base_url'] = get_ident_base_url(project, version)
+
+    if exception.description is not None:
+        template_ctx['error_details'] = exception.description
+
+    template_ctx = {
+        **template_ctx,
+        **exception.extra_template_args,
+    }
+
+    template = req.context.jinja_env.get_template('error.html')
+    result = template.render(template_ctx)
+
+    if exception.query is not None:
+        exception.query.close()
+
+    return result
+
+# Generate an error page from falcon exceptions
+def get_error_page(req, exception: ElixirProjectError):
+    template_ctx = {
+        'projects': get_projects(req.context.config.project_dir),
+        'topbar_families': TOPBAR_FAMILIES,
+        'current_version_path': (None, None, None),
+        'current_family': 'A',
+        'source_base_url': '/',
+
+        'referer': req.referer,
+
+        'error_title': exception.title,
+    }
+
+    if exception.description is not None:
+        template_ctx['error_details'] = exception.description
+
+    template = req.context.jinja_env.get_template('error.html')
     return template.render(template_ctx)
 
+# Validates project and version, returns project, version and query.
+# To be used in project/version URLs
 def validate_project_and_version(ctx, project, version):
     project = validate_project(parse.unquote(project))
     if project is None:
-        raise falcon.HTTPBadRequest('Error', 'Invalid project name')
+        raise ElixirProjectError('Error', 'Invalid project name')
 
     query = get_query(ctx.config.project_dir, project)
     if not query:
-        raise falcon.HTTPNotFound('Error', 'Unknown project')
+        raise ElixirProjectError('Error', 'Unknown project', status=falcon.HTTP_NOT_FOUND)
 
     version = validate_version(parse.unquote(version))
     if version is None:
-        raise falcon.HTTPBadRequest('Error', 'Invalid version name')
+        raise ElixirProjectError('Error', 'Invalid version', project=project, query=query)
 
     return project, version, query
 
@@ -100,7 +177,8 @@ class SourceResource:
 
         # Check if path contains only allowed characters
         if not search('^[A-Za-z0-9_/.,+-]*$', path):
-            raise falcon.HTTPBadRequest('Error', 'Path contains characters that are not allowed')
+            raise ElixirProjectError('Error', 'Path contains characters that are not allowed',
+                              project=project, version=version, query=query)
 
         if version == 'latest':
             version = parse.quote(query.query('latest'))
@@ -110,7 +188,7 @@ class SourceResource:
 
         raw_param = req.get_param('raw')
         if raw_param is not None and raw_param.strip() != '0':
-            generate_raw_source(resp, query, version, path)
+            generate_raw_source(resp, query, project, version, path)
         else:
             resp.content_type = falcon.MEDIA_HTML
             resp.status, resp.text = generate_source_page(req.context, query, project, version, path)
@@ -142,7 +220,7 @@ def stringify_ident_path(project, version, family, ident):
 # Handles redirect on a POST to ident resource
 class IdentPostRedirectResource:
     def on_post(self, req, resp, project, version, family=None, ident=None):
-        project, version, _ = validate_project_and_version(req.context, project, version)
+        project, version, query = validate_project_and_version(req.context, project, version)
 
         form = req.get_media()
         post_ident = form.get('i')
@@ -152,11 +230,18 @@ class IdentPostRedirectResource:
             post_family = 'C'
 
         if not post_ident:
-            raise falcon.HTTPBadRequest('Error', 'Invalid identifier')
+            raise ElixirProjectError('Error', 'Invalid identifier',
+                              project=project, version=version, query=query,
+                              extra_template_args={
+                                  'searched_ident': parse.unquote(form.get('i')),
+                                  'current_family': family,
+                              })
 
         post_ident = post_ident.strip()
         resp.status = falcon.HTTP_MOVED_PERMANENTLY
         resp.location = stringify_ident_path(project, version, post_family, post_ident)
+
+        query.close()
 
 # Handles ident URLs when family is specified in the URL, both POST and GET
 # See IdentPostRedirectResource for behavior on POST
@@ -171,7 +256,12 @@ class IdentResource(IdentPostRedirectResource):
 
         validated_ident = validate_ident(ident)
         if validated_ident is None:
-            raise falcon.HTTPBadRequest('Error', 'Invalid identifier')
+            raise ElixirProjectError('Error', 'Invalid identifier',
+                              project=project, version=version, query=query,
+                              extra_template_args={
+                                  'searched_ident': parse.unquote(ident),
+                                  'current_family': family,
+                              })
 
         ident = validated_ident
 
@@ -287,10 +377,11 @@ def get_layout_template_context(q, ctx, get_url_with_new_version, project, versi
     }
 
 # Generate raw source response
-def generate_raw_source(resp, query, version, path):
+def generate_raw_source(resp, query, project, version, path):
     type = query.query('type', version, path)
     if type != 'blob':
-        raise falcon.HTTPNotFound('Error', 'File not found')
+        raise ElixirProjectError('File not found', 'This file does not exist.',
+                                 query=query, project=project, version=version)
     else:
         code = query.get_file_raw(version, path)
         resp.content_type = 'application/octet-stream'
@@ -437,11 +528,9 @@ def generate_source_page(ctx, q, project, version, path):
         }
         template = ctx.jinja_env.get_template('source.html')
     else:
-        status = falcon.HTTP_NOT_FOUND
-        template_ctx = {
-            'error_title': 'This file does not exist.',
-        }
-        template = ctx.jinja_env.get_template('error.html')
+        raise ElixirProjectError('File not found', 'This file does not exist.',
+                                 status=falcon.HTTP_NOT_FOUND,
+                                 query=q, project=project, version=version)
 
 
     # Generate breadcrumbs
@@ -618,8 +707,11 @@ def error_serializer(req, resp, exception):
         if preferred == falcon.MEDIA_JSON:
             resp.data = exception.to_json()
             resp.content_type = falcon.MEDIA_JSON
-        else:
-            resp.text = get_error_page(req.context, exception.title, exception.description)
+        elif preferred == falcon.MEDIA_HTML:
+            if isinstance(exception, ElixirProjectError):
+                resp.text = get_project_error_page(req, resp, exception)
+            else:
+                resp.text = get_error_page(req, exception)
             resp.content_type = falcon.MEDIA_HTML
 
     resp.append_header('Vary', 'Accept')
