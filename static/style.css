@@ -102,6 +102,11 @@ h2 {
   margin-bottom: 1rem;
 }
 
+.link {
+  color: #6d7dd2;
+  text-decoration: underline;
+}
+
 
 /* oocss */
 
@@ -646,6 +651,21 @@ h2 {
 
 .lxrerror {
   padding: 1.5em;
+}
+
+#error-details {
+  margin-bottom: 1em;
+}
+
+#error-details-links * {
+  display: block;
+}
+
+#error-details-links button {
+  border: 0;
+  background-color: transparent;
+  padding: 0;
+  margin: 0;
 }
 
 
