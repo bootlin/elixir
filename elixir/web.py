@@ -64,9 +64,10 @@ def generate_error_details(req, resp, title, details):
            f"Error details: {details}\n"
 
 def get_github_issue_link(details: str):
-    body = "TODO: add information on how you reached the error here. Please make sure details below are correct and what you want to share.\n" + \
-           "---\n" + \
-           details
+    body = ("TODO: add information on how you reached the error here and " +
+            "validate the details below.\n\n" +
+            "---\n\n" +
+            details)
 
     return ADD_ISSUE_LINK + "?body=" + parse.quote(body)
 
