@@ -288,12 +288,13 @@ class IdentResource(IdentPostRedirectResource):
         if not validFamily(family):
             family = 'C'
 
+        ident = parse.unquote(ident)
         validated_ident = validate_ident(ident)
         if validated_ident is None:
             raise ElixirProjectError('Error', 'Invalid identifier',
                               project=project, version=version, query=query,
                               extra_template_args={
-                                  'searched_ident': parse.unquote(ident),
+                                  'searched_ident': ident,
                                   'current_family': family,
                               })
 
