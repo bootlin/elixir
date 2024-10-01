@@ -13,4 +13,4 @@ git config --system --add safe.directory $dir/repo
 
 export LXR_REPO_DIR=$dir/repo
 export LXR_DATA_DIR=$dir/data
-python3 /usr/local/elixir/update.py
+python3 /usr/local/elixir/update.py $ELIXIR_THREADS
