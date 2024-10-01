@@ -286,28 +286,36 @@ where all repositories are found.
 
 = Building Docker images
 
-Dockerfiles are provided in the `docker/` directory. To build the image, run the following commands:
+Dockerfiles are provided in the `docker/` directory.
+To build the image, run the following commands:
 
- # git clone https://github.com/bootlin/elixir.git ./elixir
- # docker build -t elixir -f ./elixir/Dockerfile ./elixir
+ # git clone https://github.com/bootlin/elixir
+ # docker build -t elixir -f ./elixir/docker/Dockerfile ./elixir/
 
 You can then run the image using `docker run`.
-It is recommended to mount a volume or a host directory into the Elixir data directory.
-This allows you to easily replace the container with a new version without losing indexing data.
+Here we mount a host directory as Elixir data:
 
  # mkdir ./elixir-data
  # docker run -v ./elixir-data/:/srv/elixir-data -d --name elixir-container elixir
 
-The Docker image does not contain any repositories. To index a repository, you can use a utility script - index-repository.
-For example, to add musl repository, run:
+The Docker image does not contain any repositories.
+To index a repository, you can use the `index-repository` script.
+For example, to add the https://musl.libc.org/[musl] repository, run:
 
- # docker exec -it -e PYTHONUNBUFFERED=1 elixir-container /usr/local/elixir/utils/index-repository musl https://git.musl-libc.org/git/musl
+ # docker exec -it -e PYTHONUNBUFFERED=1 elixir-container \
+    /bin/bash -c 'export "PATH=/usr/local/elixir/venv/bin:$PATH" ; \
+    /usr/local/elixir/utils/index-repository \
+    musl https://git.musl-libc.org/git/musl'
 
 Without PYTHONUNBUFFERED environment variable, update logs may show up with a delay.
 
 Or, to run indexing in a separate container:
 
- # docker run -e PYTHONUNBUFFERED=1 -v ./elixir-data/:/srv/elixir-data --entrypoint /usr/local/elixir/utils/index-repository elixir musl https://git.musl-libc.org/git/musl
+ # docker run -e PYTHONUNBUFFERED=1 -v ./elixir-data/:/srv/elixir-data \
+    --entrypoint /bin/bash elixir -c \
+    'export "PATH=/usr/local/elixir/venv/bin:$PATH" ; \
+    /usr/local/elixir/utils/index-repository \
+    musl https://git.musl-libc.org/git/musl'
 
 You can also use utils/index-all-repositories to start indexing all officially supported repositories.
 
