@@ -5,6 +5,9 @@ if [ "$#" -ne 2 ]; then
     exit 1
 fi
 
+export ELIXIR_INSTALL=$(dirname $(dirname $(readlink -f "$0")))
+. $ELIXIR_INSTALL/utils/common.sh
+
 dir=/srv/elixir-data/$1
 
 mkdir -p $dir/data
