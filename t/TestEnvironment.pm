@@ -135,19 +135,27 @@ sub build_repo {
     die "Need a source dir" unless $tree_src_dir;
     die "No repo dir" unless $self->lxr_repo_dir;
 
+
     my $tempdir_path = $self->lxr_repo_dir;
-    my @gitdir = ('-C', $tempdir_path);
+    my @gitopts = (
+        '-C', $tempdir_path,
+        '-c', 'init.defaultBranch=main',
+        '-c', 'user.name=test@example.com',
+        '-c', 'user.email=test');
 
     diag "Using temporary directory $tempdir_path";
-    run_program('git', 'init', $tempdir_path) or die("git init failed");
+    run_program('git', @gitopts, 'init', $tempdir_path) or die("git init failed");
 
     run_program('sh', '-c', "tar cf - -C \"$tree_src_dir\" . | tar xf - -C \"$tempdir_path\"")
         or die("Could not copy files into $tempdir_path");
 
-    run_program('git', @gitdir, 'add', '.') or die("git add failed");
-    run_program('git', @gitdir, 'commit', '-am', 'Initial commit')
+    run_program('sh', '-c', "chown -R `whoami`:`id -ng` \"$tempdir_path\"");
+    run_program('sh', '-c', "chmod -R 775 \"$tempdir_path\"");
+
+    run_program('git', @gitopts, 'add', '.') or die("git add failed");
+    run_program('git', @gitopts, 'commit', '-am', 'Initial commit')
         or die("git commit failed");
-    run_program('git', @gitdir, 'tag', 'v5.4') or die("git tag failed");
+    run_program('git', @gitopts, 'tag', 'v5.4') or die("git tag failed");
 
     return $self;
 } #build_repo()
