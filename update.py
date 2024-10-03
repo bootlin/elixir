@@ -37,7 +37,7 @@ dts_comp_support = int(script('dts-comp'))
 
 compatibles_parser = FindCompatibleDTS()
 
-db = data.DB(lib.getDataDir(), readonly=False, dtscomp=dts_comp_support)
+db = data.DB(lib.getDataDir(), readonly=False, shared=True, dtscomp=dts_comp_support)
 
 # Number of cpu threads (+2 for version indexing)
 cpu = 10
