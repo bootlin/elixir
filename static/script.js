@@ -133,12 +133,12 @@ function parseLineId(lineId) {
 // Parse and validate line range anchor in format #L${lineRangeStart}-L${lineRangeEnd}
 function parseLineRangeAnchor(hashStr) {
   const hash = hashStr.substring(1).split("-");
-  if (hash.length != 2) {
+  if (hash.length < 1 || hash.length > 2) {
     return;
   }
 
   let firstLine = parseLineId(hash[0]);
-  let lastLine = parseLineId(hash[1]);
+  let lastLine = hash.length === 2 ? parseLineId(hash[1]) : parseLineId(hash[0]);
 
   if (firstLine === undefined || lastLine === undefined) {
     return;
@@ -231,10 +231,10 @@ function setupLineRangeHandlers() {
 
     if (rangeStartLine === undefined || !ev.shiftKey) {
       rangeStartLine = parseLineId(el.id);
-      el.classList.add("line-highlight");
       rangeEndLine = undefined;
+      highlightFromTo(rangeStartLine, rangeStartLine);
       window.location.hash = el.id;
-    } else if(ev.shiftKey) {
+    } else if (ev.shiftKey) {
       if (rangeEndLine === undefined) {
         rangeEndLine = parseLineId(el.id);
       }
