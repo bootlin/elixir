@@ -37,10 +37,12 @@ from .filters.utils import FilterContext
 from .autocomplete import AutocompleteResource
 from .api import ApiIdentGetterResource
 from .query import get_query
-from .web_utils import ProjectConverter, IdentConverter, validate_version, validate_project, validate_ident
+from .web_utils import ProjectConverter, IdentConverter, validate_version, validate_project, validate_ident, \
+        get_elixir_version_string
 
 VERSION_CACHE_DURATION_SECONDS = 2 * 60  # 2 minutes
 ADD_ISSUE_LINK = "https://github.com/bootlin/elixir/issues/new"
+ELIXIR_VERSION_STRING = get_elixir_version_string()
 
 # Error with extra information about browsed project,
 # to be used in project/version URLs
@@ -82,6 +84,7 @@ def get_project_error_page(req, resp, exception: ElixirProjectError):
         'current_version_path': (None, None, None),
         'current_family': 'A',
         'source_base_url': '/',
+        'elixir_version_string': req.context.config.version_string,
 
         'referer': req.referer if req.referer != req.uri else None,
         'bug_report_link': get_github_issue_link(report_error_details),
@@ -403,6 +406,7 @@ def get_layout_template_context(q, ctx, get_url_with_new_version, project, versi
         'versions': versions,
         'current_version_path': current_version_path,
         'topbar_families': TOPBAR_FAMILIES,
+        'elixir_version_string': ctx.config.version_string,
 
         'source_base_url': get_source_base_url(project, version),
         'ident_base_url': get_ident_base_url(project, version),
@@ -696,7 +700,7 @@ def generate_ident_page(ctx, q, project, version, family, ident):
 
 
 # Elixir config, currently contains only path to directory with projects
-Config = namedtuple('Config', 'project_dir')
+Config = namedtuple('Config', 'project_dir, version_string')
 
 # Basic information about handled request - current Elixir configuration, configured Jinja environment
 # and logger
@@ -726,7 +730,7 @@ class RequestContextMiddleware:
 
     def process_request(self, req, resp):
         req.context = RequestContext(
-            Config(req.env['LXR_PROJ_DIR']),
+            Config(req.env['LXR_PROJ_DIR'], ELIXIR_VERSION_STRING),
             self.jinja_env,
             logging.getLogger(__name__),
             self.versions_cache,
