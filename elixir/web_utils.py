@@ -6,7 +6,8 @@ import falcon
 
 from .lib import validFamily, run_cmd
 
-ELIXIR_DIR = os.path.dirname(__file__)
+ELIXIR_DIR = os.path.normpath(os.path.dirname(__file__) + "/../")
+ELIXIR_REPO_LINK = 'https://github.com/bootlin/elixir/'
 
 def get_elixir_version_string():
     version = os.environ.get('ELIXIR_VERSION')
@@ -17,7 +18,7 @@ def get_elixir_version_string():
         # try to get Elixir version from git
         result, return_code = run_cmd('git',
             '-C', ELIXIR_DIR,
-            '-c', f'safe.directory={ os.path.normpath(ELIXIR_DIR) }',
+            '-c', f'safe.directory={ ELIXIR_DIR }',
             'rev-parse', '--short', 'HEAD'
         )
 
@@ -28,6 +29,12 @@ def get_elixir_version_string():
         logging.exception("failed to get elixir commit hash")
 
     return ''
+
+def get_elixir_repo_link(version):
+    if re.match('^[0-9a-f]{5,12}$', version) or version.startswith('v'):
+        return ELIXIR_REPO_LINK + f'tree/{ version }'
+    else:
+        return ELIXIR_REPO_LINK
 
 def validate_project(project):
     if project is not None and re.match(r'^[a-zA-Z0-9_.,:/-]+$', project):
