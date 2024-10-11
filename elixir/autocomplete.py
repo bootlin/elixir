@@ -21,7 +21,7 @@ import sys
 import os
 import json
 from urllib import parse
-from bsddb3.db import DB_SET_RANGE
+from berkeleydb.db import DB_SET_RANGE
 import falcon
 
 from .lib import autoBytes, validFamily
