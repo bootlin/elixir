@@ -31,6 +31,8 @@ import elixir.data as data
 from elixir.data import PathList
 from find_compatible_dts import FindCompatibleDTS
 
+import msgpack._cmsgpack
+
 verbose = False
 
 dts_comp_support = int(script('dts-comp'))
@@ -102,8 +104,8 @@ class UpdateIds(Thread):
 
         global hash_file_lock, blobs_lock
 
-        if db.vars.exists('numBlobs'):
-            idx = db.vars.get('numBlobs')
+        if db.vars.exists(b'numBlobs'):
+            idx = db.vars.get(b'numBlobs')
         else:
             idx = 0
 
@@ -120,8 +122,8 @@ class UpdateIds(Thread):
 
             if not blob_exist:
                 with hash_file_lock:
-                    db.hash.put(idx, hash)
-                    db.file.put(idx, filename)
+                    db.hash.put(idx, hash.decode())
+                    db.file.put(idx, filename.decode())
 
                 new_idxes.append(idx)
                 if verbose:
@@ -178,7 +180,7 @@ class UpdateVersions(Thread):
         buf = sorted(buf)
         obj = PathList()
         for idx, path in buf:
-            obj.append(idx, path)
+            obj.append(idx, path.decode())
 
             # Store DT bindings documentation files to parse them later
             if path[:33] == b'Documentation/devicetree/bindings':
@@ -321,9 +323,9 @@ class UpdateRefs(Thread):
                             (family != 'M' or tok.startswith(b'CONFIG_'))):
                             # We only index CONFIG_??? in makefiles
                             if tok in idents:
-                                idents[tok] += ',' + str(line_num)
+                                idents[tok].append(int(line_num))
                             else:
-                                idents[tok] = str(line_num)
+                                idents[tok] = [int(line_num)]
 
                     else:
                         line_num += tok.count(b'\1')
@@ -388,13 +390,14 @@ class UpdateDocs(Thread):
                 for l in lines:
                     ident, line = l.split(b' ')
                     line = int(line.decode())
+                    ident = ident.decode()
 
                     if db.docs.exists(ident):
                         obj = db.docs.get(ident)
                     else:
                         obj = data.RefList()
 
-                    obj.append(idx, str(line), family)
+                    obj.append(idx, [line], family)
                     if verbose:
                         print(f"doc: {ident} in #{idx} @ {line}")
                     db.docs.put(ident, obj)
@@ -450,9 +453,9 @@ class UpdateComps(Thread):
                 ident, line = l.split(' ')
 
                 if ident in comps:
-                    comps[ident] += ',' + str(line)
+                    comps[ident].append(int(line))
                 else:
-                    comps[ident] = str(line)
+                    comps[ident] = [int(line)]
 
             with comps_lock:
                 for ident, lines in comps.items():
@@ -519,9 +522,9 @@ class UpdateCompsDocs(Thread):
 
                     if db.comps.exists(ident):
                         if ident in comps_docs:
-                            comps_docs[ident] += ',' + str(line)
+                            comps_docs[ident].append(int(line))
                         else:
-                            comps_docs[ident] = str(line)
+                            comps_docs[ident] = [int(line)]
 
             with comps_docs_lock:
                 for ident, lines in comps_docs.items():
