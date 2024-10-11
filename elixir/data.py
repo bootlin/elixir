@@ -148,19 +148,14 @@ class BsdDB:
     def __init__(self, filename, readonly, contentType, shared=False):
         self.filename = filename
         self.db = bsddb3.db.DB()
-        flags = 0
-        if shared:
-            flags |= bsddb3.db.DB_THREAD
-        if readonly:
-            flags |= bsddb3.db.DB_RDONLY
+        flags = bsddb3.db.DB_THREAD if shared else 0
 
         if readonly:
+            flags |= bsddb3.db.DB_RDONLY
             self.db.open(filename, flags=flags)
         else:
-            self.db.open(filename,
-                flags=flags | bsddb3.db.DB_CREATE,
-                mode=0o644,
-                dbtype=bsddb3.db.DB_BTREE)
+            flags |= bsddb3.db.DB_CREATE
+            self.db.open(filename, flags=flags, mode=0o644, dbtype=bsddb3.db.DB_BTREE)
         self.ctype = contentType
 
     def exists(self, key):
