@@ -165,7 +165,7 @@ parse_defs_C()
     git cat-file blob "$opt1" > "$full_path"
 
     # Use ctags to parse most of the defs
-    ctags -x --kinds-c=+p+x --extras='-{anonymous}' "$full_path" |
+    ctags -u -x --kinds-c=+p+x --extras='-{anonymous}' "$full_path" |
     grep -avE -e "^operator " -e "^CONFIG_" |
     awk '{print $1" "$2" "$3}'
 
@@ -182,7 +182,7 @@ parse_defs_K()
     tmp=`mktemp -d`
     full_path=$tmp/$opt2
     git cat-file blob "$opt1" > "$full_path"
-    ctags -x --language-force=kconfig --kinds-kconfig=c --extras-kconfig=-{configPrefixed} "$full_path" |
+    ctags -u -x --language-force=kconfig --kinds-kconfig=c --extras-kconfig=-{configPrefixed} "$full_path" |
     awk '{print "CONFIG_"$1" "$2" "$3}'
     rm "$full_path"
     rmdir $tmp
@@ -193,7 +193,7 @@ parse_defs_D()
     tmp=`mktemp -d`
     full_path=$tmp/$opt2
     git cat-file blob "$opt1" > "$full_path"
-    ctags -x --language-force=dts "$full_path" |
+    ctags -u -x --language-force=dts "$full_path" |
     awk '{print $1" "$2" "$3}'
     rm "$full_path"
     rmdir $tmp
