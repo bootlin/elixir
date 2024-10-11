@@ -659,6 +659,12 @@ def generate_ident_page(ctx, q, project, version, family, ident):
     symbol_sections = []
 
     if len(symbol_definitions) or len(symbol_references):
+        if len(symbol_doccomments):
+            symbol_sections.append({
+                'title': 'Documented',
+                'symbols': {'_unknown': [symbol_instance_to_entry(source_base_url, sym) for sym in symbol_doccomments]},
+            })
+
         if len(symbol_definitions):
             defs_by_type = OrderedDict({})
 
@@ -676,12 +682,6 @@ def generate_ident_page(ctx, q, project, version, family, ident):
         else:
             symbol_sections.append({
                 'message': 'No definitions found in the database',
-            })
-
-        if len(symbol_doccomments):
-            symbol_sections.append({
-                'title': 'Documented',
-                'symbols': {'_unknown': [symbol_instance_to_entry(source_base_url, sym) for sym in symbol_doccomments]},
             })
 
         if len(symbol_references):
