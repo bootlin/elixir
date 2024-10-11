@@ -144,8 +144,8 @@ function generateReferencesHTML(data, project, version) {
   let symbolReferences = data["references"];
   let symbolDocumentations = data["documentations"];
   return '<div class="lxrident">' +
-    generateSymbolDefinitionsHTML(symbolDefinitions, project, version) +
     generateDocCommentsHTML(symbolDocumentations, project, version) +
+    generateSymbolDefinitionsHTML(symbolDefinitions, project, version) +
     generateSymbolReferencesHTML(symbolReferences, project, version) +
     '</div>';
 }
