@@ -118,14 +118,19 @@ function setupSidebarSwitch() {
 // first line number in range.
 function handleLineRange(hashStr) {
   const hash = hashStr.substring(1).split("-");
-  if (hash.length != 2) {
+  if (hash.length < 1 || hash.length > 2) {
     return;
   }
 
-  const firstLineElement = document.getElementById(hash[0]);
-  const lastLineElement = document.getElementById(hash[1]);
+  let firstLineElement = document.getElementById(hash[0]);
+  let lastLineElement = hash.length === 2 ? document.getElementById(hash[1]) : firstLineElement;
   if (firstLineElement === undefined || lastLineElement === undefined) {
     return;
+  }
+
+  // If the first line is below the last line, swap them
+  if (parseInt(firstLineElement.id.substring(1)) > parseInt(lastLineElement.id.substring(1))) {
+    [firstLineElement, lastLineElement] = [lastLineElement, firstLineElement];
   }
 
   highlightFromTo(firstLineElement, lastLineElement);
@@ -139,7 +144,7 @@ function highlightFromTo(firstLineElement, lastLineElement) {
   console.assert(!isNaN(firstLine) && !isNaN(lastLine),
     "Elements to highlight have invalid numbers in ids");
 
-  console.assert(firstLine < lastLine, "first highlight line is after last highlight line");
+  console.assert(firstLine <= lastLine, "first highlight line is after last highlight line");
 
   const firstCodeLine = document.getElementById(`codeline-${ firstLine }`);
   const lastCodeLine = document.getElementById(`codeline-${ lastLine }`);
@@ -168,6 +173,18 @@ function setupLineRangeHandlers() {
   }
 
   let rangeStart, rangeEnd;
+
+  // If the URL already contains a line range, assign rangeStart and rangeEnd
+  const hash = window.location.hash.substring(1).split("-");
+  if (hash.length > 0 && hash.length < 3) {
+    rangeStart = document.getElementById(hash[0]);
+    rangeEnd = hash.length === 2 ? document.getElementById(hash[1]) : rangeStart;
+
+    if (parseInt(rangeStart.id.substring(1)) > parseInt(rangeEnd.id.substring(1))) {
+      [rangeStart, rangeEnd] = [rangeEnd, rangeStart];
+    }
+  }
+
   linenodiv.addEventListener("click", ev => {
     if (ev.ctrlKey || ev.metaKey) {
       return;
@@ -187,12 +204,13 @@ function setupLineRangeHandlers() {
       el.classList.remove("line-highlight");
     }
 
-    if (rangeStart === undefined || !ev.shiftKey) {
+    if (!ev.shiftKey) {
       rangeStart = el;
-      rangeStart.classList.add("line-highlight");
+      rangeStart.parentNode.classList.add("line-highlight");
       rangeEnd = undefined;
+      highlightFromTo(rangeStart, rangeStart);
       window.location.hash = rangeStart.id;
-    } else if(ev.shiftKey) {
+    } else if (ev.shiftKey) {
       if (rangeEnd === undefined) {
         rangeEnd = el;
       }
