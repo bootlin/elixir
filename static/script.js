@@ -166,6 +166,13 @@ function highlightFromTo(firstLine, lastLine) {
   addClassToRangeOfElements(firstCodeLine, lastCodeLine, "line-highlight");
 }
 
+function clearRangeHighlight() {
+  const highlightElements = Array.from(document.getElementsByClassName("line-highlight"));
+  for (let el of highlightElements) {
+    el.classList.remove("line-highlight");
+  }
+}
+
 function addClassToRangeOfElements(first, last, class_name) {
   let element = first;
   const elementAfterLast = last !== null ? last.nextElementSibling : null;
@@ -187,17 +194,25 @@ function setupLineRangeHandlers() {
 
   let rangeStartLine, rangeEndLine;
 
-  const highlightedRange = parseLineRangeAnchor(window.location.hash);
-  // Set range start/end to elements from hash
-  if (highlightedRange !== undefined) {
-    rangeStartLine = highlightedRange[0];
-    rangeEndLine = highlightedRange[1];
-    highlightFromTo(rangeStartLine, rangeEndLine);
-    document.getElementById(`L${rangeStartLine}`).scrollIntoView();
-  } else if (location.hash !== "" && location.hash[1] === "L") {
-    const lineNum = parseLineId(location.hash.substring(1));
-    rangeStartLine = document.getElementById(`L${lineNum}`);
+  const parseFromHash = () => {
+    const highlightedRange = parseLineRangeAnchor(window.location.hash);
+    // Set range start/end to elements from hash
+    if (highlightedRange !== undefined) {
+      rangeStartLine = highlightedRange[0];
+      rangeEndLine = highlightedRange[1];
+      highlightFromTo(rangeStartLine, rangeEndLine);
+      document.getElementById(`L${rangeStartLine}`).scrollIntoView();
+    } else if (location.hash !== "" && location.hash[1] === "L") {
+      rangeStartLine = parseLineId(location.hash.substring(1));
+    }
   }
+
+  window.addEventListener("hashchange", _ => {
+    clearRangeHighlight();
+    parseFromHash();
+  });
+
+  parseFromHash();
 
   linenodiv.addEventListener("click", ev => {
     if (ev.ctrlKey || ev.metaKey) {
@@ -212,11 +227,7 @@ function setupLineRangeHandlers() {
       return;
     }
 
-    // Remove range highlight
-    const highlightElements = Array.from(document.getElementsByClassName("line-highlight"));
-    for (let el of highlightElements) {
-      el.classList.remove("line-highlight");
-    }
+    clearRangeHighlight();
 
     if (rangeStartLine === undefined || !ev.shiftKey) {
       rangeStartLine = parseLineId(el.id);
