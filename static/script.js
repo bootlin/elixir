@@ -113,39 +113,64 @@ function setupSidebarSwitch() {
   });
 }
 
-// Parses URL hash (anchor) in format La-Lb where a and b are line numbers,
-// highlights range between (and including) line numbers, scrolls to the
-// first line number in range.
-function handleLineRange(hashStr) {
+// Parse and validate line identifier in format L${number}
+function parseLineId(lineId) {
+  if (lineId[0] != "L") {
+    return;
+  }
+
+  let lineIdNum = parseInt(lineId.substring(1));
+  console.assert(!isNaN(lineIdNum), "Invalid line id");
+
+  let lineElement = document.getElementById(lineId);
+  if (lineElement === null || lineElement.tagName !== "A") {
+    return;
+  }
+
+  return lineIdNum;
+}
+
+// Parse and validate line range anchor in format #L${lineRangeStart}-L${lineRangeEnd}
+function parseLineRangeAnchor(hashStr) {
   const hash = hashStr.substring(1).split("-");
   if (hash.length != 2) {
     return;
   }
 
-  const firstLineElement = document.getElementById(hash[0]);
-  const lastLineElement = document.getElementById(hash[1]);
-  if (firstLineElement === undefined || lastLineElement === undefined) {
+  let firstLine = parseLineId(hash[0]);
+  let lastLine = parseLineId(hash[1]);
+
+  if (firstLine === undefined || lastLine === undefined) {
     return;
   }
 
-  highlightFromTo(firstLineElement, lastLineElement);
-  firstLineElement.scrollIntoView();
+  // Swap line numbers to support "#L2-L1" format. Postel's law.
+  if (firstLine > lastLine) {
+    const lineTmp = lastLine;
+    lastLine = firstLine;
+    firstLine = lineTmp;
+  }
+
+  return [firstLine, lastLine];
 }
 
-// Highlights line number elements from firstLineElement to lastLineElement
-function highlightFromTo(firstLineElement, lastLineElement) {
-  let firstLine = parseInt(firstLineElement.id.substring(1));
-  let lastLine = parseInt(lastLineElement.id.substring(1));
-  console.assert(!isNaN(firstLine) && !isNaN(lastLine),
-    "Elements to highlight have invalid numbers in ids");
-
-  console.assert(firstLine < lastLine, "first highlight line is after last highlight line");
+// Highlights line number elements from firstLine to lastLine
+function highlightFromTo(firstLine, lastLine) {
+  const firstLineElement = document.getElementById(`L${ firstLine }`);
+  const lastLineElement = document.getElementById(`L${ lastLine }`);
 
   const firstCodeLine = document.getElementById(`codeline-${ firstLine }`);
   const lastCodeLine = document.getElementById(`codeline-${ lastLine }`);
 
   addClassToRangeOfElements(firstLineElement.parentNode, lastLineElement.parentNode, "line-highlight");
   addClassToRangeOfElements(firstCodeLine, lastCodeLine, "line-highlight");
+}
+
+function clearRangeHighlight() {
+  const highlightElements = Array.from(document.getElementsByClassName("line-highlight"));
+  for (let el of highlightElements) {
+    el.classList.remove("line-highlight");
+  }
 }
 
 function addClassToRangeOfElements(first, last, class_name) {
@@ -167,7 +192,28 @@ function setupLineRangeHandlers() {
     return;
   }
 
-  let rangeStart, rangeEnd;
+  let rangeStartLine, rangeEndLine;
+
+  const parseFromHash = () => {
+    const highlightedRange = parseLineRangeAnchor(window.location.hash);
+    // Set range start/end to elements from hash
+    if (highlightedRange !== undefined) {
+      rangeStartLine = highlightedRange[0];
+      rangeEndLine = highlightedRange[1];
+      highlightFromTo(rangeStartLine, rangeEndLine);
+      document.getElementById(`L${rangeStartLine}`).scrollIntoView();
+    } else if (location.hash !== "" && location.hash[1] === "L") {
+      rangeStartLine = parseLineId(location.hash.substring(1));
+    }
+  }
+
+  window.addEventListener("hashchange", _ => {
+    clearRangeHighlight();
+    parseFromHash();
+  });
+
+  parseFromHash();
+
   linenodiv.addEventListener("click", ev => {
     if (ev.ctrlKey || ev.metaKey) {
       return;
@@ -181,61 +227,49 @@ function setupLineRangeHandlers() {
       return;
     }
 
-    // Remove range highlight
-    const highlightElements = Array.from(document.getElementsByClassName("line-highlight"));
-    for (let el of highlightElements) {
-      el.classList.remove("line-highlight");
-    }
+    clearRangeHighlight();
 
-    if (rangeStart === undefined || !ev.shiftKey) {
-      rangeStart = el;
-      rangeStart.classList.add("line-highlight");
-      rangeEnd = undefined;
-      window.location.hash = rangeStart.id;
+    if (rangeStartLine === undefined || !ev.shiftKey) {
+      rangeStartLine = parseLineId(el.id);
+      el.classList.add("line-highlight");
+      rangeEndLine = undefined;
+      window.location.hash = el.id;
     } else if(ev.shiftKey) {
-      if (rangeEnd === undefined) {
-        rangeEnd = el;
+      if (rangeEndLine === undefined) {
+        rangeEndLine = parseLineId(el.id);
       }
 
-      let rangeStartNumber = parseInt(rangeStart.id.substring(1));
-      let rangeEndNumber = parseInt(rangeEnd.id.substring(1));
-      const elNumber = parseInt(el.id.substring(1));
-      console.assert(!isNaN(rangeStartNumber) && !isNaN(rangeEndNumber) && !isNaN(elNumber),
-        "Elements to highlight have invalid numbers in ids");
+      const newLine = parseLineId(el.id);
+      console.assert(newLine !== undefined, "parseLineId for clicked line is undefined");
 
-      // Swap range elements to support "#L2-L1" format. Postel's law.
-      if (rangeStartNumber > rangeEndNumber) {
-        const rangeTmp = rangeStart;
-        rangeStart = rangeEnd;
-        rangeEnd = rangeTmp;
-
-        const numberTmp = rangeStartNumber;
-        rangeStartNumber = rangeEndNumber;
-        rangeEndNumber = numberTmp;
+      // Swap range elements if range end that was previously undefined is now
+      // before range start
+      if (rangeStartLine > rangeEndLine) {
+        const lineTmp = rangeStartLine;
+        rangeStartLine = rangeEndLine;
+        rangeEndLine = lineTmp;
       }
 
-      if (elNumber < rangeStartNumber) {
+      if (newLine < rangeStartLine) {
         // Expand if element above range
-        rangeStart = el;
-      } else if (elNumber > rangeEndNumber) {
+        rangeStartLine = newLine;
+      } else if (newLine > rangeEndLine) {
         // Expand if element below range
-        rangeEnd = el;
+        rangeEndLine = newLine;
       } else {
         // Shrink moving the edge that's closest to the selection.
         // Move end if center was selected.
-        const distanceFromStart = Math.abs(rangeStartNumber-elNumber);
-        const distanceFromEnd = Math.abs(rangeEndNumber-elNumber);
+        const distanceFromStart = Math.abs(rangeStartLine-newLine);
+        const distanceFromEnd = Math.abs(rangeEndLine-newLine);
         if (distanceFromStart < distanceFromEnd) {
-          rangeStart = el;
-        } else if (distanceFromStart > distanceFromEnd) {
-          rangeEnd = el;
+          rangeStartLine = newLine;
         } else {
-          rangeEnd = el;
+          rangeEndLine = newLine;
         }
       }
 
-      highlightFromTo(rangeStart, rangeEnd);
-      window.location.hash = `${rangeStart.id}-${rangeEnd.id}`;
+      highlightFromTo(rangeStartLine, rangeEndLine);
+      window.location.hash = `L${rangeStartLine}-L${rangeEndLine}`;
     }
   });
 }
@@ -311,7 +345,6 @@ document.addEventListener('DOMContentLoaded', _ => {
   setupVersionsTree();
   setupSidebarSwitch();
 
-  handleLineRange(window.location.hash);
   setupLineRangeHandlers();
 
   setupAutoscrollingPrevention();
