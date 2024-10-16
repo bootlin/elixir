@@ -1,14 +1,14 @@
 {% extends "layout.html" %}
 
 {% block title %}
-    {{ title_path }} {{ current_project|capitalize }} source code ({{ current_tag }}) - Bootlin
+    {{ title_path }} {{ current_project|capitalize }} source code ({{ current_tag }}) - Bootlin Elixir Cross Referencer
 {% endblock %}
 
 {% block description -%}
     {%- if path == '' -%}
         Elixir Cross Referencer - explore {{ current_project|capitalize }} {{ current_tag }} source code in your browser.
     {%- else -%}
-        Elixir Cross Referencer - source tree of {{ current_project|capitalize }} (version {{ current_tag }}). Browsed path: {{ '/' if path|length == 0 else path }}
+        Elixir Cross Referencer - source tree of {{ current_project|capitalize }} {{ current_tag -}} {{- '' if path|length <= 1 else ': ' + path[1:] }}
     {%- endif -%}
 {%- endblock -%}
 
