@@ -21,6 +21,34 @@ def match_regex(regex):
     rule = re.compile(regex, flags=re.MULTILINE)
     return lambda code, pos, _: rule.match(code, pos)
 
+def split_by_groups(*token_types):
+    def split(ctx, match):
+        pos = ctx.pos
+        line = ctx.line
+        for gi in range(len(match.groups())):
+            token = match.group(gi+1)
+            if len(token) != 0:
+                action = token_types[gi]
+                yield Token(action, token, (pos, pos+len(token)), line)
+                line += token.count("\n")
+                pos += len(token)
+
+    return split
+
+def token_from_match(ctx, match, token_type):
+    span = match.span()
+    result = Token(token_type, ctx.code[span[0]:span[1]], span, ctx.line)
+    ctx.pos = span[1]
+    ctx.line = ctx.line+result.token.count('\n')
+    return result, ctx
+
+def token_from_string(ctx, match, token_type):
+    span = (ctx.pos, ctx.pos+len(match))
+    result = Token(token_type, ctx.code[span[0]:span[1]], span, ctx.line)
+    ctx.pos = span[1]
+    ctx.line = ctx.line+result.token.count('\n')
+    return result, ctx
+
 # Interface class that allows to match only if certian conditions,
 # hard to express in regex, are true
 class Matcher:
@@ -67,7 +95,7 @@ class FirstInLine(Matcher):
             return self.rule.match(code, pos)
 
 class LexerContext:
-    def self(self, code, pos, line, filter_tokens):
+    def __init__(self, code, pos, line, filter_tokens):
         self.code = code
         self.pos = pos
         self.line = line
