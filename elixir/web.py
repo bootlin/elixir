@@ -42,6 +42,8 @@ from .web_utils import ProjectConverter, IdentConverter, validate_version, valid
 VERSION_CACHE_DURATION_SECONDS = 2 * 60  # 2 minutes
 ADD_ISSUE_LINK = "https://github.com/bootlin/elixir/issues/new"
 
+DEFAULT_PROJECT = 'linux'
+
 # Error with extra information about browsed project,
 # to be used in project/version URLs
 class ElixirProjectError(falcon.errors.HTTPError):
@@ -189,6 +191,22 @@ def stringify_source_path(project, version, path):
         path = '/' + path
     path = f'{ get_source_base_url(project, version) }{ path }'
     return path.rstrip('/')
+
+# Handles the '/' URL
+class IndexResource:
+    def on_get(self, req, resp):
+        ctx = req.context
+        project = DEFAULT_PROJECT
+
+        query = get_query(ctx.config.project_dir, project)
+        if not query:
+            raise ElixirProjectError('Error', f'Unknown default project: {project}',
+                                     status=falcon.HTTP_INTERNAL_SERVER_ERROR)
+
+        version = parse.quote(query.query('latest'))
+        resp.status = falcon.HTTP_FOUND
+        resp.location = stringify_source_path(project, version, '/')
+        return
 
 # Handles source URLs
 # Path parameters are asssumed to be unquoted by converters
@@ -763,6 +781,7 @@ def get_application():
 
     app.set_error_serializer(error_serializer)
 
+    app.add_route('/', IndexResource())
     app.add_route('/{project}/{version}/source/{path:path}', SourceResource())
     app.add_route('/{project}/{version}/source', SourceWithoutPathResource())
     app.add_route('/{project}/{version}/ident', IdentPostRedirectResource())
