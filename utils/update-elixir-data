@@ -31,7 +31,7 @@ for dir_name in $LXR_PROJ_DIR/*; do
     export LXR_REPO_DIR=$dir_name/repo
 
     cd $LXR_REPO_DIR
-    git fetch --all --tags
+    git fetch --all --tags -j4
 
     cd $ELIXIR_INSTALL
     ./update.py $ELIXIR_THREADS
