@@ -10,19 +10,20 @@ export ELIXIR_INSTALL=$(dirname $(dirname $(readlink -f "$0")))
 
 dir=/srv/elixir-data/$1
 
-mkdir -p $dir/data
-git clone --bare $2 $dir/repo
+mkdir -p $dir/data $dir/repo
+
+git -C $dir/repo init --bare
 git config --system --add safe.directory $dir/repo
 
-shift
 shift
 i=0
 for remote
 do
-    git -C $dir/repo remote add other$i $remote
-    git -C $dir/repo fetch --tags other$i
+    git -C $dir/repo remote add remote$i $remote
     i=$(($i+1))
 done
+
+git -C $dir/repo fetch --all --tags -j4
 
 export LXR_REPO_DIR=$dir/repo
 export LXR_DATA_DIR=$dir/data
