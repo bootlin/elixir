@@ -17,8 +17,9 @@
 #  You should have received a copy of the GNU Affero General Public License
 #  along with Elixir.  If not, see <http://www.gnu.org/licenses/>.
 
-export ELIXIR_INSTALL=$(dirname $(dirname $(readlink -f "$0")))
-. $ELIXIR_INSTALL/utils/common.sh
+if test -z "$ELIXIR_THREADS"; then
+    ELIXIR_THREADS="$(nproc)"
+fi
 
 if [ -z "$LXR_PROJ_DIR" ]; then
     echo "ERROR: LXR_PROJ_DIR environment variable not set"
