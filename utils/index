@@ -17,8 +17,7 @@ project_init() {
 
     mkdir -p $1/data $1/repo
 
-    # This doesn't fail if repo already exists
-    git -C $1/repo init --bare
+    git -C $1/repo -c init.defaultBranch=main init --bare
 
     git config --system --add safe.directory $1/repo
 }
