@@ -12,18 +12,20 @@ dir=/srv/elixir-data/$1
 
 mkdir -p $dir/data $dir/repo
 
-git -C $dir/repo init --bare
+git="git -C $dir/repo"
+
+$git init --bare
 git config --system --add safe.directory $dir/repo
 
 shift
 i=0
 for remote
 do
-    git -C $dir/repo remote add remote$i $remote
+    $git remote add remote$i $remote
     i=$(($i+1))
 done
 
-git -C $dir/repo fetch --all --tags -j4
+$git fetch --all --tags -j4
 
 export LXR_REPO_DIR=$dir/repo
 export LXR_DATA_DIR=$dir/data
