@@ -44,7 +44,19 @@ project_add_remote() {
 
 # $1 is the project path (parent of data/ and repo/).
 project_fetch() {
-    git -C $1/repo fetch --all --tags -j4
+    git="git -C $1/repo"
+
+    $git fetch --all --tags -j4
+
+    # A gc.log file implies a garbage collect failed in the past.
+    # Also, create a hidden flag which could be useful to trigger GCs manually.
+    if test -e $1/repo/gc.log -o "$ELIXIR_GC"; then
+        $git gc --aggressive
+    else
+        # Otherwise, give Git an occasion to trigger a GC.
+        # Porcelain commands should trigger that, but we don't use any.
+        $git gc --auto
+    fi
 }
 
 # $1 is the project path (parent of data/ and repo/).
