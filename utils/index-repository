@@ -41,6 +41,16 @@ project_fetch() {
     git -C $1/repo fetch --all --tags -j4
 }
 
+# $1 is the project path (parent of data/ and repo/).
+project_index() {
+    if test -z "$ELIXIR_THREADS"; then
+        ELIXIR_THREADS="$(nproc)"
+    fi
+
+    LXR_REPO_DIR=$1/repo LXR_DATA_DIR=$1/data \
+        python3 /usr/local/elixir/update.py $ELIXIR_THREADS
+}
+
 dir=/srv/elixir-data/$1
 
 project_init "$dir"
@@ -53,10 +63,4 @@ done
 
 project_fetch "$dir"
 
-if test -z "$ELIXIR_THREADS"; then
-    ELIXIR_THREADS="$(nproc)"
-fi
-
-export LXR_REPO_DIR=$dir/repo
-export LXR_DATA_DIR=$dir/data
-python3 /usr/local/elixir/update.py $ELIXIR_THREADS
+project_index "$dir"
