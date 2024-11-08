@@ -14,13 +14,26 @@ mkdir -p $dir/data $dir/repo
 
 git="git -C $dir/repo"
 
+# This doesn't fail if repo already exists
 $git init --bare
+
 git config --system --add safe.directory $dir/repo
 
+existing_remotes="$($git remote | xargs -L1 -r $git remote get-url | sort -u)"
+
 shift
-i=0
+i="$($git remote | awk '
+    BEGIN { n=-1; }
+    $0 ~ /^remote[0-9]+$/ { i=substr($0, length("remote")+1);
+                            if (i>n) n=i; }
+    END { print n+1; }')"
 for remote
 do
+    # Don't `git remote add` remotes that already exist, which is not an error.
+    if echo "$existing_remotes" | grep -qF "$remote"; then
+        continue;
+    fi
+
     $git remote add remote$i $remote
     i=$(($i+1))
 done
