@@ -18,14 +18,12 @@ project_init() {
     mkdir -p $1/data $1/repo
 
     git -C $1/repo -c init.defaultBranch=main init --bare
-
-    git config --system --add safe.directory $1/repo
 }
 
 # $1 is the project path (parent of data/ and repo/).
 # $2 is the remote URL.
 project_add_remote() {
-    git="git -C $1/repo"
+    git="git -C $1/repo -c safe.directory=$1/repo"
 
     # Do nothing if remote already exists.
     if $git remote | xargs -L1 -r $git remote get-url 2>/dev/null | grep -qxF "$2"; then
@@ -44,7 +42,7 @@ project_add_remote() {
 
 # $1 is the project path (parent of data/ and repo/).
 project_fetch() {
-    git="git -C $1/repo"
+    git="git -C $1/repo -c safe.directory=$1/repo"
 
     $git fetch --all --tags -j4
 
