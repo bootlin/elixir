@@ -1,13 +1,20 @@
 #!/bin/sh
 
-if [ "$#" -lt 2 ]; then
-    echo "Usage: $0 repo_name repo_urls..."
+if test $# -lt 3 -a \( $# -ne 2 -o "$2" != "--all" \); then
+    echo "Usage: $0 <elixir_data_path> <project_name> <repo_urls>..."
+    echo "Usage: $0 <elixir_data_path> --all"
     exit 1
 fi
 
 # $1 is the project path (inside will be created data/ and repo/).
 # It supports being called on an existing project.
 project_init() {
+    # Detect already inited projects. Avoids stderr logs.
+    # Using `git tag -n1` because `git status` doesn't work on bare repos.
+    if git -C $1/repo tag -n1 >/dev/null 2>/dev/null; then
+        return;
+    fi
+
     mkdir -p $1/data $1/repo
 
     # This doesn't fail if repo already exists
@@ -51,16 +58,65 @@ project_index() {
         python3 /usr/local/elixir/update.py $ELIXIR_THREADS
 }
 
-dir=/srv/elixir-data/$1
+# $1 is the Elixir root data path.
+# $2 is the project name.
+# $... are the remote URLs.
+index() {
+    dir="$1/$2"
 
-project_init "$dir"
+    # Remember if we are doing an indexing from scratch.
+    if test ! "$(find $1/data -type f)"; then
+        from_scratch=1
+    fi
 
-shift
-for remote
-do
-    project_add_remote "$dir" "$remote"
-done
+    project_init "$dir"
 
-project_fetch "$dir"
+    shift
+    shift
+    for remote
+    do
+        project_add_remote "$dir" "$remote"
+    done
 
-project_index "$dir"
+    project_fetch "$dir"
+    project_index "$dir"
+
+    # Redo a fetch+indexing as the initial one probably took a lot of time.
+    if test "$from_scratch"; then
+        project_fetch "$dir"
+        project_index "$dir"
+    fi
+}
+
+# Index a single project
+if test $# -ge 3; then
+    index "$@"
+    exit
+fi
+
+# Index all known projects
+index $1 amazon-freertos https://github.com/aws/amazon-freertos.git
+index $1 arm-trusted-firmware https://github.com/ARM-software/arm-trusted-firmware
+index $1 barebox https://git.pengutronix.de/git/barebox
+index $1 busybox https://git.busybox.net/busybox
+index $1 coreboot https://review.coreboot.org/coreboot.git
+index $1 dpdk https://dpdk.org/git/dpdk \
+              https://dpdk.org/git/dpdk-stable
+index $1 glibc https://sourceware.org/git/glibc.git
+index $1 llvm https://github.com/llvm/llvm-project.git
+index $1 mesa https://gitlab.freedesktop.org/mesa/mesa.git
+index $1 musl https://git.musl-libc.org/git/musl
+index $1 ofono https://git.kernel.org/pub/scm/network/ofono/ofono.git
+index $1 op-tee https://github.com/OP-TEE/optee_os.git
+index $1 qemu https://gitlab.com/qemu-project/qemu.git
+index $1 u-boot https://source.denx.de/u-boot/u-boot.git
+index $1 uclibc-ng https://cgit.uclibc-ng.org/cgi/cgit/uclibc-ng.git
+index $1 zephyr https://github.com/zephyrproject-rtos/zephyr
+index $1 toybox https://github.com/landley/toybox.git
+index $1 grub https://git.savannah.gnu.org/git/grub.git
+index $1 bluez https://git.kernel.org/pub/scm/bluetooth/bluez.git
+index $1 linux https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git \
+               https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git \
+               https://github.com/bootlin/linux-history.git
+index $1 xen https://xenbits.xen.org/git-http/xen.git
+index $1 freebsd https://git.freebsd.org/src.git
