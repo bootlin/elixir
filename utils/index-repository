@@ -5,16 +5,22 @@ if [ "$#" -lt 2 ]; then
     exit 1
 fi
 
+# $1 is the project path (inside will be created data/ and repo/).
+# It supports being called on an existing project.
+project_init() {
+    mkdir -p $1/data $1/repo
+
+    # This doesn't fail if repo already exists
+    git -C $1/repo init --bare
+
+    git config --system --add safe.directory $1/repo
+}
+
 dir=/srv/elixir-data/$1
 
-mkdir -p $dir/data $dir/repo
+project_init "$dir"
 
 git="git -C $dir/repo"
-
-# This doesn't fail if repo already exists
-$git init --bare
-
-git config --system --add safe.directory $dir/repo
 
 existing_remotes="$($git remote | xargs -L1 -r $git remote get-url | sort -u)"
 
