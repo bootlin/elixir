@@ -5,9 +5,6 @@ if [ "$#" -lt 2 ]; then
     exit 1
 fi
 
-export ELIXIR_INSTALL=$(dirname $(dirname $(readlink -f "$0")))
-. $ELIXIR_INSTALL/utils/common.sh
-
 dir=/srv/elixir-data/$1
 
 mkdir -p $dir/data $dir/repo
@@ -39,6 +36,10 @@ do
 done
 
 $git fetch --all --tags -j4
+
+if test -z "$ELIXIR_THREADS"; then
+    ELIXIR_THREADS="$(nproc)"
+fi
 
 export LXR_REPO_DIR=$dir/repo
 export LXR_DATA_DIR=$dir/data
