@@ -29,7 +29,7 @@ project_add_remote() {
     git="git -C $1/repo"
 
     # Do nothing if remote already exists.
-    if $git remote | xargs -L1 -r $git remote get-url | grep -qxF "$2"; then
+    if $git remote | xargs -L1 -r $git remote get-url 2>/dev/null | grep -qxF "$2"; then
         return;
     fi
 
@@ -61,13 +61,8 @@ project_index() {
 # $1 is the Elixir root data path.
 # $2 is the project name.
 # $... are the remote URLs.
-index() {
+add_remotes() {
     dir="$1/$2"
-
-    # Remember if we are doing an indexing from scratch.
-    if test ! "$(find $1/data -type f)"; then
-        from_scratch=1
-    fi
 
     project_init "$dir"
 
@@ -77,46 +72,60 @@ index() {
     do
         project_add_remote "$dir" "$remote"
     done
+}
 
-    project_fetch "$dir"
-    project_index "$dir"
-
-    # Redo a fetch+indexing as the initial one probably took a lot of time.
-    if test "$from_scratch"; then
-        project_fetch "$dir"
-        project_index "$dir"
+do_index() {
+    if test ! "$(find $1/data -type f)"; then
+        # If we are indexing from scratch, do it twice as the initial one
+        # probably took a lot of time.
+        project_fetch "$1"
+        project_index "$1"
+        project_fetch "$1"
+        project_index "$1"
+    else
+        project_fetch "$1"
+        project_index "$1"
     fi
 }
 
 # Index a single project
 if test "$2" != "--all"; then
-    index "$@"
+    dir="$1/$2"
+    add_remotes "$@"
+    do_index "$dir"
     exit
 fi
 
-# Index all known projects
-index $1 amazon-freertos https://github.com/aws/amazon-freertos.git
-index $1 arm-trusted-firmware https://github.com/ARM-software/arm-trusted-firmware
-index $1 barebox https://git.pengutronix.de/git/barebox
-index $1 busybox https://git.busybox.net/busybox
-index $1 coreboot https://review.coreboot.org/coreboot.git
-index $1 dpdk https://dpdk.org/git/dpdk \
-              https://dpdk.org/git/dpdk-stable
-index $1 glibc https://sourceware.org/git/glibc.git
-index $1 llvm https://github.com/llvm/llvm-project.git
-index $1 mesa https://gitlab.freedesktop.org/mesa/mesa.git
-index $1 musl https://git.musl-libc.org/git/musl
-index $1 ofono https://git.kernel.org/pub/scm/network/ofono/ofono.git
-index $1 op-tee https://github.com/OP-TEE/optee_os.git
-index $1 qemu https://gitlab.com/qemu-project/qemu.git
-index $1 u-boot https://source.denx.de/u-boot/u-boot.git
-index $1 uclibc-ng https://cgit.uclibc-ng.org/cgi/cgit/uclibc-ng.git
-index $1 zephyr https://github.com/zephyrproject-rtos/zephyr
-index $1 toybox https://github.com/landley/toybox.git
-index $1 grub https://git.savannah.gnu.org/git/grub.git
-index $1 bluez https://git.kernel.org/pub/scm/bluetooth/bluez.git
-index $1 linux https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git \
-               https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git \
-               https://github.com/bootlin/linux-history.git
-index $1 xen https://xenbits.xen.org/git-http/xen.git
-index $1 freebsd https://git.freebsd.org/src.git
+# Add all known projects remotes
+add_remotes $1 amazon-freertos https://github.com/aws/amazon-freertos.git
+add_remotes $1 arm-trusted-firmware https://github.com/ARM-software/arm-trusted-firmware
+add_remotes $1 barebox https://git.pengutronix.de/git/barebox
+add_remotes $1 busybox https://git.busybox.net/busybox
+add_remotes $1 coreboot https://review.coreboot.org/coreboot.git
+add_remotes $1 dpdk https://dpdk.org/git/dpdk \
+                    https://dpdk.org/git/dpdk-stable
+add_remotes $1 glibc https://sourceware.org/git/glibc.git
+add_remotes $1 llvm https://github.com/llvm/llvm-project.git
+add_remotes $1 mesa https://gitlab.freedesktop.org/mesa/mesa.git
+add_remotes $1 musl https://git.musl-libc.org/git/musl
+add_remotes $1 ofono https://git.kernel.org/pub/scm/network/ofono/ofono.git
+add_remotes $1 op-tee https://github.com/OP-TEE/optee_os.git
+add_remotes $1 qemu https://gitlab.com/qemu-project/qemu.git
+add_remotes $1 u-boot https://source.denx.de/u-boot/u-boot.git
+add_remotes $1 uclibc-ng https://cgit.uclibc-ng.org/cgi/cgit/uclibc-ng.git
+add_remotes $1 zephyr https://github.com/zephyrproject-rtos/zephyr
+add_remotes $1 toybox https://github.com/landley/toybox.git
+add_remotes $1 grub https://git.savannah.gnu.org/git/grub.git
+add_remotes $1 bluez https://git.kernel.org/pub/scm/bluetooth/bluez.git
+add_remotes $1 linux https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git \
+                     https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git \
+                     https://github.com/bootlin/linux-history.git
+add_remotes $1 xen https://xenbits.xen.org/git-http/xen.git
+add_remotes $1 freebsd https://git.freebsd.org/src.git
+
+# Index all projects.
+# Note: this is not only the above ones but all the ones in $1.
+find $1 -mindepth 1 -maxdepth 1 -type d | \
+while read dir; do
+    do_index "$dir"
+done
