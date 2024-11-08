@@ -36,11 +36,14 @@ project_add_remote() {
     $git remote add remote$i "$2"
 }
 
+# $1 is the project path (parent of data/ and repo/).
+project_fetch() {
+    git -C $1/repo fetch --all --tags -j4
+}
+
 dir=/srv/elixir-data/$1
 
 project_init "$dir"
-
-git="git -C $dir/repo"
 
 shift
 for remote
@@ -48,7 +51,7 @@ do
     project_add_remote "$dir" "$remote"
 done
 
-$git fetch --all --tags -j4
+project_fetch "$dir"
 
 if test -z "$ELIXIR_THREADS"; then
     ELIXIR_THREADS="$(nproc)"
