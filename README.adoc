@@ -255,7 +255,7 @@ as a front-end to reduce the load on the server running the Elixir code.
 == Keeping Elixir databases up to date
 
 To keep your Elixir databases up to date and index new versions that are released,
-we're proposing to use a script like `utils/update-elixir-data` which is called
+we're proposing to use a script like `utils/index /srv/elixir-data --all` which is called
 through a daily cron job.
 
 You can set `$ELIXIR_THREADS` if you want to change the number of threads used by
@@ -284,8 +284,7 @@ For example, to add the https://musl.libc.org/[musl] repository, run:
 
  # docker exec -it -e PYTHONUNBUFFERED=1 elixir-container \
     /bin/bash -c 'export "PATH=/usr/local/elixir/venv/bin:$PATH" ; \
-    /usr/local/elixir/utils/index-repository \
-    musl https://git.musl-libc.org/git/musl'
+    /usr/local/elixir/utils/index /srv/elixir-data musl'
 
 Without PYTHONUNBUFFERED environment variable, update logs may show up with a delay.
 
@@ -294,10 +293,9 @@ Or, to run indexing in a separate container:
  # docker run -e PYTHONUNBUFFERED=1 -v ./elixir-data/:/srv/elixir-data \
     --entrypoint /bin/bash elixir -c \
     'export "PATH=/usr/local/elixir/venv/bin:$PATH" ; \
-    /usr/local/elixir/utils/index-repository \
-    musl https://git.musl-libc.org/git/musl'
+    /usr/local/elixir/utils/index /srv/elixir-data musl'
 
-You can also use utils/index-all-repositories to start indexing all officially supported repositories.
+You can also use `utils/index /srv/elixir-data --all` to start indexing all officially supported repositories.
 
 After indexing is done, Elixir should be available under the following URL on your host:
 http://172.17.0.2/musl/latest/source
@@ -309,7 +307,7 @@ If 172.17.0.2 does not answer, you can check the IP address of the container by 
 == Automatic repository updates
 
 The Docker image does not automatically update repositories by itself.
-You can, for example, start `utils/update-elixir-data` in the container (or in a separate container, with Elixir data volume/directory mounted)
+You can, for example, start `utils/index /srv/elixir-data --all` in the container (or in a separate container, with Elixir data volume/directory mounted)
 from cron on the host to periodically update repositories.
 
 == Using Docker image as a development server
