@@ -21,6 +21,10 @@
 #  You should have received a copy of the GNU Affero General Public License
 #  along with Elixir.  If not, see <http://www.gnu.org/licenses/>.
 
+if test -z "$ELIXIR_THREADS"; then
+    ELIXIR_THREADS="$(nproc)"
+fi
+
 index() {
     project=$1
     master=$2
@@ -61,9 +65,6 @@ index() {
     cd $ELIXIR_INSTALL
     ./update.py $ELIXIR_THREADS
 }
-
-export ELIXIR_INSTALL=$(dirname $(dirname $(readlink -f "$0")))
-. $ELIXIR_INSTALL/utils/common.sh
 
 if [ "$ELIXIR_ROOT" = "" ]
 then
