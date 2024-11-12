@@ -138,7 +138,7 @@ function parseLineRangeAnchor(hashStr) {
   }
 
   let firstLine = parseLineId(hash[0]);
-  let lastLine = hash.length === 2 ? parseLineId(hash[1]) : parseLineId(hash[0]);
+  let lastLine = hash.length === 2 ? parseLineId(hash[1]) : firstLine;
 
   if (firstLine === undefined || lastLine === undefined) {
     return;
