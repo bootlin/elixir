@@ -63,9 +63,9 @@ list_tags_h()
     sed -r 's/^(v[0-9]*)\.([0-9]*)(.*)$/\1 \1.\2 \1.\2\3/'
 }
 
-get_latest()
+get_latest_tags()
 {
-    git tag | version_dir | grep -v '\-rc' | sort -V | tail -n $(($opt1 + 1)) | head -1
+    git tag | version_dir | grep -v '\-rc' | sort -Vr
 }
 
 get_type()
@@ -247,8 +247,8 @@ case $cmd in
         fi
         ;;
 
-    get-latest)
-        get_latest
+    get-latest-tags)
+        get_latest_tags
         ;;
 
     get-type)
