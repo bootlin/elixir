@@ -110,18 +110,18 @@ class Query:
 
         elif cmd == 'latest':
 
-            # Returns the tag considered as the latest one
             previous = None
-            tag = ''
             index = 0
 
-            # If we get the same tag twice, we are at the oldest one
-            while not self.db.vers.exists(tag) and previous != tag:
-                previous = tag
+            while True:
                 tag = decode(self.script('get-latest', str(index))).rstrip('\n')
-                index += 1
 
-            return tag
+                # tag == previous implies oldest tag, we return it anyway
+                if self.db.vers.exists(tag) or tag == previous:
+                    return tag
+
+                previous = tag
+                index += 1
 
         elif cmd == 'type':
 
