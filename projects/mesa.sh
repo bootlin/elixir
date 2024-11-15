@@ -15,7 +15,7 @@ list_tags_h()
     sed -r 's/^mesa-([0-9]*)(\.[0-9]*)(.*)$/v\1 v\1\2 mesa-\1\2\3/'
 }
 
-get_latest()
+get_latest_tags()
 {
-    git tag | version_dir | grep ^mesa-[0-9]*[\.][0-9]* | grep -v '\-rc' | sort -V | tail -n 1
+    git tag | version_dir | grep ^mesa-[0-9]*[\.][0-9]* | grep -v '\-rc' | sort -Vr
 }

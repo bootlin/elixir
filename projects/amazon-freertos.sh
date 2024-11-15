@@ -14,7 +14,7 @@ list_tags_h()
     sed -r 's/^(v[0-9]*)\.([0-9]*)(.*)$/\1 \1.\2 \1.\2\3/'
 }
 
-get_latest()
+get_latest_tags()
 {
-    git tag | grep '^20' | sort -V | tail -n 1
+    git tag | grep '^20' | sort -Vr
 }

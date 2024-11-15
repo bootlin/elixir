@@ -444,9 +444,9 @@ to customize the `list_tags_h` function.
 You should also make sure that Elixir properly identifies
 the most recent versions:
 
- ./script.sh get-latest
+ ./script.sh get-latest-tags | head
 
-If needed, customize the `get_latest()` function.
+If needed, customize the `get_latest_tags()` function.
 
 If you want to enable support for `compatible` properties in Devicetree files,
 add `dts_comp_support=1` at the beginning of `projects/<projectname>.sh`.

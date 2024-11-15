@@ -14,7 +14,7 @@ list_tags()
     grep '^[0-9]\.'
 }
 
-get_latest()
+get_latest_tags()
 {
-    git tag | grep '^[0-9]\.' | grep -v '\-rc' | sort -V | tail -n 1
+    git tag | grep '^[0-9]\.' | grep -v '\-rc' | sort -Vr
 }

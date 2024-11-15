@@ -11,7 +11,7 @@ list_tags_h()
     echo "v5 v5.6 v5.6.1"
 }
 
-get_latest()
+get_latest_tags()
 {
     echo "v5.6.1"
 }
