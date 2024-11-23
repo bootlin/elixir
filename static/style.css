@@ -1246,7 +1246,6 @@ main {
 /* === Banner =============================================================== */
 
 .message-banner-desktop {
-  position: absolute;
   padding: 5px;
   -webkit-box-shadow: -2px 0px 15px 1px rgba(0,0,0,0.69);
   -moz-box-shadow: -2px 0px 15px 1px rgba(0,0,0,0.69);
@@ -1254,10 +1253,8 @@ main {
   font-size: 14;
   font-family: Arial;
   font-weight: bold;
-  left: 10px;
-  bottom: 30px;
   width: 215px;
-  height: 100px;
+  height: 120px;
   text-align: center;
   border-radius: 20px;
   background: rgba(255,255,255,1);
@@ -1272,40 +1269,61 @@ main {
 .message-banner-desktop p.title {
   font-size: 14px;
   margin: 0;
-  margin-top: 5px;
-  margin-bottom: 8px;
 }
 .message-banner-desktop .subtitle {
   width: 210px;
   padding: 0 10px;
-  font-size: 11px;
+  font-size: 12px;
   position: relative;
   z-index: 29;
+}
+.message-banner-desktop .container {
+  height: 100%;
+  display: flex;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-evenly;
+}
+.message-banner-desktop .action {
+  font-size: 14px;
+  display: flex;
+  justify-content: center;
+  width: 210px;
+}
+.message-banner-desktop .action-inner {
+  border: 1px solid black;
+  border-radius: 5px;
+  padding: 2px 10px;
 }
 
 .message-banner-mobile {
   display: none;
   text-align: center;
-  position: absolute;
   background: #fe003e;
   color: #fff;
   font-family: Arial;
-  -webkit-transform:rotate(-90deg);
-  -moz-transform:rotate(-90deg);
-  -o-transform: rotate(-90deg);
-  -ms-transform:rotate(-90deg);
-  transform: rotate(-90deg);
+  -webkit-transform:rotate(-180deg);
+  -moz-transform:rotate(-180deg);
+  -o-transform: rotate(-180deg);
+  -ms-transform:rotate(-180deg);
+  transform: rotate(-180deg);
   left: -58px;
   bottom: 58px;
   padding: 5px;
+  width: min-content;
+  writing-mode: vertical-rl;
+  margin-bottom: 40px;
+  min-height: 150px;
 }
 .message-banner-mobile .title {
   margin: 0;
   font-size: 25px;
+  text-wrap: pretty;
 }
 .message-banner-mobile .subtitle {
   margin: 0;
   font-size: 11px;
+  word-break: break-word;
 }
 .message-banner-mobile:hover {
   background: #f37b30;
@@ -1319,9 +1337,6 @@ main {
   left: 0;
   z-index: 99999;
 }
-header.header h2 {
-  margin-bottom: 3rem;
-}
 .icon-googleplus:before,
 .icon-mastodon:before {
   position: relative;
@@ -1332,7 +1347,7 @@ header.header h2 {
   width: 100%;
 }
 
-@media screen and (max-width: 600px) {
+@media screen and (max-width: 748px) {
   .message-banner-desktop {
     display: none;
   }
@@ -1341,9 +1356,6 @@ header.header h2 {
   }
 }
 @media screen and (max-width: 400px) {
-  .message-banner-mobile {
-    bottom: 50px;
-  }
   .message-banner-mobile .title {
     font-size: 20px;
   }
@@ -1397,7 +1409,7 @@ header.header h2 {
 /* === Header =============================================================== */
 
 .header {
-  height: 200px;
+  min-height: 200px;
   background: #6D7DD2;
   background-image: url('/static/img/2penguins.svg');
   background-repeat: no-repeat;
@@ -1409,16 +1421,7 @@ header.header h2 {
   display: -webkit-box;
   display: -ms-flexbox;
   display: flex;
-  -webkit-box-orient: vertical;
-  -webkit-box-direction: normal;
-      -ms-flex-direction: column;
-          flex-direction: column;
-  -webkit-box-align: center;
-      -ms-flex-align: center;
-          align-items: center;
-  -webkit-box-pack: center;
-      -ms-flex-pack: center;
-          justify-content: center;
+  flex-direction: column;
 }
 .header h1 {
   font-family: 'Ubuntu Mono', monospace;
@@ -1428,6 +1431,7 @@ header.header h2 {
   word-spacing: -0.4em;
   color: #fff;
   margin-bottom: 0;
+  margin-top: 0;
 }
 .header h1 a {
   color: #fff;
@@ -1460,14 +1464,28 @@ header.header h2 {
 }
 .header nav {
   text-align: center;
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
+  width: 100%;
 }
 .header nav ul {
   list-style: none;
 }
+
+.header-main {
+  display: grid;
+  grid-template-columns: 235px 1fr 235px;
+}
+
+.banners {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+}
+
+.under-topbar {
+  height: 48px;
+}
+
 .nav-links {
   padding: 0.5em 1em;
   margin: 0;
@@ -1513,6 +1531,9 @@ header.header h2 {
 /* responsive */
 
 @media (max-width: 748px) {
+  .banners {
+    justify-content: flex-start;
+  }
   .header .social-icons {
     position: static;
   }
@@ -1520,13 +1541,16 @@ header.header h2 {
     font-size: 1.5rem;
     color: #9da9ea;
   }
+  .header-main {
+    display: grid;
+    grid-template-columns: 40px 1fr 40px;
+  }
 }
 
 @media (max-width: 520px) {
   .header h1 {
     font-size: 2.5em;
     font-size: 8vw;
-    margin-top: 1.4em;
   }
   .header h2 {
     font-size: 1em;
