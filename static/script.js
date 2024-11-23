@@ -372,9 +372,6 @@ function updateMessageBanner() {
     .then(messages => {
       const msg = randomChoice(messages);
 
-      const mobileBanner = document.querySelector('.message-banner-mobile');
-      addBannerContents(mobileBanner, msg.mobile);
-
       const desktopBanner = document.querySelector('.message-banner-desktop');
       addBannerContents(desktopBanner, msg.desktop);
     });
