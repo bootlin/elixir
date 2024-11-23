@@ -340,7 +340,49 @@ function fix301() {
   }
 }
 
+function randomChoice(arr) {
+  return arr[Math.floor(Math.random() * arr.length)];
+}
+
+function addBannerContents(bannerElement, msg) {
+  bannerElement.innerHTML = '';
+
+  const titleElement = document.createElement('p');
+  titleElement.classList.add('title');
+  titleElement.innerText = msg.title;
+  bannerElement.appendChild(titleElement);
+
+  for (const line of msg.body.split('\\n')) {
+    const subtitleElement = document.createElement('div');
+    subtitleElement.classList.add('subtitle');
+    subtitleElement.innerText = line;
+    bannerElement.appendChild(subtitleElement);
+  }
+
+  const messageLinkElement = document.createElement('a');
+  messageLinkElement.classList.add('message-link');
+  messageLinkElement.href = msg.link;
+  messageLinkElement.setAttribute('target', '_blank');
+  bannerElement.appendChild(messageLinkElement);
+}
+
+function updateMessageBanner() {
+  fetch('/static/messages.json')
+    .then(r => r.json())
+    .then(messages => {
+      const msg = randomChoice(messages);
+
+      const mobileBanner = document.querySelector('.message-banner-mobile');
+      addBannerContents(mobileBanner, msg.mobile);
+
+      const desktopBanner = document.querySelector('.message-banner-desktop');
+      addBannerContents(desktopBanner, msg.desktop);
+    });
+}
+
 document.addEventListener('DOMContentLoaded', _ => {
+  updateMessageBanner();
+
   setupVersionsFilter();
   setupVersionsTree();
   setupSidebarSwitch();
