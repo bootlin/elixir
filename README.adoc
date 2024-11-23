@@ -290,7 +290,7 @@ Dockerfiles are provided in the `docker/` directory.
 To build the image, run the following commands:
 
  # git clone https://github.com/bootlin/elixir.git ./elixir
- # docker build -t elixir --build-arg ELIXIR_VERSION=`git rev-parse --short HEAD` ./elixir/Dockerfile ./elixir
+ # docker build -t elixir --build-arg ELIXIR_VERSION=`git rev-parse --short HEAD` -f ./elixir/docker/Dockerfile ./elixir
 
 ELIXIR_VER build argument is optional. Since .git directory is not copied into Docker image by default,
 the option is used to pass a version string to Elixir.
