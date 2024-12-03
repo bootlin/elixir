@@ -347,17 +347,22 @@ function randomChoice(arr) {
 function addBannerContents(bannerElement, msg) {
   bannerElement.innerHTML = '';
 
+  const containerElement = document.createElement('div');
+  containerElement.classList.add('container');
+
   const titleElement = document.createElement('p');
   titleElement.classList.add('title');
   titleElement.innerText = msg.title;
-  bannerElement.appendChild(titleElement);
+  containerElement.appendChild(titleElement);
 
-  for (const line of msg.body.split('\\n')) {
+  for (const line of msg.body.split('\n')) {
     const subtitleElement = document.createElement('div');
     subtitleElement.classList.add('subtitle');
-    subtitleElement.innerText = line;
-    bannerElement.appendChild(subtitleElement);
+    subtitleElement.innerHTML = line;
+    containerElement.appendChild(subtitleElement);
   }
+
+  bannerElement.appendChild(containerElement);
 
   const messageLinkElement = document.createElement('a');
   messageLinkElement.classList.add('message-link');

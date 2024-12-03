@@ -1254,7 +1254,7 @@ main {
   font-family: Arial;
   font-weight: bold;
   width: 215px;
-  height: 100px;
+  height: 120px;
   text-align: center;
   border-radius: 20px;
   background: rgba(255,255,255,1);
@@ -1269,15 +1269,24 @@ main {
 .message-banner-desktop p.title {
   font-size: 14px;
   margin: 0;
-  margin-top: 5px;
-  margin-bottom: 8px;
 }
 .message-banner-desktop .subtitle {
   width: 210px;
   padding: 0 10px;
-  font-size: 11px;
+  font-size: 12px;
   position: relative;
   z-index: 29;
+}
+.message-banner-desktop .container {
+  height: 100%;
+  display: flex;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-evenly;
+}
+.message-banner-desktop .action {
+  font-size: 14px;
+  display: block;
 }
 
 .message-banner-mobile {
