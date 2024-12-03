@@ -1,0 +1,157 @@
+#!/bin/sh
+
+if test $# -lt 2; then
+    echo "Usage: $0 <elixir_data_path> <project_name> [<repo_urls>...]"
+    echo "Usage: $0 <elixir_data_path> --all"
+    exit 1
+fi
+
+# $1 is the project path (inside will be created data/ and repo/).
+# It supports being called on an existing project.
+project_init() {
+    # Detect already inited projects. Avoids stderr logs.
+    # Using `git tag -n1` because `git status` doesn't work on bare repos.
+    if git -C $1/repo tag -n1 >/dev/null 2>/dev/null; then
+        return;
+    fi
+
+    mkdir -p $1/data $1/repo
+
+    git -C $1/repo -c init.defaultBranch=main init --bare
+}
+
+# $1 is the project path (parent of data/ and repo/).
+# $2 is the remote URL.
+project_add_remote() {
+    git="git -C $1/repo -c safe.directory=$1/repo"
+
+    # Do nothing if remote already exists.
+    if $git remote | xargs -L1 -r $git remote get-url 2>/dev/null | grep -qxF "$2"; then
+        return;
+    fi
+
+    # Remotes are called remote$i with $i = 0, 1, 2...
+    i="$($git remote | awk '
+        BEGIN { n=-1; }
+        $0 ~ /^remote[0-9]+$/ { i=substr($0, length("remote")+1);
+                                if (i>n) n=i; }
+        END { print n+1; }')"
+
+    $git remote add remote$i "$2"
+}
+
+# $1 is the project path (parent of data/ and repo/).
+project_fetch() {
+    git="git -C $1/repo -c safe.directory=$1/repo"
+
+    $git fetch --all --tags -j4
+
+    # A gc.log file implies a garbage collect failed in the past.
+    # Also, create a hidden flag which could be useful to trigger GCs manually.
+    if test -e $1/repo/gc.log -o "$ELIXIR_GC"; then
+        $git gc --aggressive
+    else
+        # Otherwise, give Git an occasion to trigger a GC.
+        # Porcelain commands should trigger that, but we don't use any.
+        $git gc --auto
+    fi
+}
+
+# $1 is the project path (parent of data/ and repo/).
+project_index() {
+    if test -z "$ELIXIR_THREADS"; then
+        ELIXIR_THREADS="$(nproc)"
+    fi
+
+    elixir_sources="$(dirname "$(dirname "$0")")"
+
+    LXR_REPO_DIR=$1/repo LXR_DATA_DIR=$1/data \
+        python3 "$elixir_sources/update.py" $ELIXIR_THREADS
+}
+
+# $1 is the Elixir root data path.
+# $2 is the project name.
+# $... are the remote URLs.
+add_remotes() {
+    dir="$1/$2"
+
+    project_init "$dir"
+
+    shift
+    shift
+    for remote
+    do
+        project_add_remote "$dir" "$remote"
+    done
+}
+
+# Call add_remotes() if no remotes are passed as arguments.
+#
+# $1 is the Elixir root data path.
+# $2 is the CLI arg count.
+# $3 is the CLI arg for project name (can be --all).
+# $4 is the project name.
+# $... are the default remote URLs.
+add_default_remotes() {
+    if test $2 -eq 2 -a \( "$3" = "--all" -o "$3" = "$4" \); then
+        add_remotes "$1" "$4" ${@:5}
+    fi
+}
+
+do_index() {
+    if test ! "$(find $1/data -type f)"; then
+        # If we are indexing from scratch, do it twice as the initial one
+        # probably took a lot of time.
+        project_fetch "$1"
+        project_index "$1"
+        project_fetch "$1"
+        project_index "$1"
+    else
+        project_fetch "$1"
+        project_index "$1"
+    fi
+}
+
+# Add all known projects remotes. This works in two cases:
+#     ./utils/index <elixir_data_path> --all   # => Add default remotes for all projects
+#     ./utils/index <elixir_data_path> musl    # => Add default remote for musl
+add_default_remotes $1 $# $2 amazon-freertos https://github.com/aws/amazon-freertos.git
+add_default_remotes $1 $# $2 arm-trusted-firmware https://github.com/ARM-software/arm-trusted-firmware
+add_default_remotes $1 $# $2 barebox https://git.pengutronix.de/git/barebox
+add_default_remotes $1 $# $2 busybox https://git.busybox.net/busybox
+add_default_remotes $1 $# $2 coreboot https://review.coreboot.org/coreboot.git
+add_default_remotes $1 $# $2 dpdk https://dpdk.org/git/dpdk \
+                                  https://dpdk.org/git/dpdk-stable
+add_default_remotes $1 $# $2 glibc https://sourceware.org/git/glibc.git
+add_default_remotes $1 $# $2 llvm https://github.com/llvm/llvm-project.git
+add_default_remotes $1 $# $2 mesa https://gitlab.freedesktop.org/mesa/mesa.git
+add_default_remotes $1 $# $2 musl https://git.musl-libc.org/git/musl
+add_default_remotes $1 $# $2 ofono https://git.kernel.org/pub/scm/network/ofono/ofono.git
+add_default_remotes $1 $# $2 op-tee https://github.com/OP-TEE/optee_os.git
+add_default_remotes $1 $# $2 qemu https://gitlab.com/qemu-project/qemu.git
+add_default_remotes $1 $# $2 u-boot https://source.denx.de/u-boot/u-boot.git
+add_default_remotes $1 $# $2 uclibc-ng https://cgit.uclibc-ng.org/cgi/cgit/uclibc-ng.git
+add_default_remotes $1 $# $2 zephyr https://github.com/zephyrproject-rtos/zephyr
+add_default_remotes $1 $# $2 toybox https://github.com/landley/toybox.git
+add_default_remotes $1 $# $2 grub https://git.savannah.gnu.org/git/grub.git
+add_default_remotes $1 $# $2 bluez https://git.kernel.org/pub/scm/bluetooth/bluez.git
+add_default_remotes $1 $# $2 linux https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git \
+                                   https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git \
+                                   https://github.com/bootlin/linux-history.git
+add_default_remotes $1 $# $2 xen https://xenbits.xen.org/git-http/xen.git
+add_default_remotes $1 $# $2 freebsd https://git.freebsd.org/src.git
+
+# Index a single project
+if test "$2" != "--all"; then
+    dir="$1/$2"
+    add_remotes "$@"
+    do_index "$dir"
+else
+    # Index all projects.
+    # Note: this is not only the default projects ones but all the ones in $1.
+    find $1 -mindepth 1 -maxdepth 1 -type d | \
+    while read dir; do
+        do_index "$dir"
+    done
+fi
+
