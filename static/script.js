@@ -362,6 +362,16 @@ function addBannerContents(bannerElement, msg) {
     containerElement.appendChild(subtitleElement);
   }
 
+  if (msg.action !== undefined) {
+    const actionElement = document.createElement('div');
+    actionElement.classList.add('action');
+    const actionInner = document.createElement('div');
+    actionInner.classList.add('action-inner');
+    actionInner.innerHTML = msg.action;
+    actionElement.appendChild(actionInner);
+    containerElement.appendChild(actionElement);
+  }
+
   bannerElement.appendChild(containerElement);
 
   const messageLinkElement = document.createElement('a');

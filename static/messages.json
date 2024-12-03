@@ -2,7 +2,8 @@
     {
         "desktop": {
             "title": "Buildroot system development training",
-            "body": "Jan 13-15, 2025\n<b class=\"action\">Click to register</b>",
+            "body": "Jan 13-15, 2025",
+            "action": "Register",
             "link": "https://shop.bootlin.com/en/event/106"
         },
         "mobile": {
@@ -14,7 +15,8 @@
     {
         "desktop": {
             "title": "Embedded Linux training",
-            "body": "Jan 13-23, 2025\n<b class=\"action\">Click to register</b>",
+            "body": "Jan 13-23, 2025",
+            "action": "Register",
             "link": "https://shop.bootlin.com/en/event/113"
         },
         "mobile": {
@@ -26,19 +28,22 @@
     {
         "desktop": {
             "title": "Embedded Linux training",
-            "body": "Mar 10-20, 2025, special US time zones\n<b class=\"action\">Click to register</b>",
+            "body": "Mar 10-20, 2025, special US time zones",
+            "action": "Register",
             "link": "https://shop.bootlin.com/en/event/114"
         },
         "mobile": {
             "title": "Embedded Linux training",
-            "body": "Mar 10-20, 2025, special US time zones\n<b class=\"action\">Click to register</b>",
+            "body": "Mar 10-20, 2025, special US time zones",
+            "action": "Register",
             "link": "https://shop.bootlin.com/en/event/113"
         }
     },
     {
         "desktop": {
             "title": "Linux kernel drivers training",
-            "body": "Jan 13-22, 2025\n<b class=\"action\">Click to register</b>",
+            "body": "Jan 13-22, 2025",
+            "action": "Register",
             "link": "https://shop.bootlin.com/en/event/111"
         },
         "mobile": {
@@ -50,19 +55,22 @@
     {
         "desktop": {
             "title": "Linux kernel drivers training",
-            "body": "Mar 31-Apr 9, 2025, special US time zones\n<b class=\"action\">Click to register</b>",
+            "body": "Mar 31-Apr 9, 2025, special US time zones",
+            "action": "Register",
             "link": "https://shop.bootlin.com/en/event/FIXME"
         },
         "mobile": {
             "title": "Linux kernel drivers training",
-            "body": "Mar 31-Apr 9, 2025, special US time zones\n<b class=\"action\">Click to register</b>",
+            "body": "Mar 31-Apr 9, 2025, special US time zones",
+            "action": "Register",
             "link": "https://shop.bootlin.com/en/event/FIXME"
         }
     },
     {
         "desktop": {
             "title": "Yocto / OpenEmbedded training",
-            "body": "Nov 18-21, 2024\n<b class=\"action\">Click to register</b>",
+            "body": "Nov 18-21, 2024",
+            "action": "Register",
             "link": "https://shop.bootlin.com/en/event/98"
         },
         "mobile": {
@@ -74,7 +82,8 @@
     {
         "desktop": {
             "title": "Yocto / OpenEmbedded training",
-            "body": "Dec 2-5, 2024\n<b class=\"action\">Click to register</b>",
+            "body": "Dec 2-5, 2024",
+            "action": "Register",
             "link": "https://shop.bootlin.com/en/event/110"
         },
         "mobile": {
@@ -86,19 +95,22 @@
     {
         "desktop": {
             "title": "Yocto / OpenEmbedded training",
-            "body": "Mar 24-27, 2025, special US time zones\n<b class=\"action\">Click to register</b>",
+            "body": "Mar 24-27, 2025, special US time zones",
+            "action": "Register",
             "link": "https://shop.bootlin.com/en/event/116"
         },
         "mobile": {
             "title": "Yocto / OpenEmbedded training",
-            "body": "Mar 24-27, 2025, special US time zones\n<b class=\"action\">Click to register</b>",
+            "body": "Mar 24-27, 2025, special US time zones",
+            "action": "Register",
             "link": "https://shop.bootlin.com/en/event/116"
         }
     },
     {
         "desktop": {
             "title": "Audio with Embedded Linux training",
-            "body": "Jan 13-17, 2024\n<b class=\"action\">Click to register</b>",
+            "body": "Jan 13-17, 2024",
+            "action": "Register",
             "link": "https://shop.bootlin.com/en/event/105"
         },
         "mobile": {
@@ -110,7 +122,8 @@
     {
         "desktop": {
             "title": "Real-Time Linux with PREEMPT_RT ŧraining",
-            "body": "Feb 18-20, 2025\n<b class=\"action\">Click to register</b>",
+            "body": "Feb 18-20, 2025",
+            "action": "Register",
             "link": "https://shop.bootlin.com/en/event/104"
         },
         "mobile": {
@@ -122,7 +135,8 @@
     {
         "desktop": {
             "title": "Linux debugging, profiling, tracing and performance analysis training",
-            "body": "Dec 9-5, 2024\n<b class=\"action\">Click to register</b>",
+            "body": "Dec 9-5, 2024",
+            "action": "Register",
             "link": "https://shop.bootlin.com/en/event/107"
         },
         "mobile": {
@@ -134,7 +148,8 @@
     {
         "desktop": {
             "title": "Linux debugging, profiling, tracing and performance analysis training",
-            "body": "Jan 13-16, 2025\n<b class=\"action\">Click to register</b>",
+            "body": "Jan 13-16, 2025",
+            "action": "Register",
             "link": "https://shop.bootlin.com/en/event/108"
         },
         "mobile": {
@@ -146,12 +161,14 @@
     {
         "desktop": {
             "title": "Linux debugging, profiling, tracing and performance analysis training",
-            "body": "Mar 24-27, 2025, special US time zones\n<b class=\"action\">Click to register</b>",
+            "body": "Mar 24-27, 2025, special US time zones",
+            "action": "Register",
             "link": "https://shop.bootlin.com/en/event/117"
         },
         "mobile": {
             "title": "Linux debugging, profiling, tracing and performance analysis training",
-            "body": "Mar 24-27, 2025, special US time zones\n<b class=\"action\">Click to register</b>",
+            "body": "Mar 24-27, 2025, special US time zones",
+            "action": "Register",
             "link": "https://shop.bootlin.com/en/event/117"
        }
     },

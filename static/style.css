@@ -1286,7 +1286,14 @@ main {
 }
 .message-banner-desktop .action {
   font-size: 14px;
-  display: block;
+  display: flex;
+  justify-content: center;
+  width: 210px;
+}
+.message-banner-desktop .action-inner {
+  border: 1px solid black;
+  border-radius: 5px;
+  padding: 2px 10px;
 }
 
 .message-banner-mobile {
