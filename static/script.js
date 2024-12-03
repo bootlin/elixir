@@ -382,6 +382,27 @@ function updateMessageBanner() {
     });
 }
 
+function cycleBanner(delay=500) {
+  fetch('/static/messages.json')
+    .then(r => r.json())
+    .then(messages => {
+      cycleBannerWithData(messages, delay);
+    });
+}
+
+function sleep(duration) {
+  return new Promise(resolve => setTimeout(resolve, duration));
+}
+
+async function cycleBannerWithData(data, delay=500) {
+  for (const msg of data) {
+    const desktopBanner = document.querySelector('.message-banner-desktop');
+    addBannerContents(desktopBanner, msg.desktop);
+    await sleep(delay);
+  }
+  console.log("cycle finished");
+}
+
 document.addEventListener('DOMContentLoaded', _ => {
   updateMessageBanner();
 
