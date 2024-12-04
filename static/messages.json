@@ -28,6 +28,19 @@
     {
         "desktop": {
             "title": "Embedded Linux training",
+            "body": "Feb 18-27, 2025",
+            "action": "Register",
+            "link": "https://shop.bootlin.com/en/event/120"
+        },
+        "mobile": {
+            "title": "Embedded Linux training",
+            "body": "Feb 18-27, 2025",
+            "link": "https://shop.bootlin.com/en/event/120"
+        }
+    },
+    {
+        "desktop": {
+            "title": "Embedded Linux training",
             "body": "Mar 10-20, 2025, special US time zones",
             "action": "Register",
             "link": "https://shop.bootlin.com/en/event/114"
@@ -42,14 +55,14 @@
     {
         "desktop": {
             "title": "Linux kernel drivers training",
-            "body": "Jan 13-22, 2025",
+            "body": "Mar 10-20, 2025",
             "action": "Register",
-            "link": "https://shop.bootlin.com/en/event/111"
+            "link": "https://shop.bootlin.com/en/event/115"
         },
         "mobile": {
             "title": "Linux kernel drivers training",
-            "body": "Jan 13-22, 2025",
-            "link": "https://shop.bootlin.com/en/event/111"
+            "body": "Mar 10-20, 2025",
+            "link": "https://shop.bootlin.com/en/event/115"
         }
     },
     {
@@ -69,27 +82,14 @@
     {
         "desktop": {
             "title": "Yocto / OpenEmbedded training",
-            "body": "Nov 18-21, 2024",
+            "body": "Jan 20-23, 2025",
             "action": "Register",
-            "link": "https://shop.bootlin.com/en/event/98"
+            "link": "https://shop.bootlin.com/en/event/121"
         },
         "mobile": {
             "title": "Yocto / OpenEmbedded training",
-            "body": "Nov 18-21, 2024",
-            "link": "https://shop.bootlin.com/en/event/98"
-        }
-    },
-    {
-        "desktop": {
-            "title": "Yocto / OpenEmbedded training",
-            "body": "Dec 2-5, 2024",
-            "action": "Register",
-            "link": "https://shop.bootlin.com/en/event/110"
-        },
-        "mobile": {
-            "title": "Yocto / OpenEmbedded training",
-            "body": "Dec 2-5, 2024",
-            "link": "https://shop.bootlin.com/en/event/110"
+            "body": "Jan 20-23, 2025",
+            "link": "https://shop.bootlin.com/en/event/121"
         }
     },
     {
