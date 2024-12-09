@@ -105,7 +105,7 @@ sub main {
         --$lineno;
 
         # TODO make sure we're not still in the definition.
-        # E.g., memblock.h:for_each_mem_range().  The defintion is reported
+        # E.g., memblock.h:for_each_mem_range().  The definition is reported
         # on the second line of the #define, not the first line.
 
         say "  Starting search for docs at line $lineno" if $VERBOSE;

@@ -215,7 +215,7 @@ class IndexResource:
         return
 
 # Handles source URLs
-# Path parameters are asssumed to be unquoted by converters
+# Path parameters are assumed to be unquoted by converters
 class SourceResource:
     def on_get(self, req, resp, project, version, path):
         project, version, query = validate_project_and_version(req.context, project, version)
@@ -303,7 +303,7 @@ class IdentPostRedirectResource:
 
 # Handles ident URLs when family is specified in the URL, both POST and GET
 # See IdentPostRedirectResource for behavior on POST
-# Path parameters are asssumed to be unquoted by converters
+# Path parameters are assumed to be unquoted by converters
 class IdentResource(IdentPostRedirectResource):
     def on_get(self, req, resp, project, version, family, ident):
         project, version, query = validate_project_and_version(req.context, project, version)
@@ -412,7 +412,7 @@ def get_versions_cached(q, ctx, project):
 
         return cached_versions[1]
 
-# Retruns template context used by the layout template
+# Returns template context used by the layout template
 # q: Query object
 # ctx: RequestContext object
 # get_url_with_new_version: see get_url parameter of get_versions
