@@ -32,9 +32,9 @@
 
 /*
  * The Xen hypercall calling convention is very similar to the ARM
- * procedure calling convention: the first paramter is passed in r0, the
+ * procedure calling convention: the first parameter is passed in r0, the
  * second in r1, the third in r2 and the fourth in r3. Considering that
- * Xen hypercalls have 5 arguments at most, the fifth paramter is passed
+ * Xen hypercalls have 5 arguments at most, the fifth parameter is passed
  * in r4, differently from the procedure calling convention of using the
  * stack for that case.
  *

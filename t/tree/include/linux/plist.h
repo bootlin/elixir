@@ -44,7 +44,7 @@
  *
  * The nodes on the prio_list list are sorted by priority to simplify
  * the insertion of new nodes. There are no nodes with duplicate
- * priorites on the list.
+ * priorities on the list.
  *
  * The nodes on the node_list are ordered by priority and can contain
  * entries which have the same priority. Those entries are ordered

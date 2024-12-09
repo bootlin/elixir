@@ -583,7 +583,7 @@ enum acpi_predicate {
 	greater_than_or_equal,
 };
 
-/* Table must be terminted by a NULL entry */
+/* Table must be terminated by a NULL entry */
 struct acpi_platform_list {
 	char	oem_id[ACPI_OEM_ID_SIZE+1];
 	char	oem_table_id[ACPI_OEM_TABLE_ID_SIZE+1];

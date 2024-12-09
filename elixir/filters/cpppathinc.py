@@ -24,7 +24,7 @@ class CppPathIncFilter(Filter):
             inc = m.group(3)
             if re.match('^asm/.*', inc):
                 # Keep the original string in case the path contains "asm/"
-                # Because there are then multiple include possibilites, one per architecture
+                # Because there are then multiple include possibilities, one per architecture
                 return m.group(0)
             else:
                 self.cpppathinc.append(inc)
