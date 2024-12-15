@@ -110,18 +110,16 @@ class Query:
 
         elif cmd == 'latest':
 
-            previous = None
-            index = 0
+            # Returns the latest tag that is included in the database.
+            # This excludes release candidates.
+            sorted_tags = self.scriptLines('get-latest-tags')
 
-            while True:
-                tag = decode(self.script('get-latest', str(index))).rstrip('\n')
-
-                # tag == previous implies oldest tag, we return it anyway
-                if self.db.vers.exists(tag) or tag == previous:
+            for tag in sorted_tags:
+                if self.db.vers.exists(tag):
                     return tag
 
-                previous = tag
-                index += 1
+            # return the oldest tag, even if it does not exist in the database
+            return sorted_tags[-1]
 
         elif cmd == 'type':
 
