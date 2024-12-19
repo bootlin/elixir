@@ -2,6 +2,7 @@ import os
 import re
 from urllib import parse
 import logging
+from collections import namedtuple
 import falcon
 
 from .lib import validFamily, run_cmd
@@ -62,4 +63,22 @@ class IdentConverter(falcon.routing.BaseConverter):
     def convert(self, value: str):
         value = parse.unquote(value)
         return validate_ident(value)
+
+
+# Returns a list of names of top-level directories in basedir
+def get_directories(basedir):
+    directories = []
+    for filename in os.listdir(basedir):
+        filepath = os.path.join(basedir, filename)
+        if os.path.isdir(filepath):
+            directories.append(filename)
+    return sorted(directories)
+
+# Tuple of project name and URL to root of that project
+# Used to render project list
+ProjectEntry = namedtuple('ProjectEntry', 'name, url')
+
+# Returns a list of ProjectEntry tuples of projects stored in directory basedir
+def get_projects(basedir):
+    return [ProjectEntry(p, f"/{p}/latest/source") for p in get_directories(basedir)]
 
