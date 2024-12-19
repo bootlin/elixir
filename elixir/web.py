@@ -38,6 +38,7 @@ from .filters.utils import FilterContext
 from .autocomplete import AutocompleteResource
 from .api import ApiIdentGetterResource
 from .query import get_query
+from .robots import RobotsResource
 from .web_utils import ProjectConverter, IdentConverter, validate_version, validate_project, validate_ident, \
         get_elixir_version_string, get_elixir_repo_link, get_projects
 
@@ -771,6 +772,8 @@ def get_application():
     app.router_options.converters['ident'] = IdentConverter
 
     app.set_error_serializer(error_serializer)
+
+    app.add_route('/robots.txt', RobotsResource())
 
     app.add_route('/', IndexResource())
     app.add_route('/{project}/{version}/source/{path:path}', SourceResource())
