@@ -319,27 +319,6 @@ function setupGoToTop() {
   });
 }
 
-// fix incorrectly issued 301 redirect
-// https://developer.mozilla.org/en-US/docs/Web/API/Request/cache
-// https://developer.mozilla.org/en-US/docs/Web/API/Request/redirect
-// TODO: remove after 10.2024
-function fix301() {
-  let path = location.pathname.split('/');
-  if (path.length == 4) {
-    path[2] = 'latest';
-    let newPath = path.join('/');
-    fetch(newPath, {
-        cache: 'reload',
-        redirect: 'manual',
-        // this is to make sure that varnish will cache the response,
-        // by default fetch sends no-cache in both headers if cache='reload'
-        headers: {'Cache-Control': 'max-age=86400', 'Pragma': ''}
-    })
-      .then(console.log)
-      .catch(console.error);
-  }
-}
-
 function randomChoice(arr) {
   return arr[Math.floor(Math.random() * arr.length)];
 }
@@ -425,5 +404,4 @@ document.addEventListener('DOMContentLoaded', _ => {
   setupAutoscrollingPrevention();
   setupAnchorOffsetHandler();
   setupGoToTop();
-  fix301();
 });
