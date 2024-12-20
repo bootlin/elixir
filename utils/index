@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 if test $# -lt 2; then
     echo "Usage: $0 <elixir_data_path> <project_name> [<repo_urls>...]"
