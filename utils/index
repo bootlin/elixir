@@ -142,7 +142,7 @@ add_default_remotes $1 $# $2 xen https://xenbits.xen.org/git-http/xen.git
 add_default_remotes $1 $# $2 freebsd https://git.freebsd.org/src.git
 
 # Index a single project
-if test "$2" != "--all"; then
+if test "x$2" != "x--all"; then
     dir="$1/$2"
     add_remotes "$@"
     do_index "$dir"
