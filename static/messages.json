@@ -15,27 +15,14 @@
     {
         "desktop": {
             "title": "Embedded Linux training",
-            "body": "Jan 13-23, 2025",
+            "body": "Mar 31-Apr 8, 2025",
             "action": "Register",
-            "link": "https://shop.bootlin.com/en/event/113"
+            "link": "https://shop.bootlin.com/en/event/122"
         },
         "mobile": {
             "title": "Embedded Linux training",
-            "body": "Jan 13-23, 2025",
-            "link": "https://shop.bootlin.com/en/event/113"
-        }
-    },
-    {
-        "desktop": {
-            "title": "Embedded Linux training",
-            "body": "Feb 18-27, 2025",
-            "action": "Register",
-            "link": "https://shop.bootlin.com/en/event/120"
-        },
-        "mobile": {
-            "title": "Embedded Linux training",
-            "body": "Feb 18-27, 2025",
-            "link": "https://shop.bootlin.com/en/event/120"
+            "body": "Mar 31-Apr 8, 2025",
+            "link": "https://shop.bootlin.com/en/event/122"
         }
     },
     {
@@ -55,14 +42,14 @@
     {
         "desktop": {
             "title": "Linux kernel drivers training",
-            "body": "Mar 10-20, 2025",
+            "body": "May 6-19, 2025",
             "action": "Register",
-            "link": "https://shop.bootlin.com/en/event/115"
+            "link": "https://shop.bootlin.com/en/event/123"
         },
         "mobile": {
             "title": "Linux kernel drivers training",
-            "body": "Mar 10-20, 2025",
-            "link": "https://shop.bootlin.com/en/event/115"
+            "body": "May 6-19, 2025",
+            "link": "https://shop.bootlin.com/en/event/123"
         }
     },
     {
@@ -90,6 +77,19 @@
             "title": "Yocto / OpenEmbedded training",
             "body": "Jan 20-23, 2025",
             "link": "https://shop.bootlin.com/en/event/121"
+        }
+    },
+    {
+        "desktop": {
+            "title": "Yocto / OpenEmbedded training",
+            "body": "Feb 10-13, 2025",
+            "action": "Register",
+            "link": "https://shop.bootlin.com/en/event/125"
+        },
+        "mobile": {
+            "title": "Yocto / OpenEmbedded training",
+            "body": "Feb 10-13, 2025",
+            "link": "https://shop.bootlin.com/en/event/125"
         }
     },
     {
@@ -135,27 +135,14 @@
     {
         "desktop": {
             "title": "Linux debugging, profiling, tracing and performance analysis training",
-            "body": "Dec 9-5, 2024",
+            "body": "Apr 14-17, 2025",
             "action": "Register",
-            "link": "https://shop.bootlin.com/en/event/107"
+            "link": "https://shop.bootlin.com/en/event/124"
         },
         "mobile": {
             "title": "Linux debugging, profiling, tracing and performance analysis training",
-            "body": "Dec 9-5, 2024",
-            "link": "https://shop.bootlin.com/en/event/107"
-       }
-    },
-    {
-        "desktop": {
-            "title": "Linux debugging, profiling, tracing and performance analysis training",
-            "body": "Jan 13-16, 2025",
-            "action": "Register",
-            "link": "https://shop.bootlin.com/en/event/108"
-        },
-        "mobile": {
-            "title": "Linux debugging, profiling, tracing and performance analysis training",
-            "body": "Jan 13-16, 2025",
-            "link": "https://shop.bootlin.com/en/event/108"
+            "body": "Apr 14-17, 2025",
+            "link": "https://shop.bootlin.com/en/event/124"
        }
     },
     {
