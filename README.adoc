@@ -283,17 +283,15 @@ To index a repository, you can use the `index-repository` script.
 For example, to add the https://musl.libc.org/[musl] repository, run:
 
  # docker exec -it -e PYTHONUNBUFFERED=1 elixir-container \
-    /bin/bash -c 'export "PATH=/usr/local/elixir/venv/bin:$PATH" ; \
-    /usr/local/elixir/utils/index /srv/elixir-data musl'
+    /usr/local/elixir/utils/index -c '/srv/elixir-data musl'
 
 Without PYTHONUNBUFFERED environment variable, update logs may show up with a delay.
 
 Or, to run indexing in a separate container:
 
  # docker run -e PYTHONUNBUFFERED=1 -v ./elixir-data/:/srv/elixir-data \
-    --entrypoint /bin/bash elixir -c \
-    'export "PATH=/usr/local/elixir/venv/bin:$PATH" ; \
-    /usr/local/elixir/utils/index /srv/elixir-data musl'
+    --entrypoint /usr/local/elixir/utils/index elixir -c \
+    '/srv/elixir-data musl'
 
 You can also use `utils/index /srv/elixir-data --all` to start indexing all officially supported repositories.
 
