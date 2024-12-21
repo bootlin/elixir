@@ -32,7 +32,7 @@ RUN \
     libyaml-0-2 \
     wget
 
-COPY . /usr/local/elixir/
+COPY ./requirements.txt /usr/local/elixir/requirements.txt
 
 WORKDIR /usr/local/elixir/
 
@@ -42,6 +42,8 @@ RUN python3 -m venv venv && \
     . ./venv/bin/activate && \
     pip install /tmp/build/berkeleydb-*.whl && \
     pip install -r requirements.txt
+
+COPY . /usr/local/elixir/
 
 RUN mkdir -p /srv/elixir-data/
 
@@ -55,5 +57,8 @@ ARG ELIXIR_VERSION
 ENV ELIXIR_VERSION=$ELIXIR_VERSION
 
 ENV ELIXIR_ROOT=/srv/elixir-data
+ENV PATH="/usr/local/elixir/venv/bin:$PATH"
+ENV PYTHONUNBUFFERED=1
+ENV PATH="/usr/local/elixir/utils:$PATH"
 
 ENTRYPOINT ["/usr/sbin/apache2ctl", "-D", "FOREGROUND"]
