@@ -110,16 +110,7 @@ class Query:
 
         elif cmd == 'latest':
 
-            # Returns the latest tag that is included in the database.
-            # This excludes release candidates.
-            sorted_tags = self.scriptLines('get-latest-tags')
-
-            for tag in sorted_tags:
-                if self.db.vers.exists(tag):
-                    return tag
-
-            # return the oldest tag, even if it does not exist in the database
-            return sorted_tags[-1]
+            return next(self.get_latest_tags())
 
         elif cmd == 'type':
 
@@ -263,6 +254,21 @@ class Query:
 
         else:
             return 'Unknown subcommand: ' + cmd + '\n'
+
+    def get_latest_tags(self):
+        # Returns the latest tag that is included in the database.
+        # This excludes release candidates.
+        sorted_tags = self.scriptLines('get-latest-tags')
+        found = False
+
+        for tag in sorted_tags:
+            if self.db.vers.exists(tag):
+                found = True
+                yield tag
+
+        if not found:
+            # return the oldest tag, even if it does not exist in the database
+            yield sorted_tags[-1]
 
     def get_file_raw(self, version, path):
         return decode(self.script('get-file', version, path))
