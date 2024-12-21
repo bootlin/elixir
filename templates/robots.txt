@@ -1,0 +1,9 @@
+User-agent: *
+Crawl-delay: 5
+Disallow: /
+Allow: /$
+{%- for (project, versions) in projects.items() %}
+{%- for version in versions %}
+Allow: /{{ project }}/{{ version }}
+{%- endfor %}
+{%- endfor %}

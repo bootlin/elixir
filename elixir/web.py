@@ -38,8 +38,9 @@ from .filters.utils import FilterContext
 from .autocomplete import AutocompleteResource
 from .api import ApiIdentGetterResource
 from .query import get_query
+from .robots import RobotsResource
 from .web_utils import ProjectConverter, IdentConverter, validate_version, validate_project, validate_ident, \
-        get_elixir_version_string, get_elixir_repo_link
+        get_elixir_version_string, get_elixir_repo_link, get_projects
 
 VERSION_CACHE_DURATION_SECONDS = 2 * 60  # 2 minutes
 ADD_ISSUE_LINK = "https://github.com/bootlin/elixir/issues/new"
@@ -351,23 +352,6 @@ TOPBAR_FAMILIES = {
     'D': 'Devicetree',
     'B': 'DT compatible',
 }
-
-# Returns a list of names of top-level directories in basedir
-def get_directories(basedir):
-    directories = []
-    for filename in os.listdir(basedir):
-        filepath = os.path.join(basedir, filename)
-        if os.path.isdir(filepath):
-            directories.append(filename)
-    return sorted(directories)
-
-# Tuple of project name and URL to root of that project
-# Used to render project list
-ProjectEntry = namedtuple('ProjectEntry', 'name, url')
-
-# Returns a list of ProjectEntry tuples of projects stored in directory basedir
-def get_projects(basedir):
-    return [ProjectEntry(p, f"/{p}/latest/source") for p in get_directories(basedir)]
 
 # Tuple of version name and URL to chosen resource with that version
 # Used to render version list in the sidebar
@@ -788,6 +772,8 @@ def get_application():
     app.router_options.converters['ident'] = IdentConverter
 
     app.set_error_serializer(error_serializer)
+
+    app.add_route('/robots.txt', RobotsResource())
 
     app.add_route('/', IndexResource())
     app.add_route('/{project}/{version}/source/{path:path}', SourceResource())
