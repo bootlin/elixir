@@ -72,6 +72,14 @@ class DefList:
         if dummy:
             yield maxId, None, None, None
 
+    def exists(self, idx, line_num):
+        entries = deflist_regex.findall(self.data)
+        for id, _, line, _ in entries:
+            if id == idx and int(line) == line_num:
+                return True
+
+        return False
+
     def append(self, id, type, line, family):
         if type not in defTypeD:
             return
@@ -165,6 +173,8 @@ class BsdDB:
     def get(self, key):
         key = autoBytes(key)
         p = self.db.get(key)
+        if p is None:
+            return None
         p = self.ctype(p)
         return p
 
@@ -180,6 +190,9 @@ class BsdDB:
         if sync:
             self.db.sync()
 
+    def sync(self):
+        self.db.sync()
+    
     def close(self):
         self.db.close()
 
