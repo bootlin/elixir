@@ -1,3 +1,4 @@
+from itertools import islice
 import falcon
 
 from .web_utils import get_projects
@@ -16,7 +17,8 @@ class RobotsResource:
         for (project, _) in get_projects(req.context.config.project_dir):
             query = get_query(req.context.config.project_dir, project)
             if query is not None:
-                projects[project] = STATIC_PROJECT_VERSIONS.get(project, []) + [query.query("latest"), "latest"]
+                latest_three = [tag.decode() for tag in islice(query.get_latest_tags(), 3)]
+                projects[project] = STATIC_PROJECT_VERSIONS.get(project, []) + latest_three + ["latest"]
                 query.close()
 
         resp.text = template.render({"projects": projects}) 
