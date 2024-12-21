@@ -57,7 +57,7 @@ ARG ELIXIR_VERSION
 
 ENV ELIXIR_VERSION=$ELIXIR_VERSION \
     ELIXIR_ROOT=/srv/elixir-data \
-    PATH="/usr/local/elixir/venv/bin:$PATH" \
+    PATH="/usr/local/elixir/utils:/usr/local/elixir/venv/bin:$PATH" \
     PYTHONUNBUFFERED=1
 
 ENTRYPOINT ["/usr/sbin/apache2ctl", "-D", "FOREGROUND"]
