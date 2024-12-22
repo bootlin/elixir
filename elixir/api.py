@@ -53,7 +53,8 @@ class ApiIdentGetterResource:
         resp.media = {
             'definitions': [sym.__dict__ for sym in symbol_definitions],
             'references': [sym.__dict__ for sym in symbol_references],
-            'documentations': [sym.__dict__ for sym in symbol_doccomments]
+            'documentations': [sym.__dict__ for sym in symbol_doccomments],
+            'peeks': peaks
         }
 
         query.close()
