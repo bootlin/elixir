@@ -331,4 +331,31 @@ class Query:
             symbol_doccomments.append(SymbolInstance(path, docline))
 
         return symbol_definitions, symbol_references, symbol_doccomments
+    
+    def get_peeks_of_syms(self, version, symbol_definitions, symbol_references):
+
+        peeks = {}
+
+        def request_peeks(syms):
+            if len(syms) > 100:
+                return
+            for sym in syms:
+                if sym.path not in peeks:
+                    peeks[sym.path] = {}
+
+                content = self.scriptLines('get-file', version, "/" + sym.path)
+
+                if type(sym.line) is int:
+                    lines = (sym.line,)
+                else:
+                    lines = map(int, sym.line.split(','))
+
+                for num in lines:
+                    index = num - 1
+                    if index >= 0 and index < len(content):
+                        peeks[sym.path][num] = decode(content[index]).strip()
+
+        request_peeks(symbol_definitions)
+        request_peeks(symbol_references)
+        return peeks
 
