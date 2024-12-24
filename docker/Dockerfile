@@ -46,6 +46,7 @@ RUN python3 -m venv venv && \
 RUN mkdir -p /srv/elixir-data/
 
 COPY ./docker/000-default.conf /etc/apache2/sites-available/000-default.conf
+COPY ./docker/gitconfig /etc/gitconfig
 
 RUN a2enmod rewrite
 
