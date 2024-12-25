@@ -189,6 +189,15 @@ class UpdateVersions(Thread):
         db.vers.put(tag, obj, sync=True)
 
 
+def generate_defs_caches():
+    for key in db.defs.get_keys():
+        value = db.defs.get(key)
+        for family in ['C', 'K', 'D', 'M']:
+            if (lib.compatibleFamily(value.get_families(), family) or
+                        lib.compatibleMacro(value.get_macros(), family)):
+                db.defs_cache[family].put(key, b'')
+
+
 class UpdateDefs(Thread):
     def __init__(self, start, inc):
         Thread.__init__(self, name="UpdateDefsElixir")
@@ -255,6 +264,8 @@ class UpdateDefs(Thread):
                     if verbose:
                         print(f"def {type} {ident} in #{idx} @ {line}")
                     db.defs.put(ident, obj)
+
+        generate_defs_caches()
 
 
 class UpdateRefs(Thread):
@@ -586,6 +597,9 @@ project = lib.currentProject()
 print(project + ' - found ' + str(num_tags) + ' new tags')
 
 if not num_tags:
+    # Backward-compatibility: generate defs caches if they are empty.
+    if db.defs_cache['C'].db.stat()['nkeys'] == 0:
+        generate_defs_caches()
     exit(0)
 
 threads_list.append(UpdateIds(tag_buf))

@@ -188,9 +188,7 @@ class Query:
                 for tok in tokens:
                     even = not even
                     tok2 = prefix + tok
-                    if (even and self.db.defs.exists(tok2) and
-                        (lib.compatibleFamily(self.db.defs.get(tok2).get_families(), family) or
-                        lib.compatibleMacro(self.db.defs.get(tok2).get_macros(), family))):
+                    if even and self.db.defs_cache[family].exists(tok2):
                         tok = b'\033[31m' + tok2 + b'\033[0m'
                     else:
                         tok = lib.unescape(tok)

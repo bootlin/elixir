@@ -201,6 +201,12 @@ class DB:
             # Map serial number to filename
         self.vers = BsdDB(dir + '/versions.db', ro, PathList, shared=shared)
         self.defs = BsdDB(dir + '/definitions.db', ro, DefList, shared=shared)
+        self.defs_cache = {}
+        NOOP = lambda x: x
+        self.defs_cache['C'] = BsdDB(dir + '/definitions-cache-C.db', ro, NOOP, shared=shared)
+        self.defs_cache['K'] = BsdDB(dir + '/definitions-cache-K.db', ro, NOOP, shared=shared)
+        self.defs_cache['D'] = BsdDB(dir + '/definitions-cache-D.db', ro, NOOP, shared=shared)
+        self.defs_cache['M'] = BsdDB(dir + '/definitions-cache-M.db', ro, NOOP, shared=shared)
         self.refs = BsdDB(dir + '/references.db', ro, RefList, shared=shared)
         self.docs = BsdDB(dir + '/doccomments.db', ro, RefList, shared=shared)
         self.dtscomp = dtscomp
@@ -216,6 +222,10 @@ class DB:
         self.file.close()
         self.vers.close()
         self.defs.close()
+        self.defs_cache['C'].close()
+        self.defs_cache['K'].close()
+        self.defs_cache['D'].close()
+        self.defs_cache['M'].close()
         self.refs.close()
         self.docs.close()
         if self.dtscomp:
