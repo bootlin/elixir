@@ -54,8 +54,9 @@ RUN a2enmod rewrite
 EXPOSE 80
 
 ARG ELIXIR_VERSION
-ENV ELIXIR_VERSION=$ELIXIR_VERSION
 
-ENV ELIXIR_ROOT=/srv/elixir-data
+ENV ELIXIR_VERSION=$ELIXIR_VERSION \
+    ELIXIR_ROOT=/srv/elixir-data \
+    PATH="/usr/local/elixir/venv/bin:$PATH"
 
 ENTRYPOINT ["/usr/sbin/apache2ctl", "-D", "FOREGROUND"]
