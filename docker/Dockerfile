@@ -32,7 +32,7 @@ RUN \
     libyaml-0-2 \
     wget
 
-COPY . /usr/local/elixir/
+COPY ./requirements.txt /usr/local/elixir/
 
 WORKDIR /usr/local/elixir/
 
@@ -45,6 +45,7 @@ RUN python3 -m venv venv && \
 
 RUN mkdir -p /srv/elixir-data/
 
+COPY . /usr/local/elixir/
 COPY ./docker/000-default.conf /etc/apache2/sites-available/000-default.conf
 COPY ./docker/gitconfig /etc/gitconfig
 
