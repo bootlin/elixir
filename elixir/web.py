@@ -518,7 +518,7 @@ def generate_source(q, project, version, path):
     html_code_block = format_code(fname, code)
 
     # Replace line numbers by links to the corresponding line in the current file
-    html_code_block = sub('href="#codeline-(\d+)', 'name="L\\1" id="L\\1" href="#L\\1', html_code_block)
+    html_code_block = sub(r'href="#codeline-(\d+)', 'name="L\\1" id="L\\1" href="#L\\1', html_code_block)
 
     for f in filters:
         html_code_block = f.untransform_formatted_code(filter_ctx, html_code_block)
