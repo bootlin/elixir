@@ -1,7 +1,8 @@
 import re
 
 from . import shared
-from .utils import TokenType, simple_lexer, FirstInLine, split_by_groups, regex_concat, token_from_string
+from .utils import TokenType, simple_lexer, FirstInLine, split_by_groups, regex_concat, token_from_string, token_from_match, \
+        regex_or, match_token, Token
 
 # Lexers used to extract possible references from source files
 # Design inspired by Pygments lexers interface
@@ -143,4 +144,114 @@ class DTSLexer:
 
     def lex(self, **kwargs):
         return simple_lexer(self.rules, self.code, **kwargs)
+
+
+# https://www.kernel.org/doc/html/next/kbuild/kconfig-language.html#kconfig-syntax
+# https://www.kernel.org/doc/html/next/kbuild/kconfig-language.html#kconfig-hints
+
+# TODO better macros calls support
+
+class KconfigLexer:
+    hash_comment = r'#' + shared.singleline_comment_with_escapes_base
+
+    # NOTE pretty much all kconfig identifiers either start uppercase or with a number. this saves us from parsing macro calls
+    kconfig_identifier_starts_with_letters = r'[A-Z_][A-Z0-9a-z_-]*'
+    kconfig_identifier_starts_with_digits = r'[0-9]+[A-Z_a-z-][A-Z0-9a-z_-]*'
+    kconfig_identifier = regex_or(kconfig_identifier_starts_with_letters, kconfig_identifier_starts_with_digits)
+    # other perhaps interesting identifiers
+    kconfig_minor_identifier = r'[a-zA-Z0-9_/][a-zA-Z0-9_/.-]*'
+    kconfig_punctuation = r'[|&!=$()/_.+<>,-]'
+    kconfig_number = f'[0-9]+' # TODO does not handle hex numbers
+
+    # NOTE no identifiers are parsed out of KConfig help texts now, this changes the
+    # old behavior
+    # for example see all instances of USB in /u-boot/v2024.07/source/drivers/usb/Kconfig#L3
+
+    @staticmethod
+    def count_kconfig_help_whitespace(start_whitespace_str):
+        tabs = start_whitespace_str.count('\t')
+        spaces = start_whitespace_str.count(' ')
+        return 8*tabs + spaces + (len(start_whitespace_str)-tabs-spaces)
+
+    @staticmethod
+    def parse_kconfig_help_text(ctx, match):
+        # assumes called with matched help keyword, return the keyword
+        token, ctx = token_from_match(ctx, match, TokenType.SPECIAL)
+        yield token
+
+        # match whitespace after help
+        whitespace_after_help, ctx = match_token(ctx, r'\s*?\n', TokenType.WHITESPACE)
+        if whitespace_after_help is None:
+            # failed to match whitespace and newline after kconfig help - perhaps it's not the right context (macro call for exapmle)
+            return
+        else:
+            yield whitespace_after_help
+
+        line_matcher = re.compile(r'[^\n]*\n', flags=re.MULTILINE|re.UNICODE)
+
+        start_help_text_pos = ctx.pos
+        current_pos = ctx.pos
+        min_whitespace = None
+
+        def collect_tokens(start, end):
+            return Token(TokenType.COMMENT, ctx.code[start:end], (start, end), ctx.line)
+
+        # match first line with whitespace at the beginning
+        while current_pos < len(ctx.code):
+            line = line_matcher.match(ctx.code, current_pos)
+            if line is None:
+                yield collect_tokens(start_help_text_pos, current_pos)
+                return
+
+            token = line.group(0)
+            span = line.span()
+
+            if token == '\n':
+                # just an empty line
+                current_pos = span[1]
+                continue
+            else:
+                start_whitespace = re.match(r'\s*', token)
+                if start_whitespace is None:
+                    # no whitespace at the beginning of the line
+                    yield collect_tokens(start_help_text_pos, current_pos)
+                    return
+                elif min_whitespace is None:
+                    # first nonemtpy line - save amount of whitespace
+                    min_whitespace = KconfigLexer.count_kconfig_help_whitespace(start_whitespace.group(0))
+                    current_pos = span[1]
+                else:
+                    cur_whitespace = KconfigLexer.count_kconfig_help_whitespace(start_whitespace.group(0))
+                    if cur_whitespace < min_whitespace:
+                        yield collect_tokens(start_help_text_pos, current_pos)
+                        return
+                    else:
+                        current_pos = span[1]
+
+        yield collect_tokens(start_help_text_pos, current_pos)
+
+    rules = [
+        (shared.whitespace, TokenType.WHITESPACE),
+        (hash_comment, TokenType.COMMENT),
+        (shared.common_string_and_char, TokenType.STRING),
+        # for whatever reason u-boot kconfigs sometimes use ---help--- instead of help
+        # /u-boot/v2024.07/source/arch/arm/mach-sunxi/Kconfig#L732
+        (FirstInLine('-+help-+'), parse_kconfig_help_text),
+        (kconfig_punctuation, TokenType.PUNCTUATION),
+        (FirstInLine('help'), parse_kconfig_help_text),
+        (kconfig_identifier, TokenType.IDENTIFIER),
+        (kconfig_number, TokenType.NUMBER),
+        (kconfig_minor_identifier, TokenType.SPECIAL),
+        # things that do not match are probably things from a macro call.
+        # unless the syntax changed, or the help parser got confused.
+        # https://www.kernel.org/doc/html/next/kbuild/kconfig-macro-language.html
+        # both shell call and warning/error would require additinal parsing
+        (r'[^\n]+', TokenType.SPECIAL),
+    ]
+
+    def __init__(self, code):
+        self.code = code
+
+    def lex(self):
+        return simple_lexer(self.rules, self.code)
 
