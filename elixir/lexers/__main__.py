@@ -19,6 +19,8 @@ if __name__ == "__main__":
             lexer = lexers.KconfigLexer(f.read())
         elif filename.endswith(('.s', '.S')):
             lexer = lexers.GasLexer(f.read())
+        elif filename.endswith('Makefile'):
+            lexer = lexers.MakefileLexer(f.read())
         else:
             raise Exception("no lexer for filetype")
 
