@@ -21,6 +21,7 @@
 import sys
 import logging
 import subprocess, os
+import msgpack._cmsgpack
 
 logger = logging.getLogger(__name__)
 
@@ -189,9 +190,9 @@ def isIdent(bstr):
 
 def autoBytes(arg):
     if type(arg) is str:
-        arg = arg.encode()
+        arg = msgpack.dumps(arg)
     elif type(arg) is int:
-        arg = str(arg).encode()
+        arg = msgpack.dumps(arg)
     return arg
 
 def getDataDir():

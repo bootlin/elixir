@@ -54,7 +54,7 @@ function generateSymbolDefinitionsHTML(symbolDefinitions, project, version) {
       result += '<ul>';
       previous_type = sd.type;
     }
-    let ln = sd.line.toString().split(',');
+    let ln = [sd.line];
     if (ln.length == 1) {
       let n = ln[0];
       result += `<li><a href="/${project}/${version}/source/${sd.path}#L${n}"><strong>${sd.path}</strong>, line ${n} <em>(as a ${sd.type})</em></a>`;
@@ -87,7 +87,7 @@ function generateSymbolReferencesHTML(symbolReferences, project, version) {
   result += '<h2>Referenced in ' + symbolReferences.length.toString() + ' files:</h2>';
   result += '<ul>';
   for (let sr of symbolReferences) {
-    let ln = sr.line.split(',');
+    let ln = sr.line;
     if (ln.length == 1) {
       let n = ln[0];
       result += `<li><a href="/${project}/${version}/source/${sr.path}#L${n}"><strong>${sr.path}</strong>, line ${n}</a>`;
@@ -117,7 +117,7 @@ function generateDocCommentsHTML(symbolDocComments, project, version) {
   result += '<h2>Documented in ' + symbolDocComments.length.toString() + ' files:</h2>';
   result += '<ul>';
   for(let sd of symbolDocComments) {
-    let ln = sd.line.split(',');
+    let ln = sd.line;
     if(ln.length == 1) {
       let n = ln[0];
       result += `<li><a href="/${project}/${version}/source/${sd.path}#L${n}"><strong>${sd.path}</strong>, line ${n}</a>`;
