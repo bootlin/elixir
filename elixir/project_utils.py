@@ -4,6 +4,7 @@ from typing import List
 from .filters.utils import Filter, FilterContext
 from .filters import default_filters
 from .projects import projects
+from .lexers import default_lexers
 
 # Returns a list of applicable filters for project_name under provided filter context
 def get_filters(ctx: FilterContext, project_name: str) -> List[Filter]:
@@ -27,4 +28,20 @@ def get_filters(ctx: FilterContext, project_name: str) -> List[Filter]:
                     "Make sure project_filters in project.py is valid.")
 
     return [f for f in filters if f.check_if_applies(ctx)]
+
+def get_lexer(path: str, project_name: str):
+    project_config = projects.get(project_name)
+    if project_config is None or 'lexers' not in project_config:
+        lexers = default_lexers
+    else:
+        lexers = project_config['lexers']
+
+    path = path.lower()
+    for regex, lexer in lexers.items():
+        if re.match(regex, path):
+            if type(lexer) == tuple:
+                lexer_cls, kwargs = lexer
+                return lambda code: lexer_cls(code, **kwargs)
+            else:
+                return lambda code: lexer(code)
 

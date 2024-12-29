@@ -21,7 +21,8 @@
 from .lib import script, scriptLines, decode
 from . import lib
 from . import data
-import os
+from .lexers import TokenType
+import os, sys
 from collections import OrderedDict
 from urllib import parse
 
@@ -172,29 +173,38 @@ class Query:
 
             version = args[0]
             path = args[1]
+            lexer = args[2]
 
             filename = os.path.basename(path)
             family = lib.getFileFamily(filename)
 
-            if family != None:
+            if family is not None and lexer is not None:
                 buffer = BytesIO()
-                tokens = self.scriptLines('tokenize-file', version, path, family)
-                even = True
+                code = self.get_file_raw(version, path)
 
                 prefix = b''
                 if family == 'K':
                     prefix = b'CONFIG_'
 
-                for tok in tokens:
-                    even = not even
-                    tok2 = prefix + tok
-                    if (even and self.db.defs.exists(tok2) and
-                        (lib.compatibleFamily(self.db.defs.get(tok2).get_families(), family) or
-                        lib.compatibleMacro(self.db.defs.get(tok2).get_macros(), family))):
-                        tok = b'\033[31m' + tok2 + b'\033[0m'
-                    else:
-                        tok = lib.unescape(tok)
-                    buffer.write(tok)
+                for token_type, token, _, line in lexer(code).lex():
+                    token = token.encode()
+
+                    if token_type == TokenType.ERROR:
+                        print("error token: ", token, token_type, filename, line, file=sys.stderr)
+                    elif token_type == TokenType.IDENTIFIER:
+                        token_with_prefix = prefix + token
+                        token_in_db = self.db.defs.exists(token_with_prefix)
+                        if token_in_db:
+                            compatible = \
+                                lib.compatibleFamily(self.db.defs.get(token_with_prefix).get_families(), family) or \
+                                lib.compatibleMacro(self.db.defs.get(token_with_prefix).get_macros(), family)
+
+                            if compatible:
+                                buffer.write(b'\033[31m' + token_with_prefix + b'\033[0m')
+                                continue
+
+                    buffer.write(token)
+
                 return decode(buffer.getvalue())
             else:
                 return decode(self.script('get-file', version, path))

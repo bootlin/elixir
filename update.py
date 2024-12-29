@@ -22,13 +22,16 @@
 # Throughout, an "idx" is the sequential number associated with a blob.
 # This is different from that blob's Git hash.
 
+import sys
 from sys import argv
 from threading import Thread, Lock, Event, Condition
 
+from elixir.lexers import TokenType
 import elixir.lib as lib
 from elixir.lib import script, scriptLines
 import elixir.data as data
 from elixir.data import PathList
+from elixir.project_utils import get_lexer
 from find_compatible_dts import FindCompatibleDTS
 
 verbose = False
@@ -56,6 +59,7 @@ new_idxes = [] # (new idxes, Event idxes ready, Event defs ready, Event comps re
 bindings_idxes = [] # DT bindings documentation files
 idx_key_mod = 1000000
 defs_idxes = {} # Idents definitions stored with (idx*idx_key_mod + line) as the key.
+file_paths = {}
 
 tags_done = False # True if all tags have been added to new_idxes
 
@@ -163,7 +167,7 @@ class UpdateVersions(Thread):
         progress('vers: Thread finished', index)
 
     def update_versions(self, tag):
-        global blobs_lock
+        global blobs_lock, file_paths
 
         # Get blob hashes and associated file paths
         blobs = scriptLines('list-blobs', '-p', tag)
@@ -174,11 +178,13 @@ class UpdateVersions(Thread):
             with blobs_lock:
                 idx = db.blob.get(hash)
             buf.append((idx, path))
+            file_paths[idx] = path
 
         buf = sorted(buf)
         obj = PathList()
         for idx, path in buf:
             obj.append(idx, path)
+
 
             # Store DT bindings documentation files to parse them later
             if path[:33] == b'Documentation/devicetree/bindings':
@@ -275,6 +281,7 @@ class UpdateRefs(Thread):
 
             new_idxes[self.index][1].wait() # Make sure the tag is ready
             new_idxes[self.index][2].wait() # Make sure UpdateDefs processed the tag
+            new_idxes[self.index][4].wait() # Tell that UpdateVersions processed the tag
 
             with tags_refs_lock:
                 tags_refs[0] += 1
@@ -288,45 +295,53 @@ class UpdateRefs(Thread):
             progress('refs: Thread ' + str(tags_refs[1]) + '/' + str(self.inc) + ' finished', tags_refs[0])
 
     def update_references(self, idxes):
-        global hash_file_lock, defs_lock, refs_lock, tags_refs
+        global hash_file_lock, defs_lock, refs_lock, tags_refs, file_paths
 
         for idx in idxes:
             if idx % 1000 == 0: progress('refs: ' + str(idx), tags_refs[0])
 
             with hash_file_lock:
                 hash = db.hash.get(idx)
-                filename = db.file.get(idx)
+                filename = file_paths[idx].decode()
 
             family = lib.getFileFamily(filename)
             if family == None: continue
+
+            lexer = get_lexer(filename, project)
+            if lexer is None:
+                continue
+
+            try:
+                code = script('get-blob', hash).decode()
+            except UnicodeDecodeError:
+                code = script('get-blob', hash).decode('raw_unicode_escape')
 
             prefix = b''
             # Kconfig values are saved as CONFIG_<value>
             if family == 'K':
                 prefix = b'CONFIG_'
 
-            tokens = scriptLines('tokenize-file', '-b', hash, family)
-            even = True
-            line_num = 1
             idents = {}
             with defs_lock:
-                for tok in tokens:
-                    even = not even
-                    if even:
-                        tok = prefix + tok
+                for token_type, token, _, line in lexer(code).lex():
+                    if token_type == TokenType.ERROR:
+                        print("error token: ", token, token_type, filename, line, file=sys.stderr)
+                        continue
 
-                        if (db.defs.exists(tok) and
-                            not ( (idx*idx_key_mod + line_num) in defs_idxes and
-                                defs_idxes[idx*idx_key_mod + line_num] == tok ) and
-                            (family != 'M' or tok.startswith(b'CONFIG_'))):
-                            # We only index CONFIG_??? in makefiles
-                            if tok in idents:
-                                idents[tok] += ',' + str(line_num)
-                            else:
-                                idents[tok] = str(line_num)
+                    token = prefix + token.encode()
 
-                    else:
-                        line_num += tok.count(b'\1')
+                    if token_type != TokenType.IDENTIFIER:
+                        continue
+
+                    if (db.defs.exists(token) and
+                        not ( (idx*idx_key_mod + line) in defs_idxes and
+                            defs_idxes[idx*idx_key_mod + line] == token ) and
+                        (family != 'M' or token.startswith(b'CONFIG_'))):
+                        # We only index CONFIG_??? in makefiles
+                        if token in idents:
+                            idents[token] += ',' + str(line)
+                        else:
+                            idents[token] = str(line)
 
             with refs_lock:
                 for ident, lines in idents.items():
@@ -579,6 +594,7 @@ tag_buf = []
 for tag in scriptLines('list-tags'):
     if not db.vers.exists(tag):
         tag_buf.append(tag)
+        break
 
 num_tags = len(tag_buf)
 project = lib.currentProject()

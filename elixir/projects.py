@@ -1,4 +1,7 @@
 from .filters import *
+from collections import OrderedDict
+from .filters import *
+from .lexers import *
 
 # Dictionary of custom per-projects settings.
 # filters:
@@ -48,6 +51,29 @@ projects = {
             # Our solution is to ignore all includes in such paths
             (CppPathIncFilter, {"path_exceptions": {'^/include/uapi/.*'}}),
         ],
+        'lexers': OrderedDict({
+            r'.*\.(c|h|cpp|hpp|c++|cxx|cc)': CLexer,
+            r'makefile\..*':  MakefileLexer,
+            r'.*\.dts(i)?': DTSLexer,
+            r'kconfig.*': KconfigLexer, #TODO negative lookahead for .rst
+
+            r'/arch/alpha/.*\.s': (GasLexer, {"arch": "alpha"}),
+            r'/arch/arc/.*\.s': (GasLexer, {"arch": "arc"}),
+            r'/arch/arm/.*\.s': (GasLexer, {"arch": "arm32"}),
+            r'/arch/csky/.*\.s': (GasLexer, {"arch": "csky"}),
+            r'/arch/m68k/.*\.s': (GasLexer, {"arch": "m68k"}),
+            r'/arch/microblaze/.*\.s': (GasLexer, {"arch": "microblaze"}),
+            r'/arch/mips/.*\.s': (GasLexer, {"arch": "mips"}),
+            r'/arch/openrisc/.*\.s': (GasLexer, {"arch": "openrisc"}),
+            r'/arch/parisc/.*\.s': (GasLexer, {"arch": "parisc"}),
+            r'/arch/s390/.*\.s': (GasLexer, {"arch": "s390"}),
+            r'/arch/sh/.*\.s': (GasLexer, {"arch": "sh"}),
+            r'/arch/sparc/.*\.s': (GasLexer, {"arch": "sparc"}),
+            r'/arch/um/.*\.s': (GasLexer, {"arch": "x86"}),
+            r'/arch/x86/.*\.s': (GasLexer, {"arch": "x86"}),
+            r'/arch/xtensa/.*\.s': (GasLexer, {"arch": "xtensa"}),
+            r'.*\.s': GasLexer,
+        }),
     },
     'qemu': {
         'filters': [
@@ -63,6 +89,24 @@ projects = {
             CppPathIncFilter,
             *common_makefile_filters,
         ],
+        'lexers': OrderedDict({
+            r'.*\.(c|h|cpp|hpp|c++|cxx|cc)': CLexer,
+            r'makefile\..*':  MakefileLexer,
+            r'.*\.dts(i)?': DTSLexer,
+            r'kconfig.*': KconfigLexer, #TODO negative lookahead for .rst
+
+            r'/arch/arc/.*\.s': (GasLexer, {"arch": "arc"}),
+            r'/arch/arm/.*\.s': (GasLexer, {"arch": "arm32"}),
+            r'/arch/m68k/.*\.s': (GasLexer, {"arch": "m68k"}),
+            r'/arch/microblaze/.*\.s': (GasLexer, {"arch": "microblaze"}),
+            r'/arch/mips/.*\.s': (GasLexer, {"arch": "mips"}),
+            r'/arch/riscv/.*\.s': (GasLexer, {"arch": "riscv"}),
+            r'/arch/sh/.*\.s': (GasLexer, {"arch": "sh"}),
+            r'/arch/x86/.*\.s': (GasLexer, {"arch": "x86"}),
+            r'/arch/sandbox/.*\.s': (GasLexer, {"arch": "x86"}),
+            r'/arch/xtensa/.*\.s': (GasLexer, {"arch": "xtensa"}),
+            r'.*\.s': GasLexer,
+        }),
     },
     'uclibc-ng': {
         'filters': [
