@@ -48,8 +48,7 @@ index() {
         git fetch --tags other2
     fi
 
-    cd $ELIXIR_INSTALL
-    ./update.py $ELIXIR_THREADS
+    python3 -m elixir.update
 
     # The above can take so much time on the first run that it's worth running a new update
 
@@ -59,7 +58,7 @@ index() {
 
     echo "$project: 2nd indexing pass..."
     cd $ELIXIR_INSTALL
-    ./update.py $ELIXIR_THREADS
+    python3 -m elixir.update
 }
 
 export ELIXIR_INSTALL=$(dirname $(dirname $(readlink -f "$0")))

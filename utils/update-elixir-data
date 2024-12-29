@@ -34,5 +34,5 @@ for dir_name in $LXR_PROJ_DIR/*; do
     git fetch --all --tags
 
     cd $ELIXIR_INSTALL
-    ./update.py $ELIXIR_THREADS
+    python3 -m elixir.update
 done
