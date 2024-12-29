@@ -1,23 +1,51 @@
-from typing import List
+from .ident import IdentFilter
 
-from .utils import Filter, FilterContext
-from .projects import project_filters, default_filters
+from .cppinc import CppIncFilter
+from .cpppathinc import CppPathIncFilter
 
-# Returns a list of applicable filters for project_name under provided filter context
-def get_filters(ctx: FilterContext, project_name: str) -> List[Filter]:
-    filter_classes = project_filters.get(project_name, default_filters)
-    filters = []
+from .defconfig import DefConfigIdentsFilter
+from .configin import ConfigInFilter
 
-    for filter_cls in filter_classes:
-        if type(filter_cls) == tuple and len(filter_cls) == 2:
-            cls, kwargs = filter_cls
-            filters.append(cls(**kwargs))
-        elif type(filter_cls) == type:
-            filters.append(filter_cls())
-        else:
-            raise ValueError(f"Invalid filter: {filter_cls}, " \
-                    "should be either a two element tuple or a type. " \
-                    "Make sure project_filters in project.py is valid.")
+from .kconfig import KconfigFilter
+from .kconfigidents import KconfigIdentsFilter
 
-    return [f for f in filters if f.check_if_applies(ctx)]
+from .dtsi import DtsiFilter
+from .dtscompdocs import DtsCompDocsFilter
+from .dtscompcode import DtsCompCodeFilter
+from .dtscompdts import DtsCompDtsFilter
+
+from .makefileo import MakefileOFilter
+from .makefiledtb import MakefileDtbFilter
+from .makefiledir import MakefileDirFilter
+from .makefilesubdir import MakefileSubdirFilter
+from .makefilefile import MakefileFileFilter
+from .makefilesrctree import MakefileSrcTreeFilter
+from .makefilesubdir import MakefileSubdirFilter
+
+
+# List of filters applied to all projects
+default_filters = [
+    DtsCompCodeFilter,
+    DtsCompDtsFilter,
+    DtsCompDocsFilter,
+    IdentFilter,
+    CppIncFilter,
+]
+
+# List of filters for Kconfig files
+common_kconfig_filters = [
+    KconfigFilter,
+    KconfigIdentsFilter,
+    DefConfigIdentsFilter,
+]
+
+# List of filters for Makefiles
+common_makefile_filters = [
+    MakefileOFilter,
+    MakefileDtbFilter,
+    MakefileDirFilter,
+    MakefileFileFilter,
+    MakefileSubdirFilter,
+    MakefileSrcTreeFilter,
+]
 
