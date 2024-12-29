@@ -1299,30 +1299,20 @@ main {
 .message-banner-mobile {
   display: none;
   text-align: center;
-  background: #fe003e;
+  background: #d31d4a;
   color: #fff;
   font-family: Arial;
-  -webkit-transform:rotate(-180deg);
-  -moz-transform:rotate(-180deg);
-  -o-transform: rotate(-180deg);
-  -ms-transform:rotate(-180deg);
-  transform: rotate(-180deg);
-  left: -58px;
-  bottom: 58px;
-  padding: 5px;
   width: min-content;
-  writing-mode: vertical-rl;
-  margin-bottom: 40px;
-  min-height: 150px;
+  width: 100%;
 }
 .message-banner-mobile .title {
   margin: 0;
-  font-size: 25px;
+  font-size: 20px;
   text-wrap: pretty;
 }
 .message-banner-mobile .subtitle {
   margin: 0;
-  font-size: 11px;
+  font-size: 15px;
   word-break: break-word;
 }
 .message-banner-mobile:hover {
@@ -1513,7 +1503,7 @@ main {
   padding: 0;
   margin: 0;
   display: inline-block;
-  line-height: 2.5rem; /* little hack for firefox vertical align */
+  line-height: 1.5rem; /* little hack for firefox vertical align */
 }
 .social-icons li {
   display: inline-block;
@@ -1536,14 +1526,16 @@ main {
   }
   .header .social-icons {
     position: static;
+    background-color: rgba(0,0,0,.5);
+    width: 100%;
   }
   .social-icons a::before {
     font-size: 1.5rem;
     color: #9da9ea;
   }
   .header-main {
-    display: grid;
-    grid-template-columns: 40px 1fr 40px;
+    display: flex;
+    flex-direction: column-reverse;
   }
 }
 
