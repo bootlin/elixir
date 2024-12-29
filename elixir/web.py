@@ -33,7 +33,7 @@ import jinja2
 
 from .lib import validFamily
 from .query import Query, SymbolInstance
-from .filters import get_filters
+from .project_utils import get_filters, get_lexer
 from .filters.utils import FilterContext
 from .autocomplete import AutocompleteResource
 from .api import ApiIdentGetterResource
@@ -485,7 +485,8 @@ def format_code(filename, code):
 # version: requested version of the project
 # path: path to the file in the repository
 def generate_source(q, project, version, path):
-    code = q.query('file', version, path)
+    lexer = get_lexer(path, project)
+    code = q.query('file', version, path, lexer)
 
     _, fname = os.path.split(path)
     _, extension = os.path.splitext(fname)
