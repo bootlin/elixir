@@ -21,6 +21,17 @@ def match_regex(regex):
     rule = re.compile(regex, flags=re.MULTILINE)
     return lambda code, pos, _: rule.match(code, pos)
 
+def match_token(ctx, pattern, token_type):
+    match = re.compile(pattern).match(ctx.code, ctx.pos)
+    if match is None:
+        return None, ctx
+    else:
+        span = match.span()
+        result = Token(token_type, ctx.code[span[0]:span[1]], span, ctx.line)
+        ctx.pos = span[1] 
+        ctx.line += result.token.count('\n')
+        return result, ctx
+
 def split_by_groups(*token_types):
     def split(ctx, match):
         pos = ctx.pos

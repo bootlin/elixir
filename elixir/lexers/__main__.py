@@ -15,6 +15,8 @@ if __name__ == "__main__":
             lexer = lexers.CLexer(f.read())
         elif filename.endswith(('.dts', '.dtsi')):
             lexer = lexers.DTSLexer(f.read())
+        elif filename.endswith('Kconfig'):
+            lexer = lexers.KconfigLexer(f.read())
         else:
             raise Exception("no lexer for filetype")
 
