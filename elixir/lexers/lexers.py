@@ -255,3 +255,110 @@ class KconfigLexer:
     def lex(self):
         return simple_lexer(self.rules, self.code)
 
+
+# https://sourceware.org/binutils/docs/as.html#Syntax
+class GasLexer:
+    # https://sourceware.org/binutils/docs/as.html#Symbol-Intro
+    # apparently dots are okay, BUT ctags removes the first dot from labels, for example. same with dollars
+    # /musl/v1.2.5/source/src/string/aarch64/memcpy.S#L92
+    gasm_identifier = r'[a-zA-Z0-9_][a-zA-Z0-9_$.]*'
+
+    gasm_flonum = r'0?[a-zA-Z][+-]?([0-9]|\\s*\n\s*)*\.([0-9]|\\s*\n\s*)*([eE][+-]?[0-9]+)?'
+    gasm_number = regex_or(gasm_flonum, shared.common_hexidecimal_integer, shared.common_binary_integer,
+                           shared.common_decimal_integer)
+
+    gasm_char = r"'(\\.|.|\n)"
+    gasm_string = f'(({ shared.double_quote_string_with_escapes })|({ gasm_char }))'
+
+    gasm_comment_chars_map = {
+        'generic': (r'#\s',),
+
+        'nios2': (r'#',),
+        'openrisc': (r'#',),
+        'powerpc': (r'#',),
+        's390': (r'#',),
+        'xtensa': (r'#',),
+        'microblaze': (r'#',),
+        'mips': (r'#',),
+        'alpha': (r'#',),
+        'csky': (r'#',),
+        # BUT double pipe in macros is an operator... and # not in the first line in
+        # /linux/v6.10.7/source/arch/m68k/ifpsp060/src/fplsp.S
+        'm68k': ('|', '^#', r'#\s'),
+        'arc': ('# ', ';'),
+
+        # https://sourceware.org/binutils/docs/as.html#HPPA-Syntax
+        # /linux/v6.10.7/source/arch/parisc/kernel/perf_asm.S#L28
+        'parisc': (';',),
+        'x86': (';',),
+        'tic6x': (';', '*'), # cx6, tms320, although the star is sketchy
+
+        # in below, # can be a comment only if the first character of the line
+
+        # https://sourceware.org/binutils/docs/as.html#SH-Syntax
+        # /linux/v6.10.7/source/arch/sh/kernel/head_32.S#L58
+        'sh': ('!', '^#'),
+        # https://sourceware.org/binutils/docs/as.html#Sparc_002dSyntax
+        # /linux/v6.10.7/source/arch/sparc/lib/memset.S#L125
+        'sparc': ('!', '^#'),
+        # used in ARM https://sourceware.org/binutils/docs/as.html#ARM-Syntax
+        # /linux/v6.10.7/source/arch/arm/mach-sa1100/sleep.S#L33
+        'arm32': ('@', '^#'),
+        'cris': (';', '^#'),
+        'avr': (';', '^#'),
+        # blackfin, tile
+    }
+
+    gasm_punctuation = r'[.,\[\]()<>{}%&+*!|@#$;:^/\\=~-]'
+    # TODO make sure all relevant directives are listed here
+    gasm_preprocessor = r'#[ \t]*(define|ifdef|ifndef|undef|if|else|elif|endif)'
+
+    rules_before_comments = [
+        (shared.whitespace, TokenType.WHITESPACE),
+        # don't interpret macro concatenate as a comment
+        ('##', TokenType.PUNCTUATION),
+        # don't interpret or as a comment
+        (r'\|\|', TokenType.PUNCTUATION),
+        (FirstInLine(regex_or(shared.c_preproc_include, shared.c_preproc_warning_and_error)), TokenType.SPECIAL),
+        (FirstInLine(gasm_preprocessor), TokenType.SPECIAL),
+        (shared.common_slash_comment, TokenType.COMMENT),
+    ]
+
+    rules_after_comments = [
+        (gasm_string, TokenType.STRING),
+        (gasm_number, TokenType.NUMBER),
+        (gasm_identifier, TokenType.IDENTIFIER),
+        (gasm_punctuation, TokenType.PUNCTUATION),
+    ]
+
+    def __init__(self, code, arch='generic'):
+        self.code = code
+        self.comment_chars = self.gasm_comment_chars_map[arch]
+
+    def get_arch_rules(self):
+        result = []
+
+        regex_chars = '*?+^.$\\[]|()'
+        add_slash = lambda ch: '\\' + ch if ch in regex_chars else ch
+
+        for comment_char in self.comment_chars:
+            if comment_char[0] == '^':
+                result.append((
+                    FirstInLine(add_slash(comment_char[1]) + shared.singleline_comment_with_escapes_base),
+                    TokenType.COMMENT
+                ))
+            else:
+                result.append((
+                    add_slash(comment_char) + shared.singleline_comment_with_escapes_base,
+                    TokenType.COMMENT)
+                )
+
+        return result
+
+    def lex(self):
+        rules = self.rules_before_comments + \
+                self.get_arch_rules() + \
+                self.rules_after_comments
+
+        return simple_lexer(rules, self.code)
+
