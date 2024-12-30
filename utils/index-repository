@@ -26,4 +26,4 @@ done
 
 export LXR_REPO_DIR=$dir/repo
 export LXR_DATA_DIR=$dir/data
-python3 /usr/local/elixir/update.py $ELIXIR_THREADS
+PWD=/usr/local/elixir/ python3 -m elixir.update
