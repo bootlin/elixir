@@ -173,6 +173,7 @@ class Query:
 
             filename = os.path.basename(path)
             family = lib.getFileFamily(filename)
+            assert family in lib.CACHED_DEFINITIONS_FAMILIES, f"family {family} must have its definitions cached"
 
             if family != None:
                 buffer = BytesIO()

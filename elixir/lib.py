@@ -216,6 +216,10 @@ def currentProject():
 # List all families supported by Elixir
 families = ['A', 'B', 'C', 'D', 'K', 'M']
 
+# Those families have databases that cache the content of definitions.db.
+# This allows faster lookup.
+CACHED_DEFINITIONS_FAMILIES = ['C', 'K', 'D', 'M']
+
 def validFamily(family):
     return family in families
 

@@ -20,7 +20,7 @@
 
 import berkeleydb
 import re
-from .lib import autoBytes
+from . import lib
 import os
 import os.path
 import errno
@@ -159,11 +159,11 @@ class BsdDB:
         self.ctype = contentType
 
     def exists(self, key):
-        key = autoBytes(key)
+        key = lib.autoBytes(key)
         return self.db.exists(key)
 
     def get(self, key):
-        key = autoBytes(key)
+        key = lib.autoBytes(key)
         p = self.db.get(key)
         return self.ctype(p) if p is not None else None
 
@@ -171,8 +171,8 @@ class BsdDB:
         return self.db.keys()
 
     def put(self, key, val, sync=False):
-        key = autoBytes(key)
-        val = autoBytes(val)
+        key = lib.autoBytes(key)
+        val = lib.autoBytes(val)
         if type(val) is not bytes:
             val = val.pack()
         self.db.put(key, val)
@@ -207,6 +207,7 @@ class DB:
         self.defs_cache['K'] = BsdDB(dir + '/definitions-cache-K.db', ro, NOOP, shared=shared)
         self.defs_cache['D'] = BsdDB(dir + '/definitions-cache-D.db', ro, NOOP, shared=shared)
         self.defs_cache['M'] = BsdDB(dir + '/definitions-cache-M.db', ro, NOOP, shared=shared)
+        assert sorted(self.defs_cache.keys()) == sorted(lib.CACHED_DEFINITIONS_FAMILIES)
         self.refs = BsdDB(dir + '/references.db', ro, RefList, shared=shared)
         self.docs = BsdDB(dir + '/doccomments.db', ro, RefList, shared=shared)
         self.dtscomp = dtscomp
