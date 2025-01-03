@@ -28,7 +28,7 @@ function identUrl(project, ident, version, family) {
   ]
 */
 
-function generateSymbolDefinitionsHTML(symbolDefinitions, project, version) {
+function generateSymbolDefinitionsHTML(symbolDefinitions, peeks, project, version) {
   let result = "";
   let typesCount = {};
   let previous_type = "";
@@ -55,7 +55,7 @@ function generateSymbolDefinitionsHTML(symbolDefinitions, project, version) {
       previous_type = sd.type;
     }
     let ln = sd.line.toString().split(',');
-    if (ln.length == 1) {
+    if (ln.length == 1 && !peeks) {
       let n = ln[0];
       result += `<li><a href="/${project}/${version}/source/${sd.path}#L${n}"><strong>${sd.path}</strong>, line ${n} <em>(as a ${sd.type})</em></a>`;
     } else {
@@ -66,7 +66,14 @@ function generateSymbolDefinitionsHTML(symbolDefinitions, project, version) {
         result += `<li><a href="/${project}/${version}/source/${sd.path}#L${ln[0]}"><strong>${sd.path}</strong> <em>(as a ${sd.type})</em></a>`;
         result += '<ul>';
         for(let n of ln) {
-          result += `<li><a href="/${project}/${version}/source/${sd.path}#L${n}">line ${n}</a></li>`;
+          result += `<li><a href="/${project}/${version}/source/${sd.path}#L${n}"><span>line ${n}</span>`;
+          let srcLine = peeks?.[sd.path]?.[n];
+          if(srcLine) {
+            let tag = document.createElement("pre");
+            tag.textContent = srcLine;
+            result += tag.outerHTML;
+          }
+          result += '</a></li>'
         }
         result += '</ul>';
       }
@@ -77,7 +84,7 @@ function generateSymbolDefinitionsHTML(symbolDefinitions, project, version) {
   return result;
 }
 
-function generateSymbolReferencesHTML(symbolReferences, project, version) {
+function generateSymbolReferencesHTML(symbolReferences, peeks, project, version) {
   let result = "";
 
   if(symbolReferences.length == 0) {
@@ -88,7 +95,7 @@ function generateSymbolReferencesHTML(symbolReferences, project, version) {
   result += '<ul>';
   for (let sr of symbolReferences) {
     let ln = sr.line.split(',');
-    if (ln.length == 1) {
+    if (ln.length == 1 && !peeks) {
       let n = ln[0];
       result += `<li><a href="/${project}/${version}/source/${sr.path}#L${n}"><strong>${sr.path}</strong>, line ${n}</a>`;
     } else {
@@ -99,7 +106,14 @@ function generateSymbolReferencesHTML(symbolReferences, project, version) {
         result += `<li><a href="/${project}/${version}/source/${sr.path}#L${ln[0]}"><strong>${sr.path}</strong></a>`;
         result += '<ul>'
         for(let n of ln) {
-          result += `<li><a href="/${project}/${version}/source/${sr.path}#L${n}">line ${n}</a>`
+          result += `<li><a href="/${project}/${version}/source/${sr.path}#L${n}"><span>line ${n}</span>`
+          let srcLine = peeks?.[sr.path]?.[n];
+          if (srcLine) {
+            let tag = document.createElement("pre");
+            tag.textContent = srcLine;
+            result += tag.outerHTML;
+          }
+          result += '</a></li>'
         }
         result += '</ul>'
       }
@@ -143,10 +157,11 @@ function generateReferencesHTML(data, project, version) {
   let symbolDefinitions = data["definitions"];
   let symbolReferences = data["references"];
   let symbolDocumentations = data["documentations"];
+  let peeks = data["peeks"];
   return '<div class="lxrident">' +
     generateDocCommentsHTML(symbolDocumentations, project, version) +
-    generateSymbolDefinitionsHTML(symbolDefinitions, project, version) +
-    generateSymbolReferencesHTML(symbolReferences, project, version) +
+    generateSymbolDefinitionsHTML(symbolDefinitions, peeks, project, version) +
+    generateSymbolReferencesHTML(symbolReferences, peeks, project, version) +
     '</div>';
 }
 
