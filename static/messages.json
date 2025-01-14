@@ -1,15 +1,15 @@
 [
     {
         "desktop": {
-            "title": "Buildroot system development training",
-            "body": "Jan 13-15, 2025",
+            "title": "In-person Linux kernel drivers training",
+            "body": "Jun 16-20, 2025",
             "action": "Register",
-            "link": "https://shop.bootlin.com/en/event/106"
+            "link": "https://shop.bootlin.com/en/event/126"
         },
         "mobile": {
-            "title": "Buildroot system development training",
-            "body": "Jan 13-15, 2025",
-            "link": "https://shop.bootlin.com/en/event/106"
+            "title": "In-person Linux kernel drivers training",
+            "body": "June 16-20, 2025",
+            "link": "https://shop.bootlin.com/en/event/126"
         }
     },
     {
@@ -69,19 +69,6 @@
     {
         "desktop": {
             "title": "Yocto / OpenEmbedded training",
-            "body": "Jan 20-23, 2025",
-            "action": "Register",
-            "link": "https://shop.bootlin.com/en/event/121"
-        },
-        "mobile": {
-            "title": "Yocto / OpenEmbedded training",
-            "body": "Jan 20-23, 2025",
-            "link": "https://shop.bootlin.com/en/event/121"
-        }
-    },
-    {
-        "desktop": {
-            "title": "Yocto / OpenEmbedded training",
             "body": "Feb 10-13, 2025",
             "action": "Register",
             "link": "https://shop.bootlin.com/en/event/125"
@@ -105,19 +92,6 @@
             "action": "Register",
             "link": "https://shop.bootlin.com/en/event/116"
         }
-    },
-    {
-        "desktop": {
-            "title": "Audio with Embedded Linux training",
-            "body": "Jan 13-17, 2025",
-            "action": "Register",
-            "link": "https://shop.bootlin.com/en/event/105"
-        },
-        "mobile": {
-            "title": "Audio with Embedded Linux training",
-            "body": "Jan 13-17, 2025",
-            "link": "https://shop.bootlin.com/en/event/105"
-       }
     },
     {
         "desktop": {
