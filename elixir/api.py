@@ -46,14 +46,15 @@ class ApiIdentGetterResource:
         if version == 'latest':
             version = query.query('latest')
 
-        symbol_definitions, symbol_references, symbol_doccomments = query.query('ident', version, ident, family)
+        symbol_definitions, symbol_references, symbol_doccomments, peaks = query.query('ident', version, ident, family)
 
         resp.status = falcon.HTTP_200
         resp.content_type = falcon.MEDIA_JSON
         resp.media = {
             'definitions': [sym.__dict__ for sym in symbol_definitions],
             'references': [sym.__dict__ for sym in symbol_references],
-            'documentations': [sym.__dict__ for sym in symbol_doccomments]
+            'documentations': [sym.__dict__ for sym in symbol_doccomments],
+            'peeks': peaks
         }
 
         query.close()
