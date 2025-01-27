@@ -16,3 +16,6 @@ http/robots.txt
 *.swp
 *~
 ~*
+
+# https://direnv.net/
+.envrc
