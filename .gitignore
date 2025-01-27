@@ -5,6 +5,7 @@ tags
 .idea/
 env/
 venv/
+/data/
 
 # Web-specific
 http/images
