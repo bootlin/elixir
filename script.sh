@@ -48,7 +48,8 @@ get_tags()
     version_dir |
     sed 's/$/.0/' |
     sort -V |
-    sed 's/\.0$//'
+    sed 's/\.0$//' |
+    head -n1000
 }
 
 list_tags()
@@ -65,7 +66,7 @@ list_tags_h()
 
 get_latest_tags()
 {
-    git tag | version_dir | grep -v '\-rc' | sort -Vr
+    git tag | version_dir | grep -v '\-rc' | sort -Vr | head -n1000
 }
 
 get_type()
