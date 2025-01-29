@@ -29,7 +29,7 @@ update_index()
         # Not using `docker run --rm` to avoid losing logs.
         docker rm lxr-indexing || true
 
-        docker run -it --name lxr-indexing		\
+        docker run -i --name lxr-indexing		\
         	-v "$cold_data":/srv/elixir-data	\
         	--entrypoint /bin/bash elixir		\
         	-c 'LXR_PROJ_DIR=/srv/elixir-data /usr/local/elixir/utils/update-elixir-data'
