@@ -69,7 +69,11 @@ index()
         restart_container
 }
 
-functions="$(declare -F | sed 's/^declare -f //' | sort)"
+functions="deploy
+index
+restart_container
+update_index
+update_sources"
 
 if test "$#" -eq 0 || ! echo "$functions" | grep -q "^$1$"; then
         >&2 echo "usage: $0 <$(echo "$functions" | paste -sd'|')>..."
