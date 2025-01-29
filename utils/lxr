@@ -33,7 +33,7 @@ update_index()
         	--entrypoint /bin/bash elixir		\
         	-c 'LXR_PROJ_DIR=/srv/elixir-data /usr/local/elixir/utils/update-elixir-data'
 
-        ln -snf "$cold_data" elixir-data
+        ln -snf "$cold_data" /srv/elixir-data
 }
 
 update_sources()
