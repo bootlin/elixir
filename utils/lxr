@@ -22,8 +22,9 @@ update_index()
         	exit 1
         fi
 
-        # $cold_data cannot be "", but we give it a default anyway!
-        rm -rf "${cold_data:-713635333a}/*"
+        test -z "$cold_data" && exit 1 # Last check before "rm -rf /*"!
+        rm -rf "$cold_data/*"
+        cp -r $hot_data/* "$cold_data/"
 
         # Not using `docker run --rm` to avoid losing logs.
         docker rm lxr-indexing || true
