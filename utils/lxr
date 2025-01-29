@@ -1,5 +1,16 @@
 #!/bin/sh
 
+checksum()
+{
+    # We don't checksum the full databases, that is slow. Instead, we checksum
+    # the list of database names and sizes. We never remove versions when
+    # indexing so the size will forever grow.
+    stat --printf="%n\t%s\n" $1/*/data/*.db | \
+        sort | \
+        sha256sum | \
+        cut -d' ' -f1
+}
+
 update_index()
 {
         # We do an A/B scheme: there are two folders and one symlink pointing to either:
@@ -34,7 +45,11 @@ update_index()
         	--entrypoint /bin/bash elixir		\
         	-c 'LXR_PROJ_DIR=/srv/elixir-data /usr/local/elixir/utils/update-elixir-data'
 
-        ln -snf "$cold_data" /srv/elixir-data
+        # Only update the symlink when something new got indexed. We want to
+        # avoid restarting the HTTP server container if nothing changed.
+        if test "$(checksum "$cold_data")" != "$(checksum "$hot_data")"; then
+            ln -snf "$cold_data" /srv/elixir-data
+        fi
 }
 
 update_sources()
@@ -66,8 +81,14 @@ deploy()
 
 index()
 {
+        hot_data="$(readlink -f /srv/elixir-data)"
+
         update_index
-        restart_container
+
+        new_hot_data="$(readlink -f /srv/elixir-data)"
+        if test "$hot_data" != "$new_hot_data"; then
+            restart_container
+        fi
 }
 
 functions="deploy
