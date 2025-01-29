@@ -1,0 +1,88 @@
+#!/bin/sh
+
+update_index()
+{
+        # We do an A/B scheme: there are two folders and one symlink pointing to either:
+        #  - /srv/elixir-data-a
+        #  - /srv/elixir-data-b
+        #  - /srv/elixir-data   is the symlink.
+        #
+        # "Hot" means the data pointed by the symlink, ie the one served on prod.
+        # "Cold" means the other repo. We only delete it at next indexing to simplify
+        # debugging & recovery.
+
+        hot_data="$(readlink -f /srv/elixir-data)"
+
+        if test "/srv/elixir-data-a" = "$hot_data"; then
+        	cold_data="/srv/elixir-data-b"
+        elif test "/srv/elixir-data-b" = "$hot_data"; then
+        	cold_data="/srv/elixir-data-a"
+        else
+        	>&2 echo "error: unexpected data symlink: $hot_data"
+        	exit 1
+        fi
+
+        # $cold_data cannot be "", but we give it a default anyway!
+        rm -rf "${cold_data:-713635333a}/*"
+
+        # Not using `docker run --rm` to avoid losing logs.
+        docker rm lxr-indexing || true
+
+        docker run -it --name lxr-indexing		\
+        	-v "$cold_data":/srv/elixir-data	\
+        	--entrypoint /bin/bash elixir		\
+        	-c 'LXR_PROJ_DIR=/srv/elixir-data /usr/local/elixir/utils/update-elixir-data'
+
+        ln -snf "$cold_data" elixir-data
+}
+
+update_sources()
+{
+        src=/usr/local/elixir
+
+        git -C $src fetch
+        git -C $src rebase
+
+        version=$(git -C $src rev-parse --short HEAD)
+
+        docker build -t elixir                          \
+                --build-arg ELIXIR_VERSION=$version     \
+                -f $src/docker/Dockerfile $src
+}
+
+restart_container()
+{
+        docker kill lxr || true
+        docker rm lxr || true
+        docker run -d --name lxr -p 8080:80 -v /srv/elixir-data:/srv/elixir-data:ro elixir
+}
+
+deploy()
+{
+        update_sources
+        restart_container
+}
+
+index()
+{
+        update_index
+        restart_container
+}
+
+functions="$(declare -F | sed 's/^declare -f //' | sort)"
+
+if test "$#" -eq 0 || ! echo "$functions" | grep -q "^$1$"; then
+        >&2 echo "usage: $0 <$(echo "$functions" | paste -sd'|')>..."
+        >&2 echo
+        >&2 echo "deploy:            update_sources && restart_container"
+        >&2 echo "index:             update_index && restart_container"
+        >&2 echo "restart_container: docker kill, docker run"
+        >&2 echo "update_index:      copy data, run update container, swap symlink"
+        >&2 echo "update_sources:    git pull, docker build container"
+
+        exit 1
+fi
+
+set -ex
+
+$1
