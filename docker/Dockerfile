@@ -45,7 +45,6 @@ RUN python3 -m venv venv && \
 
 RUN mkdir -p /srv/elixir-data/
 
-COPY . /usr/local/elixir/
 COPY ./docker/000-default.conf /etc/apache2/sites-available/000-default.conf
 COPY ./docker/gitconfig /etc/gitconfig
 
@@ -59,5 +58,7 @@ ENV ELIXIR_VERSION=$ELIXIR_VERSION \
     ELIXIR_ROOT=/srv/elixir-data \
     PATH="/usr/local/elixir/utils:/usr/local/elixir/venv/bin:$PATH" \
     PYTHONUNBUFFERED=1
+
+COPY . /usr/local/elixir/
 
 ENTRYPOINT ["/usr/sbin/apache2ctl", "-D", "FOREGROUND"]
