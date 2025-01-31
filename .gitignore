@@ -16,3 +16,4 @@ http/robots.txt
 *.swp
 *~
 ~*
+.envrc
