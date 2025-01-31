@@ -33,7 +33,7 @@
                     <li>
                     <a href="{{ symbol.lines[0].url }}">
                         <strong>{{ symbol.path }}</strong>
-                        {%- if symbol.lines|length == 1 %},
+                        {%- if symbol.lines|length == 1 and symbol.peeks|length == 0 %},
                             line {{ symbol.lines[0].lineno }}
                         {%- elif symbols|length > 100 %},
                             <em>{{ symbol.lines|length }} times</em>
@@ -42,10 +42,14 @@
                             <em>(as a {{ symbol.type }})</em>
                         {% endif %}
                     </a>
-                    {% if symbol.lines|length > 1 and symbols|length <= 100 %}
+                    {% if (symbol.lines|length > 1 or symbol.peeks|length > 0) and symbols|length <= 100 %}
                         <ul>
                         {% for line, url in symbol.lines %}
-                            <li><a href="{{ url }}">line {{ line }}</a>
+                            <li><a href="{{ url }}"><span>line {{ line }}</span>
+                                {% if line in symbol.peeks %}
+                                    <pre>{{ symbol.peeks[line] }}</pre>
+                                {% endif %}
+                            </a></li>
                         {% endfor %}
                         </ul>
                     {% endif %}
