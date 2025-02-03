@@ -196,19 +196,17 @@ def autoBytes(arg):
 
 def getDataDir():
     try:
-        dir=os.environ['LXR_DATA_DIR']
+        return os.environ['LXR_DATA_DIR']
     except KeyError:
         print(sys.argv[0] + ': LXR_DATA_DIR needs to be set')
         exit(1)
-    return dir
 
 def getRepoDir():
     try:
-        dir=os.environ['LXR_REPO_DIR']
+        return os.environ['LXR_REPO_DIR']
     except KeyError:
         print(sys.argv[0] + ': LXR_REPO_DIR needs to be set')
         exit(1)
-    return dir
 
 def currentProject():
     return os.path.basename(os.path.dirname(getDataDir()))
