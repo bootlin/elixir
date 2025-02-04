@@ -13,6 +13,11 @@ checksum()
 
 update_index()
 {
+        flock -n /tmp/lxr-indexing-lock $0 update_index_nolock
+}
+
+update_index_nolock()
+{
         # We do an A/B scheme: there are two folders and one symlink pointing to either:
         #  - /srv/elixir-data-a
         #  - /srv/elixir-data-b
@@ -95,10 +100,11 @@ functions="deploy
 index
 restart_container
 update_index
+update_index_nolock
 update_sources"
 
 if test "$#" -eq 0 || ! echo "$functions" | grep -q "^$1$"; then
-        >&2 echo "usage: $0 <$(echo "$functions" | paste -sd'|')>..."
+        >&2 echo "usage: $0 <deploy|index|restart_container|update_index|update_sources>..."
         >&2 echo
         >&2 echo "deploy:            update_sources && restart_container"
         >&2 echo "index:             update_index && restart_container"
