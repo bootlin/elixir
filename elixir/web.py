@@ -359,6 +359,17 @@ class IncompleteURLRedirectResource:
         resp.status = falcon.HTTP_FOUND
         resp.location = stringify_source_path(project, version, '/')
 
+# Handles /{project}/{version}/... URLs with unknown "command"
+class UnknownPathResource:
+    def on_get(self, req, resp, project: str, version: str, family: str = "", subcmd: str = "", path: str = ""):
+        project, version, query = validate_project_and_version(req.context, project, version)
+
+        raise ElixirProjectError('Error', 'Invalid path',
+                          project=project, version=version, query=query,
+                          extra_template_args={
+                              'current_family': 'A',
+                          })
+
 
 # File families available in the dropdown next to search input in the topbar
 TOPBAR_FAMILIES = {
@@ -808,6 +819,9 @@ def get_application():
     app.add_route('/{project}', IncompleteURLRedirectResource())
     app.add_route('/{project}/{version}', IncompleteURLRedirectResource())
     app.add_route('/{project}/{version}/', IncompleteURLRedirectResource())
+    app.add_route('/{project}/{version}/{family}', UnknownPathResource())
+    app.add_route('/{project}/{version}/{family}/{subcmd}', UnknownPathResource())
+    app.add_route('/{project}/{version}/{family}/{subcmd}/{path:path}', UnknownPathResource())
 
     return app
 
