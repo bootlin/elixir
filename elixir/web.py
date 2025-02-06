@@ -94,6 +94,7 @@ def get_project_error_page(req, resp, exception: ElixirProjectError):
 
         'referer': req.referer if req.referer != req.uri else None,
         'bug_report_link': get_github_issue_link(report_error_details),
+        'home_page_link': '/',
         'report_error_details': report_error_details,
 
         'error_title': exception.title,
@@ -109,25 +110,24 @@ def get_project_error_page(req, resp, exception: ElixirProjectError):
         get_url_with_new_version = lambda v: stringify_source_path(project, v, '/')
         versions, current_version_path = get_versions(versions_raw, get_url_with_new_version, version)
 
+        if current_version_path[2] is None:
+            # If details about current version are not available, make base links
+            # point to latest.
+            # current_tag is not set to latest to avoid latest being highlighted in the sidebar
+            version = query.query('latest').decode()
+
         template_ctx = {
             **template_ctx,
 
             'current_project': project,
+            'current_tag': version,
             'versions': versions,
             'current_version_path': current_version_path,
+
+            'home_page_link': get_source_base_url(project, version),
+            'source_base_url': get_source_base_url(project, version),
+            'ident_base_url': get_ident_base_url(project, version),
         }
-
-
-        if version is None:
-            # If details about current version are not available, make base links
-            # point to latest.
-            # current_tag is not set to latest to avoid latest being highlighted in the sidebar
-            version = query.query('latest')
-        else:
-            template_ctx['current_tag'] = version
-
-        template_ctx['source_base_url'] = get_source_base_url(project, version)
-        template_ctx['ident_base_url'] = get_ident_base_url(project, version)
 
     if exception.description is not None:
         template_ctx['error_details'] = exception.description
