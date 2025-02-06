@@ -94,6 +94,7 @@ def get_project_error_page(req, resp, exception: ElixirProjectError):
 
         'referer': req.referer if req.referer != req.uri else None,
         'bug_report_link': get_github_issue_link(report_error_details),
+        'home_page_link': '/',
         'report_error_details': report_error_details,
 
         'error_title': exception.title,
@@ -115,17 +116,18 @@ def get_project_error_page(req, resp, exception: ElixirProjectError):
             'current_project': project,
             'versions': versions,
             'current_version_path': current_version_path,
+            'home_page_link': get_source_base_url(project, "latest"),
         }
 
 
-        if version is None:
+        if current_version_path[2] is None:
             # If details about current version are not available, make base links
             # point to latest.
             # current_tag is not set to latest to avoid latest being highlighted in the sidebar
-            version = query.query('latest')
-        else:
-            template_ctx['current_tag'] = version
+            version = query.query('latest').decode()
 
+        template_ctx['current_tag'] = version
+        template_ctx['home_page_link'] = get_source_base_url(project, version)
         template_ctx['source_base_url'] = get_source_base_url(project, version)
         template_ctx['ident_base_url'] = get_ident_base_url(project, version)
 
