@@ -94,6 +94,7 @@ def get_project_error_page(req, resp, exception: ElixirProjectError):
 
         'referer': req.referer if req.referer != req.uri else None,
         'bug_report_link': get_github_issue_link(report_error_details),
+        'home_page_link': '/',
         'report_error_details': report_error_details,
 
         'error_title': exception.title,
@@ -115,17 +116,18 @@ def get_project_error_page(req, resp, exception: ElixirProjectError):
             'current_project': project,
             'versions': versions,
             'current_version_path': current_version_path,
+            'home_page_link': get_source_base_url(project, "latest"),
         }
 
 
-        if version is None:
+        if current_version_path[2] is None:
             # If details about current version are not available, make base links
             # point to latest.
             # current_tag is not set to latest to avoid latest being highlighted in the sidebar
-            version = query.query('latest')
-        else:
-            template_ctx['current_tag'] = version
+            version = query.query('latest').decode()
 
+        template_ctx['current_tag'] = version
+        template_ctx['home_page_link'] = get_source_base_url(project, version)
         template_ctx['source_base_url'] = get_source_base_url(project, version)
         template_ctx['ident_base_url'] = get_ident_base_url(project, version)
 
@@ -342,6 +344,37 @@ class IdentResource(IdentPostRedirectResource):
 class IdentWithoutFamilyResource(IdentResource):
     def on_get(self, req, resp, project: str, version: str, ident: str):
         super().on_get(req, resp, project, version, 'C', ident)
+
+# Handles /{project}/{version} URL, without path
+class IncompleteURLRedirectResource:
+    def on_get(self, req, resp, project: str, version: str = "latest"):
+        ctx = req.context
+
+        query = get_query(ctx.config.project_dir, project)
+        if not query:
+            raise ElixirProjectError('Error', f'Unknown default project: {project}',
+                                     status=falcon.HTTP_INTERNAL_SERVER_ERROR)
+
+        if version == 'latest' or len(version) == 0:
+            version = parse.quote(query.query('latest'))
+            resp.status = falcon.HTTP_FOUND
+            resp.location = stringify_source_path(project, version, '/')
+            return
+
+        resp.status = falcon.HTTP_FOUND
+        resp.location = stringify_source_path(project, version, '/')
+        return
+
+# Handles /{project}/{version}/... URLs with unknown "command"
+class UnknownPathResource:
+    def on_get(self, req, resp, project: str, version: str, family: str = "", subcmd: str = "", path: str = ""):
+        project, version, query = validate_project_and_version(req.context, project, version)
+
+        raise ElixirProjectError('Error', 'Invalid path',
+                          project=project, version=version, query=query,
+                          extra_template_args={
+                              'current_family': 'A',
+                          })
 
 
 # File families available in the dropdown next to search input in the topbar
@@ -788,6 +821,13 @@ def get_application():
 
     app.add_route('/acp', AutocompleteResource())
     app.add_route('/api/ident/{project:project}/{ident:ident}', ApiIdentGetterResource())
+
+    app.add_route('/{project}', IncompleteURLRedirectResource())
+    app.add_route('/{project}/{version}', IncompleteURLRedirectResource())
+    app.add_route('/{project}/{version}/', IncompleteURLRedirectResource())
+    app.add_route('/{project}/{version}/{family}', UnknownPathResource())
+    app.add_route('/{project}/{version}/{family}/{subcmd}', UnknownPathResource())
+    app.add_route('/{project}/{version}/{family}/{subcmd}/{path:path}', UnknownPathResource())
 
     return app
 
