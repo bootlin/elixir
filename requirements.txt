@@ -1,4 +1,4 @@
-Jinja2==3.1.2
+Jinja2~=3.1.5
 Pygments~=2.18.0
 # TODO replace with a pypi published version once https://github.com/falconry/falcon/pull/1945
 # appears in a release (NOTE: it's not in 3.1.3).
