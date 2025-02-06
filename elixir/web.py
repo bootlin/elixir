@@ -343,6 +343,22 @@ class IdentWithoutFamilyResource(IdentResource):
     def on_get(self, req, resp, project: str, version: str, ident: str):
         super().on_get(req, resp, project, version, 'C', ident)
 
+# Handles /{project}/{version} URL, without path
+class IncompleteURLRedirectResource:
+    def on_get(self, req, resp, project: str, version: str = "latest"):
+        ctx = req.context
+
+        query = get_query(ctx.config.project_dir, project)
+        if not query:
+            raise ElixirProjectError('Error', f'Unknown default project: {project}',
+                                     status=falcon.HTTP_INTERNAL_SERVER_ERROR)
+
+        if version == 'latest' or len(version) == 0:
+            version = parse.quote(query.query('latest'))
+
+        resp.status = falcon.HTTP_FOUND
+        resp.location = stringify_source_path(project, version, '/')
+
 
 # File families available in the dropdown next to search input in the topbar
 TOPBAR_FAMILIES = {
@@ -788,6 +804,10 @@ def get_application():
 
     app.add_route('/acp', AutocompleteResource())
     app.add_route('/api/ident/{project:project}/{ident:ident}', ApiIdentGetterResource())
+
+    app.add_route('/{project}', IncompleteURLRedirectResource())
+    app.add_route('/{project}/{version}', IncompleteURLRedirectResource())
+    app.add_route('/{project}/{version}/', IncompleteURLRedirectResource())
 
     return app
 
