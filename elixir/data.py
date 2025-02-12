@@ -20,7 +20,7 @@
 
 import berkeleydb
 import re
-from . import lib
+from .lib import autoBytes
 import os
 import os.path
 import errno
@@ -71,6 +71,14 @@ class DefList:
             yield id, type, line, family
         if dummy:
             yield maxId, None, None, None
+
+    def exists(self, idx, line_num):
+        entries = deflist_regex.findall(self.data)
+        for id, _, line, _ in entries:
+            if id == idx and int(line) == line_num:
+                return True
+
+        return False
 
     def append(self, id, type, line, family):
         if type not in defTypeD:
@@ -159,26 +167,32 @@ class BsdDB:
         self.ctype = contentType
 
     def exists(self, key):
-        key = lib.autoBytes(key)
+        key = autoBytes(key)
         return self.db.exists(key)
 
     def get(self, key):
-        key = lib.autoBytes(key)
+        key = autoBytes(key)
         p = self.db.get(key)
-        return self.ctype(p) if p is not None else None
+        if p is None:
+            return None
+        p = self.ctype(p)
+        return p
 
     def get_keys(self):
         return self.db.keys()
 
     def put(self, key, val, sync=False):
-        key = lib.autoBytes(key)
-        val = lib.autoBytes(val)
+        key = autoBytes(key)
+        val = autoBytes(val)
         if type(val) is not bytes:
             val = val.pack()
         self.db.put(key, val)
         if sync:
             self.db.sync()
 
+    def sync(self):
+        self.db.sync()
+    
     def close(self):
         self.db.close()
 
@@ -201,13 +215,6 @@ class DB:
             # Map serial number to filename
         self.vers = BsdDB(dir + '/versions.db', ro, PathList, shared=shared)
         self.defs = BsdDB(dir + '/definitions.db', ro, DefList, shared=shared)
-        self.defs_cache = {}
-        NOOP = lambda x: x
-        self.defs_cache['C'] = BsdDB(dir + '/definitions-cache-C.db', ro, NOOP, shared=shared)
-        self.defs_cache['K'] = BsdDB(dir + '/definitions-cache-K.db', ro, NOOP, shared=shared)
-        self.defs_cache['D'] = BsdDB(dir + '/definitions-cache-D.db', ro, NOOP, shared=shared)
-        self.defs_cache['M'] = BsdDB(dir + '/definitions-cache-M.db', ro, NOOP, shared=shared)
-        assert sorted(self.defs_cache.keys()) == sorted(lib.CACHED_DEFINITIONS_FAMILIES)
         self.refs = BsdDB(dir + '/references.db', ro, RefList, shared=shared)
         self.docs = BsdDB(dir + '/doccomments.db', ro, RefList, shared=shared)
         self.dtscomp = dtscomp
@@ -223,10 +230,6 @@ class DB:
         self.file.close()
         self.vers.close()
         self.defs.close()
-        self.defs_cache['C'].close()
-        self.defs_cache['K'].close()
-        self.defs_cache['D'].close()
-        self.defs_cache['M'].close()
         self.refs.close()
         self.docs.close()
         if self.dtscomp:
