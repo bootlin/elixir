@@ -33,7 +33,7 @@ def get_elixir_version_string():
 
     return ''
 
-def get_elixir_repo_link(version):
+def get_elixir_repo_url(version):
     if re.match('^[0-9a-f]{5,12}$', version) or version.startswith('v'):
         return ELIXIR_REPO_LINK + f'tree/{ version }'
     else:
@@ -43,7 +43,7 @@ def get_elixir_repo_link(version):
 class Config(NamedTuple):
     project_dir: str
     version_string: str
-    repo_link: str
+    repo_url: str
 
 # Basic information about handled request - current Elixir configuration, configured Jinja environment
 # and logger
