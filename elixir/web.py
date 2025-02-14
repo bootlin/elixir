@@ -210,7 +210,7 @@ class IndexResource:
             raise ElixirProjectError('Error', f'Unknown default project: {project}',
                                      status=falcon.HTTP_INTERNAL_SERVER_ERROR)
 
-        version = parse.quote(query.query('latest'))
+        version = query.query('latest')
         resp.status = falcon.HTTP_FOUND
         resp.location = stringify_source_path(project, version, '/')
         return
@@ -235,7 +235,7 @@ class SourceResource:
                               project=project, version=version, query=query)
 
         if version == 'latest':
-            version = parse.quote(query.query('latest'))
+            version = query.query('latest')
             resp.status = falcon.HTTP_FOUND
             resp.location = stringify_source_path(project, version, path)
             return
@@ -326,7 +326,7 @@ class IdentResource(IdentPostRedirectResource):
         ident = validated_ident
 
         if version == 'latest':
-            version = parse.quote(query.query('latest'))
+            version = query.query('latest')
             resp.status = falcon.HTTP_FOUND
             resp.location = stringify_ident_path(project, version, family, ident)
             return
@@ -354,7 +354,7 @@ class IncompleteURLRedirectResource:
                                      status=falcon.HTTP_INTERNAL_SERVER_ERROR)
 
         if version == 'latest' or len(version) == 0:
-            version = parse.quote(query.query('latest'))
+            version = query.query('latest')
 
         resp.status = falcon.HTTP_FOUND
         resp.location = stringify_source_path(project, version, '/')
