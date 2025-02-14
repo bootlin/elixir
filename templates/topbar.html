@@ -2,7 +2,7 @@
     <div class="breadcrumb">
         <a href="#menu" class="open-menu icon-menu screenreader" title="Open Menu">Open Menu</a>
         <a class="project" href="{{ source_base_url }}">/</a>
-        {% for name, url in breadcrumb_links %}
+        {% for name, url in breadcrumb_urls %}
             <a href="{{ url }}">{{ name }}</a>
             {{ '/' if not loop.last else '' }}
         {% endfor %}

@@ -16,9 +16,9 @@
         {% if referer is not none -%}
             <li><a class="link" href="{{ referer }}">Go back</a></li>
         {%- endif %}
-        <li><a class="link" href="{{ home_page_link }}">Go to home page</a></li>
-        {% if bug_report_link is not none -%}
-            <li><a class="link" href="{{ bug_report_link }}">Report a bug</a></li>
+        <li><a class="link" href="{{ home_page_url }}">Go to home page</a></li>
+        {% if bug_report_url is not none -%}
+            <li><a class="link" href="{{ bug_report_url }}">Report a bug</a></li>
         {%- endif %}
     </ul>
     {% if report_error_details is not none -%}

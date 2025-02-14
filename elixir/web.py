@@ -40,12 +40,12 @@ from .autocomplete import AutocompleteResource
 from .api import ApiIdentGetterResource
 from .query import get_query
 from .web_utils import ProjectConverter, IdentConverter, validate_version, validate_project, validate_ident, \
-        get_elixir_version_string, get_elixir_repo_link, RequestContext, Config
+        get_elixir_version_string, get_elixir_repo_url, RequestContext, Config
 
 VERSION_CACHE_DURATION_SECONDS = 2 * 60  # 2 minutes
 ADD_ISSUE_LINK = "https://github.com/bootlin/elixir/issues/new"
 ELIXIR_VERSION_STRING = get_elixir_version_string()
-ELIXIR_REPO_LINK = get_elixir_repo_link(ELIXIR_VERSION_STRING)
+ELIXIR_REPO_LINK = get_elixir_repo_url(ELIXIR_VERSION_STRING)
 
 DEFAULT_PROJECT = 'linux'
 
@@ -70,7 +70,7 @@ def generate_error_details(req, resp, title, details):
            f"Error title: {title}\n" + \
            f"Error details: {details}\n"
 
-def get_github_issue_link(details: str):
+def get_github_issue_url(details: str):
     body = ("TODO: add information on how you reached the error here and " +
             "validate the details below.\n\n" +
             "---\n\n" +
@@ -90,10 +90,10 @@ def get_project_error_page(req, resp, exception: ElixirProjectError):
         'current_family': 'A',
         'source_base_url': '/',
         'elixir_version_string': req.context.config.version_string,
-        'elixir_repo_link': req.context.config.repo_link,
+        'elixir_repo_url': req.context.config.repo_url,
 
         'referer': req.referer if req.referer != req.uri else None,
-        'bug_report_link': get_github_issue_link(report_error_details),
+        'bug_report_url': get_github_issue_url(report_error_details),
         'home_page_url': '/',
         'report_error_details': report_error_details,
 
@@ -157,7 +157,7 @@ def get_error_page(req, resp, exception: ElixirProjectError):
         'source_base_url': '/',
 
         'referer': req.referer,
-        'bug_report_link': ADD_ISSUE_LINK + parse.quote(report_error_details),
+        'bug_report_url': ADD_ISSUE_LINK + parse.quote(report_error_details),
         'report_error_details': report_error_details,
 
         'error_title': exception.title,
@@ -458,7 +458,7 @@ def get_layout_template_context(q: Query, ctx: RequestContext, get_url_with_new_
         'current_version_path': current_version_path,
         'topbar_families': TOPBAR_FAMILIES,
         'elixir_version_string': ctx.config.version_string,
-        'elixir_repo_link': ctx.config.repo_link,
+        'elixir_repo_url': ctx.config.repo_url,
 
         'source_base_url': get_source_base_url(project, version),
         'ident_base_url': get_ident_base_url(project, version),
@@ -602,10 +602,10 @@ def generate_source_page(ctx: RequestContext, q: Query,
     # Generate breadcrumbs
     path_split = path.split('/')[1:]
     path_temp = ''
-    breadcrumb_links = []
+    breadcrumb_urls = []
     for p in path_split:
         path_temp += '/'+p
-        breadcrumb_links.append((p, f'{ source_base_url }{ path_temp }'))
+        breadcrumb_urls.append((p, f'{ source_base_url }{ path_temp }'))
 
     if type == 'tree':
         back_path = os.path.dirname(path[:-1])
@@ -627,7 +627,7 @@ def generate_source_page(ctx: RequestContext, q: Query,
         raise ElixirProjectError('File not found', 'This file does not exist.',
                                  status=falcon.HTTP_NOT_FOUND,
                                  query=q, project=project, version=version,
-                                 extra_template_args={'breadcrumb_links': breadcrumb_links})
+                                 extra_template_args={'breadcrumb_urls': breadcrumb_urls})
 
     # Create titles like this:
     # root path: "Linux source code (v5.5.6) - Bootlin"
@@ -648,7 +648,7 @@ def generate_source_page(ctx: RequestContext, q: Query,
 
         'title_path': title_path,
         'path': path,
-        'breadcrumb_links': breadcrumb_links,
+        'breadcrumb_urls': breadcrumb_urls,
 
         **template_ctx,
     }
