@@ -114,7 +114,7 @@ def get_project_error_page(req, resp, exception: ElixirProjectError):
             # If details about current version are not available, make base links
             # point to latest.
             # current_tag is not set to latest to avoid latest being highlighted in the sidebar
-            version = query.query('latest').decode()
+            version = query.query('latest')
 
         template_ctx = {
             **template_ctx,

@@ -116,10 +116,10 @@ class Query:
 
             for tag in sorted_tags:
                 if self.db.vers.exists(tag):
-                    return tag
+                    return tag.decode()
 
             # return the oldest tag, even if it does not exist in the database
-            return sorted_tags[-1]
+            return sorted_tags[-1].decode()
 
         elif cmd == 'type':
 
