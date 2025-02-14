@@ -1322,39 +1322,26 @@ main {
 }
 
 .message-banner-mobile {
+  padding: 3px;
   display: none;
   text-align: center;
-  background: #fe003e;
+  background: #757575;
   color: #fff;
   font-family: Arial;
-  -webkit-transform:rotate(-180deg);
-  -moz-transform:rotate(-180deg);
-  -o-transform: rotate(-180deg);
-  -ms-transform:rotate(-180deg);
-  transform: rotate(-180deg);
-  left: -58px;
-  bottom: 58px;
-  padding: 5px;
   width: min-content;
-  writing-mode: vertical-rl;
-  margin-bottom: 40px;
-  min-height: 150px;
+  width: 100%;
 }
 .message-banner-mobile .title {
   margin: 0;
-  font-size: 25px;
+  font-weight: 900;
   text-wrap: pretty;
 }
 .message-banner-mobile .subtitle {
+  padding-top: 2px;
   margin: 0;
-  font-size: 11px;
   word-break: break-word;
 }
-.message-banner-mobile:hover {
-  background: #f37b30;
-}
-.message-banner-mobile .message-link,
-.message-banner-desktop .message-link {
+.message-link {
   position: absolute;
   width: 100%;
   height: 100%;
@@ -1378,14 +1365,6 @@ main {
   }
   .message-banner-mobile {
     display: block;
-  }
-}
-@media screen and (max-width: 400px) {
-  .message-banner-mobile .title {
-    font-size: 20px;
-  }
-  .message-banner-mobile .subtitle {
-    font-size: 9.5px;
   }
 }
 
@@ -1538,7 +1517,7 @@ main {
   padding: 0;
   margin: 0;
   display: inline-block;
-  line-height: 2.5rem; /* little hack for firefox vertical align */
+  line-height: 1.5rem; /* little hack for firefox vertical align */
 }
 .social-icons li {
   display: inline-block;
@@ -1561,14 +1540,16 @@ main {
   }
   .header .social-icons {
     position: static;
+    background-color: rgba(0,0,0,.5);
+    width: 100%;
   }
   .social-icons a::before {
     font-size: 1.5rem;
     color: #9da9ea;
   }
   .header-main {
-    display: grid;
-    grid-template-columns: 40px 1fr 40px;
+    display: flex;
+    flex-direction: column-reverse;
   }
 }
 

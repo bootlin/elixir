@@ -364,10 +364,17 @@ function updateMessageBanner() {
   fetch('/static/messages.json')
     .then(r => r.json())
     .then(messages => {
-      const msg = randomChoice(messages);
+      // TODO compatibility with old messages format, remove after ~march 2025
+      const pickedMsg = randomChoice(messages);
+      const msg = pickedMsg.desktop ? pickedMsg.desktop : pickedMsg;
 
       const desktopBanner = document.querySelector('.message-banner-desktop');
-      addBannerContents(desktopBanner, msg.desktop);
+      addBannerContents(desktopBanner, msg);
+
+      // Remove action button for mobile banner
+      msg.action = undefined;
+      const mobileBanner = document.querySelector('.message-banner-mobile');
+      addBannerContents(mobileBanner, msg);
     });
 }
 
