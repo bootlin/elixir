@@ -26,15 +26,15 @@ logger = logging.getLogger(__name__)
 
 CURRENT_DIR = os.path.abspath(os.path.dirname(os.path.abspath(__file__)) + '/../')
 
-def script(*args, env=None):
+def script(*args, input=None, env=None):
     args = (os.path.join(CURRENT_DIR, 'script.sh'),) + args
     # subprocess.run was introduced in Python 3.5
     # fall back to subprocess.check_output if it's not available
     if hasattr(subprocess, 'run'):
-        p = subprocess.run(args, stdout=subprocess.PIPE, env=env)
+        p = subprocess.run(args, stdout=subprocess.PIPE, input=input, env=env)
         p = p.stdout
     else:
-        p = subprocess.check_output(args)
+        p = subprocess.check_output(args, input=input)
     return p
 
 def run_cmd(*args, env=None):
