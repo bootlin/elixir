@@ -54,7 +54,7 @@ class ApiIdentGetterResource:
             'definitions': [sym.__dict__ for sym in symbol_definitions],
             'references': [sym.__dict__ for sym in symbol_references],
             'documentations': [sym.__dict__ for sym in symbol_doccomments],
-            'peeks': peaks
+            'peeks': peeks
         }
 
         query.close()

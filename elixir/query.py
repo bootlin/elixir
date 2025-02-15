@@ -353,9 +353,7 @@ class Query:
             batch_res = batch_res[size:]
             yield sym, content
 
-
     def get_peeks_of_syms(self, version, symbol_definitions, symbol_references):
-
         peeks = {}
 
         def request_peeks(syms):

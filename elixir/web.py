@@ -27,7 +27,7 @@ import time
 import datetime
 from collections import OrderedDict, namedtuple
 from re import search, sub
-from typing import Any, Callable, NamedTuple, Tuple
+from typing import Any, Callable, Dict, NamedTuple, Tuple
 from urllib import parse
 import falcon
 import jinja2
@@ -667,7 +667,7 @@ SymbolEntry = namedtuple('SymbolEntry', 'type, path, lines, peeks')
 
 # Converts SymbolInstance into SymbolEntry
 # path of SymbolInstance will be appended to base_url
-def symbol_instance_to_entry(base_url, symbol, peeks):
+def symbol_instance_to_entry(base_url: str, symbol: SymbolInstance, peeks: Dict[str, Dict[int, str]]) -> SymbolEntry:
     # TODO this should be a responsibility of Query
     if type(symbol.line) is str:
         line_numbers = symbol.line.split(',')
