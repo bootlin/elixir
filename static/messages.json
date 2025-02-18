@@ -1,196 +1,87 @@
 [
-    {
-        "desktop": {
-            "title": "In-person Linux kernel drivers training",
-            "body": "Jun 16-20, 2025",
-            "action": "Register",
-            "link": "https://shop.bootlin.com/en/event/126"
-        },
-        "mobile": {
-            "title": "In-person Linux kernel drivers training",
-            "body": "June 16-20, 2025",
-            "link": "https://shop.bootlin.com/en/event/126"
-        }
-    },
-    {
-        "desktop": {
-            "title": "Embedded Linux training",
-            "body": "Mar 31-Apr 8, 2025",
-            "action": "Register",
-            "link": "https://shop.bootlin.com/en/event/122"
-        },
-        "mobile": {
-            "title": "Embedded Linux training",
-            "body": "Mar 31-Apr 8, 2025",
-            "link": "https://shop.bootlin.com/en/event/122"
-        }
-    },
-    {
-        "desktop": {
-            "title": "Embedded Linux training",
-            "body": "Mar 10-20, 2025, special US time zones",
-            "action": "Register",
-            "link": "https://shop.bootlin.com/en/event/114"
-        },
-        "mobile": {
-            "title": "Embedded Linux training",
-            "body": "Mar 10-20, 2025, special US time zones",
-            "action": "Register",
-            "link": "https://shop.bootlin.com/en/event/114"
-        }
-    },
-    {
-        "desktop": {
-            "title": "Linux kernel drivers training",
-            "body": "May 6-19, 2025",
-            "action": "Register",
-            "link": "https://shop.bootlin.com/en/event/123"
-        },
-        "mobile": {
-            "title": "Linux kernel drivers training",
-            "body": "May 6-19, 2025",
-            "link": "https://shop.bootlin.com/en/event/123"
-        }
-    },
-    {
-        "desktop": {
-            "title": "Linux kernel drivers training",
-            "body": "Mar 31-Apr 9, 2025, special US time zones",
-            "action": "Register",
-            "link": "https://shop.bootlin.com/en/event/118"
-        },
-        "mobile": {
-            "title": "Linux kernel drivers training",
-            "body": "Mar 31-Apr 9, 2025, special US time zones",
-            "action": "Register",
-            "link": "https://shop.bootlin.com/en/event/118"
-        }
-    },
-    {
-        "desktop": {
-            "title": "Yocto / OpenEmbedded training",
-            "body": "Feb 10-13, 2025",
-            "action": "Register",
-            "link": "https://shop.bootlin.com/en/event/125"
-        },
-        "mobile": {
-            "title": "Yocto / OpenEmbedded training",
-            "body": "Feb 10-13, 2025",
-            "link": "https://shop.bootlin.com/en/event/125"
-        }
-    },
-    {
-        "desktop": {
-            "title": "Yocto / OpenEmbedded training",
-            "body": "Mar 24-27, 2025, special US time zones",
-            "action": "Register",
-            "link": "https://shop.bootlin.com/en/event/116"
-        },
-        "mobile": {
-            "title": "Yocto / OpenEmbedded training",
-            "body": "Mar 24-27, 2025, special US time zones",
-            "action": "Register",
-            "link": "https://shop.bootlin.com/en/event/116"
-        }
-    },
-    {
-        "desktop": {
-            "title": "Real-Time Linux with PREEMPT_RT training",
-            "body": "Feb 18-20, 2025",
-            "action": "Register",
-            "link": "https://shop.bootlin.com/en/event/104"
-        },
-        "mobile": {
-            "title": "Real-Time Linux with PREEMPT_RT training",
-            "body": "Feb 18-20, 2025",
-            "link": "https://shop.bootlin.com/en/event/104"
-       }
-    },
-    {
-        "desktop": {
-            "title": "Linux debugging, profiling, tracing and performance analysis training",
-            "body": "Apr 14-17, 2025",
-            "action": "Register",
-            "link": "https://shop.bootlin.com/en/event/124"
-        },
-        "mobile": {
-            "title": "Linux debugging, profiling, tracing and performance analysis training",
-            "body": "Apr 14-17, 2025",
-            "link": "https://shop.bootlin.com/en/event/124"
-       }
-    },
-    {
-        "desktop": {
-            "title": "Linux debugging, profiling, tracing and performance analysis training",
-            "body": "Mar 24-27, 2025, special US time zones",
-            "action": "Register",
-            "link": "https://shop.bootlin.com/en/event/117"
-        },
-        "mobile": {
-            "title": "Linux debugging, profiling, tracing and performance analysis training",
-            "body": "Mar 24-27, 2025, special US time zones",
-            "action": "Register",
-            "link": "https://shop.bootlin.com/en/event/117"
-       }
-    },
-    {
-        "desktop": {
-            "title": "Linux BSP development engineering services",
-            "body": "Need help to port Linux and bootloaders to your hardware?",
-            "link": "https://bootlin.com/engineering/linux-board-support-package/"
-        },
-        "mobile": {
-            "title": "Linux BSP development engineering services",
-            "body": "Need help to port Linux and bootloaders to your hardware?",
-            "link": "https://bootlin.com/engineering/linux-board-support-package/"
-       }
-    },
-    {
-        "desktop": {
-            "title": "Open-source upstreaming",
-            "body": "Need help get the support for your hardware in upstream Linux?",
-            "link": "https://bootlin.com/engineering/upstreaming/"
-        },
-        "mobile": {
-            "title": "Open-source upstreaming",
-            "body": "Need help get the support for your hardware in upstream Linux?",
-            "link": "https://bootlin.com/engineering/upstreaming/"
-       }
-    },
-    {
-        "desktop": {
-            "title": "Linux BSP upgrade and security maintenance",
-            "body": "Need help to get security updates for your Linux BSP?",
-            "link": "https://bootlin.com/engineering/linux-board-support-package/"
-        },
-        "mobile": {
-            "title": "Linux BSP upgrade and security maintenance",
-            "body": "Need help to get security updates for your Linux BSP?",
-            "link": "https://bootlin.com/engineering/linux-board-support-package/"
-       }
-    },
-    {
-        "desktop": {
-            "title": "Yocto distribution development and maintenance",
-            "body": "Need a Yocto distribution for your embedded project?",
-            "link": "https://bootlin.com/engineering/linux-board-support-package/"
-        },
-        "mobile": {
-            "title": "Yocto distribution development and maintenance",
-            "body": "Need a Yocto distribution for your embedded project?",
-            "link": "https://bootlin.com/engineering/linux-board-support-package/"
-       }
-    },
-    {
-        "desktop": {
-            "title": "Buildroot integration, development and maintenance",
-            "body": "Need a Buildroot system for your embedded project?",
-            "link": "https://bootlin.com/engineering/linux-board-support-package/"
-        },
-        "mobile": {
-            "title": "Buildroot integration, development and maintenance",
-            "body": "Need a Buildroot system for your embedded project?",
-            "link": "https://bootlin.com/engineering/linux-board-support-package/"
-       }
-    }
+  {
+    "title": "In-person Linux kernel drivers training",
+    "body": "Jun 16-20, 2025",
+    "action": "Register",
+    "link": "https://shop.bootlin.com/en/event/126"
+  },
+  {
+    "title": "Embedded Linux training",
+    "body": "Mar 31-Apr 8, 2025",
+    "action": "Register",
+    "link": "https://shop.bootlin.com/en/event/122"
+  },
+  {
+    "title": "Embedded Linux training",
+    "body": "Mar 10-20, 2025, special US time zones",
+    "action": "Register",
+    "link": "https://shop.bootlin.com/en/event/114"
+  },
+  {
+    "title": "Linux kernel drivers training",
+    "body": "May 6-19, 2025",
+    "action": "Register",
+    "link": "https://shop.bootlin.com/en/event/123"
+  },
+  {
+    "title": "Linux kernel drivers training",
+    "body": "Mar 31-Apr 9, 2025, special US time zones",
+    "action": "Register",
+    "link": "https://shop.bootlin.com/en/event/118"
+  },
+  {
+    "title": "Yocto / OpenEmbedded training",
+    "body": "Feb 10-13, 2025",
+    "action": "Register",
+    "link": "https://shop.bootlin.com/en/event/125"
+  },
+  {
+    "title": "Yocto / OpenEmbedded training",
+    "body": "Mar 24-27, 2025, special US time zones",
+    "action": "Register",
+    "link": "https://shop.bootlin.com/en/event/116"
+  },
+  {
+    "title": "Real-Time Linux with PREEMPT_RT training",
+    "body": "Feb 18-20, 2025",
+    "action": "Register",
+    "link": "https://shop.bootlin.com/en/event/104"
+  },
+  {
+    "title": "Linux debugging, profiling, tracing and performance analysis training",
+    "body": "Apr 14-17, 2025",
+    "action": "Register",
+    "link": "https://shop.bootlin.com/en/event/124"
+  },
+  {
+    "title": "Linux debugging, profiling, tracing and performance analysis training",
+    "body": "Mar 24-27, 2025, special US time zones",
+    "action": "Register",
+    "link": "https://shop.bootlin.com/en/event/117"
+  },
+  {
+    "title": "Linux BSP development engineering services",
+    "body": "Need help to port Linux and bootloaders to your hardware?",
+    "link": "https://bootlin.com/engineering/linux-board-support-package/"
+  },
+  {
+    "title": "Open-source upstreaming",
+    "body": "Need help get the support for your hardware in upstream Linux?",
+    "link": "https://bootlin.com/engineering/upstreaming/"
+  },
+  {
+    "title": "Linux BSP upgrade and security maintenance",
+    "body": "Need help to get security updates for your Linux BSP?",
+    "link": "https://bootlin.com/engineering/linux-board-support-package/"
+  },
+  {
+    "title": "Yocto distribution development and maintenance",
+    "body": "Need a Yocto distribution for your embedded project?",
+    "link": "https://bootlin.com/engineering/linux-board-support-package/"
+  },
+  {
+    "title": "Buildroot integration, development and maintenance",
+    "body": "Need a Buildroot system for your embedded project?",
+    "link": "https://bootlin.com/engineering/linux-board-support-package/"
+  }
 ]
