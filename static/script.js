@@ -323,41 +323,21 @@ function randomChoice(arr) {
   return arr[Math.floor(Math.random() * arr.length)];
 }
 
-function addBannerContents(bannerElement, msg) {
-  bannerElement.innerHTML = '';
+function updateBannerContents(msg) {
+  const banner = document.querySelector('.message-banner');
 
-  const containerElement = document.createElement('div');
-  containerElement.classList.add('container');
+  banner.querySelector('.title').innerText = msg.title;
+  banner.querySelector('.subtitle').innerHTML = msg.body.replace('\n', '<br/>');
+  document.querySelector('.message-link').href = msg.link;
 
-  const titleElement = document.createElement('p');
-  titleElement.classList.add('title');
-  titleElement.innerText = msg.title;
-  containerElement.appendChild(titleElement);
-
-  for (const line of msg.body.split('\n')) {
-    const subtitleElement = document.createElement('div');
-    subtitleElement.classList.add('subtitle');
-    subtitleElement.innerHTML = line;
-    containerElement.appendChild(subtitleElement);
+  const actionElement = banner.querySelector('.action');
+    const actionInner = actionElement.querySelector('.action-inner');
+  if (msg.action) {
+    actionInner.innerText = msg.action;
+    actionElement.classList.add("action-visible");
+  } else {
+    actionElement.classList.remove("action-visible");
   }
-
-  if (msg.action !== undefined) {
-    const actionElement = document.createElement('div');
-    actionElement.classList.add('action');
-    const actionInner = document.createElement('div');
-    actionInner.classList.add('action-inner');
-    actionInner.innerHTML = msg.action;
-    actionElement.appendChild(actionInner);
-    containerElement.appendChild(actionElement);
-  }
-
-  bannerElement.appendChild(containerElement);
-
-  const messageLinkElement = document.createElement('a');
-  messageLinkElement.classList.add('message-link');
-  messageLinkElement.href = msg.link;
-  messageLinkElement.setAttribute('target', '_blank');
-  bannerElement.appendChild(messageLinkElement);
 }
 
 function updateMessageBanner() {
@@ -368,13 +348,7 @@ function updateMessageBanner() {
       const pickedMsg = randomChoice(messages);
       const msg = pickedMsg.desktop ? pickedMsg.desktop : pickedMsg;
 
-      const desktopBanner = document.querySelector('.message-banner-desktop');
-      addBannerContents(desktopBanner, msg);
-
-      // Remove action button for mobile banner
-      msg.action = undefined;
-      const mobileBanner = document.querySelector('.message-banner-mobile');
-      addBannerContents(mobileBanner, msg);
+      updateBannerContents(msg);
     });
 }
 
@@ -392,8 +366,7 @@ function sleep(duration) {
 
 async function cycleBannerWithData(data, delay=500) {
   for (const msg of data) {
-    const desktopBanner = document.querySelector('.message-banner-desktop');
-    addBannerContents(desktopBanner, msg.desktop);
+    updateBannerContents(msg);
     await sleep(delay);
   }
   console.log("cycle finished");
