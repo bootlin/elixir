@@ -166,7 +166,7 @@ parse_defs_C()
 
     # Use ctags to parse most of the defs
     ctags -x --kinds-c=+p+x --extras='-{anonymous}' "$full_path" |
-    grep -avE "^operator |CONFIG_" |
+    grep -avE -e "^operator " -e "^CONFIG_" |
     awk '{print $1" "$2" "$3}'
 
     # Parse function macros, e.g., in .S files
