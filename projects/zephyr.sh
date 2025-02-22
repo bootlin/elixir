@@ -3,6 +3,17 @@
 # Enable DT bindings compatible strings support
 dts_comp_support=1
 
+version_dir()
+{
+    grep "^elixir-" |
+    sed -e 's/elixir-//';
+}
+
+version_rev()
+{
+    sed -e 's/^/elixir-/';
+}
+
 list_tags()
 {
     echo "$tags" |
@@ -20,4 +31,8 @@ list_tags_h()
 get_latest_tags()
 {
     git tag | grep -v '^zephyr-v' | version_dir | grep -v '\-rc' | sort -Vr
+}
+
+fetch_hook() {
+    $script_dir/utils/zephyr-converter.sh $opt1
 }

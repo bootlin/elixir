@@ -34,7 +34,8 @@ RUN \
     libapache2-mod-wsgi-py3 \
     libjansson4 \
     libyaml-0-2 \
-    wget
+    wget \
+    yq
 
 COPY ./requirements.txt /usr/local/elixir/
 
