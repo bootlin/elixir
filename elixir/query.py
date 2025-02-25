@@ -87,17 +87,9 @@ class Query:
             return self.get_latest_tag()
 
         elif cmd == 'type':
-
-            # Returns the type (blob or tree) associated to
-            # the given path. Example:
-            # > ./query.py type v3.1-rc10 /Makefile
-            # blob
-            # > ./query.py type v3.1-rc10 /arch
-            # tree
-
             version = args[0]
             path = args[1]
-            return decode(self.script('get-type', version, path)).strip()
+            return self.get_file_type(version, path)
 
         elif cmd == 'exist':
             version = args[0]
@@ -250,6 +242,15 @@ class Query:
                 versions[topmenu][submenu].append(tag)
 
         return versions
+
+    # Returns the type (blob or tree) associated to
+    # the given path. Example:
+    # > ./query.py type v3.1-rc10 /Makefile
+    # blob
+    # > ./query.py type v3.1-rc10 /arch
+    # tree
+    def get_file_type(self, version, path):
+        return decode(self.script('get-type', version, path)).strip()
 
     # Returns identifier search results
     def search_ident(self, version, ident, family):
