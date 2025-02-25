@@ -120,39 +120,9 @@ class Query:
             return entries_str.split("\n")[:-1]
 
         elif cmd == 'file':
-
-            # Returns the contents of the specified file
-            # Tokens are marked for further processing
-            # Example: ./query.py file v3.1-rc10 /Makefile
-
             version = args[0]
             path = args[1]
-
-            filename = os.path.basename(path)
-            family = lib.getFileFamily(filename)
-
-            if family != None:
-                assert family in lib.CACHED_DEFINITIONS_FAMILIES, f"family {family} must have its definitions cached"
-
-                buffer = BytesIO()
-                tokens = self.scriptLines('tokenize-file', version, path, family)
-                even = True
-
-                prefix = b''
-                if family == 'K':
-                    prefix = b'CONFIG_'
-
-                for tok in tokens:
-                    even = not even
-                    tok2 = prefix + tok
-                    if even and self.db.defs_cache[family].exists(tok2):
-                        tok = b'\033[31m' + tok2 + b'\033[0m'
-                    else:
-                        tok = lib.unescape(tok)
-                    buffer.write(tok)
-                return decode(buffer.getvalue())
-            else:
-                return decode(self.script('get-file', version, path))
+            return self.get_tokenized_file(version, path)
 
         elif cmd == 'family':
             # Get the family of a given file
@@ -213,6 +183,37 @@ class Query:
 
         else:
             return 'Unknown subcommand: ' + cmd + '\n'
+
+
+    # Returns the contents of the specified file
+    # Tokens are marked for further processing
+    # Example: v3.1-rc10 /Makefile
+    def get_tokenized_file(self, version, path):
+        filename = os.path.basename(path)
+        family = lib.getFileFamily(filename)
+
+        if family != None:
+            assert family in lib.CACHED_DEFINITIONS_FAMILIES, f"family {family} must have its definitions cached"
+
+            buffer = BytesIO()
+            tokens = self.scriptLines('tokenize-file', version, path, family)
+            even = True
+
+            prefix = b''
+            if family == 'K':
+                prefix = b'CONFIG_'
+
+            for tok in tokens:
+                even = not even
+                tok2 = prefix + tok
+                if even and self.db.defs_cache[family].exists(tok2):
+                    tok = b'\033[31m' + tok2 + b'\033[0m'
+                else:
+                    tok = lib.unescape(tok)
+                buffer.write(tok)
+            return decode(buffer.getvalue())
+        else:
+            return decode(self.script('get-file', version, path))
 
     # Returns the list of indexed versions in the following format:
     # topmenu submenu tag
@@ -425,7 +426,7 @@ def cmd_ident(q, version, ident, family, **kwargs):
         print(symbol_doccomment)
 
 def cmd_file(q, version, path, **kwargs):
-    code = q.query("file", version, path)
+    code = q.get_tokenized_file(version, path)
     print(code)
 
 if __name__ == "__main__":

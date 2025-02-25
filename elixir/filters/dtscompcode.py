@@ -2,7 +2,8 @@ import re
 from .utils import Filter, FilterContext, encode_number, decode_number, extension_matches
 
 # Filter for DT compatible strings in code (C family) files
-# Finds assigments to properties and variables named 'compatible' and recognized by the Query.query('file')
+# Finds assigments to properties and variables named 'compatible' and recognized by
+# Query.get_tokenized_file()
 # .compatible = "device"
 # Example: u-boot/v2023.10/source/drivers/phy/nop-phy.c#L84
 class DtsCompCodeFilter(Filter):

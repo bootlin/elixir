@@ -2,8 +2,8 @@ import re
 from .utils import Filter, FilterContext, encode_number, decode_number
 
 # Filter for identifier links
-# Replaces identifiers marked by Query.query('file') with links to ident page.
-# If Query.query('file') detects that a file belongs to a family that can contain
+# Replaces identifiers marked by Query.get_tokenized_file() with links to ident page.
+# If Query.get_tokenized_file() detects that a file belongs to a family that can contain
 # indexed identifiers, it processes the file by adding unprintable markers
 # ('\033[31m' + token + b'\033[0m') to tokens that have an entry in the definitions
 # database. This filter replaces these marked tokens with links to their ident pages,
