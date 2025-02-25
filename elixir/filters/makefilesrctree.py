@@ -15,7 +15,7 @@ class MakefileSrcTreeFilter(Filter):
 
     def transform_raw_code(self, ctx, code: str) -> str:
         def keep_makefilesrctree(m):
-            if ctx.query.query('exist', ctx.tag, '/' + m.group(1)):
+            if ctx.query.file_exists(ctx.tag, '/' + m.group(1)):
                 self.makefilesrctree.append(m.group(1))
                 return f'__KEEPMAKEFILESRCTREE__{ encode_number(len(self.makefilesrctree)) }{ m.group(2) }'
             else:

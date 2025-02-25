@@ -21,7 +21,7 @@ class MakefileFileFilter(Filter):
             if filedir != '/':
                 filedir += '/'
 
-            if ctx.query.query('exist', ctx.tag, filedir + m.group(1)):
+            if ctx.query.file_exists(ctx.tag, filedir + m.group(1)):
                 self.makefilefile.append(m.group(1))
                 return f'__KEEPMAKEFILEFILE__{ encode_number(len(self.makefilefile)) }{ m.group(2) }'
             else:
