@@ -515,7 +515,7 @@ def format_code(filename: str, code: str) -> str:
 # version: requested version of the project
 # path: path to the file in the repository
 def generate_source(q: Query, project: str, version: str, path: str) -> str:
-    code = q.query('file', version, path)
+    code = q.get_tokenized_file(version, path)
 
     _, fname = os.path.split(path)
     _, extension = os.path.splitext(fname)
