@@ -94,20 +94,7 @@ class Query:
         elif cmd == 'exist':
             version = args[0]
             path = args[1]
-
-            if version not in self.file_cache:
-                version_cache = set()
-                last_dir = None
-                for _, path in self.db.vers.get(version).iter():
-                    dirname, filename = os.path.split(path)
-                    if dirname != last_dir:
-                        last_dir = dirname
-                        version_cache.add(dirname)
-                    version_cache.add(path)
-
-                self.file_cache[version] = version_cache
-
-            return path.strip('/') in self.file_cache[version]
+            return self.file_exists(version, path)
 
         elif cmd == 'dir':
             version = args[0]
@@ -178,6 +165,21 @@ class Query:
         else:
             return 'Unknown subcommand: ' + cmd + '\n'
 
+    # Returns True if file exists
+    def file_exists(self, version, path):
+        if version not in self.file_cache:
+            version_cache = set()
+            last_dir = None
+            for _, path in self.db.vers.get(version).iter():
+                dirname, filename = os.path.split(path)
+                if dirname != last_dir:
+                    last_dir = dirname
+                    version_cache.add(dirname)
+                version_cache.add(path)
+
+            self.file_cache[version] = version_cache
+
+        return path.strip('/') in self.file_cache[version]
 
     # Returns the contents of the specified file
     # Tokens are marked for further processing
