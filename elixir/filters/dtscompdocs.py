@@ -13,14 +13,14 @@ class DtsCompDocsFilter(Filter):
 
     def check_if_applies(self, ctx) -> bool:
         return super().check_if_applies(ctx) and \
-            ctx.query.query('dts-comp') and \
+            ctx.query.supports_dts_comp() and \
             ctx.filepath.startswith('/Documentation/devicetree/bindings')
 
     def transform_raw_code(self, ctx, code: str) -> str:
         def keep_dtscompB(m):
             text = m.group(1)
 
-            if ctx.query.query('dts-comp-exists', quote(text)):
+            if ctx.query.dts_comp_exists(quote(text)):
                 self.dtscompB.append(text)
                 return f'__KEEPDTSCOMPB__{ encode_number(len(self.dtscompB)) }'
             else:

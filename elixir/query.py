@@ -113,18 +113,11 @@ class Query:
             return lib.getFileFamily(filename)
 
         elif cmd == 'dts-comp':
-            # Get state of dts_comp_support
-
-            return self.dts_comp_support
+            return self.supports_dts_comp()
 
         elif cmd == 'dts-comp-exists':
-            # Check if a dts compatible string exists
-
             ident = args[0]
-            if self.dts_comp_support:
-                return self.db.comps.exists(ident)
-            else:
-                return False
+            return self.dts_comp_exists(ident)
 
         elif cmd == 'keys':
             # Return all keys of a given database
@@ -164,6 +157,17 @@ class Query:
 
         else:
             return 'Unknown subcommand: ' + cmd + '\n'
+
+    # Get state of dts_comp_support
+    def supports_dts_comp(self):
+        return self.dts_comp_support
+
+    # Check if a dts compatible string exists
+    def dts_comp_exists(self, ident):
+        if self.dts_comp_support:
+            return self.db.comps.exists(ident)
+        else:
+            return False
 
     # Returns True if file exists
     def file_exists(self, version, path):
