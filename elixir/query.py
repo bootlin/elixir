@@ -110,14 +110,9 @@ class Query:
             return path.strip('/') in self.file_cache[version]
 
         elif cmd == 'dir':
-
-            # Returns the contents (trees or blobs) of the specified directory
-            # Example: ./query.py dir v3.1-rc10 /arch
-
             version = args[0]
             path = args[1]
-            entries_str =  decode(self.script('get-dir', version, path))
-            return entries_str.split("\n")[:-1]
+            return self.get_dir_contents(version, path)
 
         elif cmd == 'file':
             version = args[0]
@@ -213,6 +208,12 @@ class Query:
             return decode(buffer.getvalue())
         else:
             return decode(self.script('get-file', version, path))
+
+    # Returns the contents (trees or blobs) of the specified directory
+    # Example: v3.1-rc10 /arch
+    def get_dir_contents(self, version, path):
+        entries_str =  decode(self.script('get-dir', version, path))
+        return entries_str.split("\n")[:-1]
 
     # Returns the list of indexed versions in the following format:
     # topmenu submenu tag

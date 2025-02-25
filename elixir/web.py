@@ -569,7 +569,7 @@ DirectoryEntry = namedtuple('DirectoryEntry', 'type, name, path, url, size')
 # path: path to the directory in the repository
 def get_directory_entries(q: Query, base_url, tag: str, path: str) -> list[DirectoryEntry]:
     dir_entries = []
-    lines = q.query('dir', tag, path)
+    lines = q.get_dir_contents(tag, path)
 
     for l in lines:
         type, name, size, perm = l.split(' ')
