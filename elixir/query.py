@@ -126,7 +126,6 @@ class Query:
 
         elif cmd == 'family':
             # Get the family of a given file
-
             filename = args[0]
 
             return lib.getFileFamily(filename)

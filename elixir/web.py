@@ -32,7 +32,7 @@ from urllib import parse
 import falcon
 import jinja2
 
-from .lib import validFamily
+from .lib import validFamily, getFileFamily
 from .query import Query, SymbolInstance
 from .filters import get_filters
 from .filters.utils import FilterContext
@@ -520,7 +520,7 @@ def generate_source(q: Query, project: str, version: str, path: str) -> str:
     _, fname = os.path.split(path)
     _, extension = os.path.splitext(fname)
     extension = extension[1:].lower()
-    family = q.query('family', fname)
+    family = getFileFamily(fname)
 
     source_base_url = get_source_base_url(project, version)
 
