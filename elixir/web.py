@@ -469,7 +469,7 @@ def get_layout_template_context(q: Query, ctx: RequestContext, get_url_with_new_
 
 # Generate raw source response
 def generate_raw_source(resp, query, project, version, path):
-    type = query.query('type', version, path)
+    type = query.get_file_type(version, path)
     if type != 'blob':
         raise ElixirProjectError('File not found', 'This file does not exist.',
                                  query=query, project=project, version=version)
@@ -597,7 +597,7 @@ def generate_source_page(ctx: RequestContext, q: Query,
     status = falcon.HTTP_OK
     source_base_url = get_source_base_url(project, version)
 
-    type = q.query('type', version, path)
+    type = q.get_file_type(version, path)
 
     # Generate breadcrumbs
     path_split = path.split('/')[1:]
