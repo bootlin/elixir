@@ -44,7 +44,7 @@ class ApiIdentGetterResource:
             return
 
         if version == 'latest':
-            version = query.query('latest')
+            version = query.get_latest_tag()
 
         symbol_definitions, symbol_references, symbol_doccomments = query.query('ident', version, ident, family)
 
