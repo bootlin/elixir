@@ -78,21 +78,21 @@ def init_query(project):
     datadir = basedir + '/' + project + '/data'
     repodir = basedir + '/' + project + '/repo'
 
-    from query import Query
+    from elixir.query import Query
     return Query(datadir, repodir)
 
 
-def get_ident(ident, version):
+def get_ident(query, ident, version):
     if version == 'latest':
-            version = query.query('latest')
+        version = query.get_latest_tag()
 
-    return query.query('ident', version, ident[0], ident[1])
+    return query.search_ident(version, ident[0], ident[1])
 
-def get_file(path, version):
+def get_file(query, path, version):
     if version == 'latest':
-            version = query.query('latest')
+        version = query.get_latest_tag()
 
-    return query.query('file', version, path)
+    return query.get_file(version, path)
 
 
 #Read arguments
@@ -122,7 +122,7 @@ for version in versions:
     for i in range(run_number):
         for ident in idents:
             start_time = time()
-            get_ident(ident, version)
+            get_ident(query, ident, version)
             end_time = time()
 
             elapsed_time = (end_time - start_time)*1000 #convert to ms
@@ -146,7 +146,7 @@ for version in versions:
     for i in range(run_number):
         for file in files:
             start_time = time()
-            get_file(file, version)
+            get_file(query, file, version)
             end_time = time()
 
             elapsed_time = (end_time - start_time) * 1000 #convert to ms
