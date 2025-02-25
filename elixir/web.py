@@ -401,7 +401,7 @@ def get_projects(basedir: str) -> list[ProjectEntry]:
 # Used to render version list in the sidebar
 VersionEntry = namedtuple('VersionEntry', 'version, url')
 
-# Takes result of Query.query('version') and prepares it for the sidebar template.
+# Takes result of Query.get_versions() and prepares it for the sidebar template.
 #  Returns an OrderedDict with version information and optionally a triple with
 #  (major, minor, version) of current_version. The triple is useful, because sometimes
 #  the major or minor of a version (in this context) is a custom string (ex. FIXME).
@@ -433,12 +433,12 @@ def get_versions(versions: OrderedDict[str, OrderedDict[str, str]],
 def get_versions_cached(q, ctx, project):
     with ctx.versions_cache_lock:
         if project not in ctx.versions_cache:
-            ctx.versions_cache[project] = (time.time(), q.query('versions'))
+            ctx.versions_cache[project] = (time.time(), q.get_versions())
             cached_versions = ctx.versions_cache[project]
         else:
             cached_versions = ctx.versions_cache[project]
             if time.time()-cached_versions[0] > VERSION_CACHE_DURATION_SECONDS:
-                ctx.versions_cache[project] = (time.time(), q.query('versions'))
+                ctx.versions_cache[project] = (time.time(), q.get_versions())
                 cached_versions = ctx.versions_cache[project]
 
         return cached_versions[1]

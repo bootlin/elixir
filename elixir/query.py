@@ -81,32 +81,7 @@ class Query:
 
     def query(self, cmd, *args):
         if cmd == 'versions':
-
-            # Returns the list of indexed versions in the following format:
-            # topmenu submenu tag
-            # Example: v3 v3.1 v3.1-rc10
-            versions = OrderedDict()
-
-            for line in self.scriptLines('list-tags', '-h'):
-                taginfo = decode(line).split(' ')
-                num = len(taginfo)
-                topmenu, submenu = 'FIXME', 'FIXME'
-
-                if num == 1:
-                    tag, = taginfo
-                elif num == 2:
-                    submenu,tag = taginfo
-                elif num ==3:
-                    topmenu,submenu,tag = taginfo
-
-                if self.db.vers.exists(tag):
-                    if topmenu not in versions:
-                        versions[topmenu] = OrderedDict()
-                    if submenu not in versions[topmenu]:
-                        versions[topmenu][submenu] = []
-                    versions[topmenu][submenu].append(tag)
-
-            return versions
+            return self.get_versions()
 
         elif cmd == 'latest':
             return self.get_latest_tag()
@@ -246,6 +221,35 @@ class Query:
 
         else:
             return 'Unknown subcommand: ' + cmd + '\n'
+
+    # Returns the list of indexed versions in the following format:
+    # topmenu submenu tag
+    # Example: v3 v3.1 v3.1-rc10
+    def get_versions(self):
+        versions = OrderedDict()
+
+        for line in self.scriptLines('list-tags', '-h'):
+            taginfo = decode(line).split(' ')
+            num = len(taginfo)
+            topmenu, submenu = 'FIXME', 'FIXME'
+
+            if num == 1:
+                tag, = taginfo
+            elif num == 2:
+                submenu, tag = taginfo
+            elif num == 3:
+                topmenu, submenu, tag = taginfo
+            else:
+                raise Exception("unexpected number of fields in taginfo")
+
+            if self.db.vers.exists(tag):
+                if topmenu not in versions:
+                    versions[topmenu] = OrderedDict()
+                if submenu not in versions[topmenu]:
+                    versions[topmenu][submenu] = []
+                versions[topmenu][submenu].append(tag)
+
+        return versions
 
     # Returns identifier search results
     def search_ident(self, version, ident, family):
