@@ -182,6 +182,9 @@ class BsdDB:
     def close(self):
         self.db.close()
 
+    def __len__(self):
+        return self.db.stat()["nkeys"]
+
 class DB:
     def __init__(self, dir, readonly=True, dtscomp=False, shared=False):
         if os.path.isdir(dir):
