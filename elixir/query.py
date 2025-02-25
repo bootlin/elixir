@@ -238,21 +238,22 @@ class Query:
                 return []
 
         elif cmd == 'ident':
-
-            # Returns identifier search results
-
             version = args[0]
             ident = args[1]
             family = args[2]
 
-            # DT bindings compatible strings are handled differently
-            if family == 'B':
-                return self.get_idents_comps(version, ident)
-            else:
-                return self.get_idents_defs(version, ident, family)
+            return self.search_ident(version, ident, family)
 
         else:
             return 'Unknown subcommand: ' + cmd + '\n'
+
+    # Returns identifier search results
+    def search_ident(self, version, ident, family):
+        # DT bindings compatible strings are handled differently
+        if family == 'B':
+            return self.get_idents_comps(version, ident)
+        else:
+            return self.get_idents_defs(version, ident, family)
 
     # Returns the latest tag that is included in the database.
     # This excludes release candidates.
@@ -405,7 +406,7 @@ class Query:
 
 
 def cmd_ident(q, version, ident, family, **kwargs):
-    symbol_definitions, symbol_references, symbol_doccomments = q.query("ident", version, ident, family)
+    symbol_definitions, symbol_references, symbol_doccomments = q.search_ident(version, ident, family)
     print("Symbol Definitions:")
     for symbol_definition in symbol_definitions:
         print(symbol_definition)

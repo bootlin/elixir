@@ -687,7 +687,7 @@ def generate_ident_page(ctx: RequestContext, q: Query,
 
     status = falcon.HTTP_OK
     source_base_url = get_source_base_url(project, version)
-    symbol_definitions, symbol_references, symbol_doccomments = q.query('ident', version, ident, family)
+    symbol_definitions, symbol_references, symbol_doccomments = q.search_ident(version, ident, family)
     symbol_sections = []
 
     if len(symbol_definitions) or len(symbol_references):
