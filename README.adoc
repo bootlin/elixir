@@ -364,6 +364,8 @@ new project:
  ln -s /srv/git/zephyr.git repo
  export LXR_DATA_DIR=$LXR_PROJ_DIR/data
  export LXR_REPO_DIR=$LXR_PROJ_DIR/repo
+ export LXR_DATA_DIR=$LXR_PROJ_DIR/data
+ export LXR_REPO_DIR=$LXR_PROJ_DIR/repo
 
 Now, go back to the Elixir sources and test that tags are correctly
 extracted:
@@ -371,9 +373,6 @@ extracted:
  ./script.sh list-tags
 
 Depending on how you want to show the available versions on the Elixir pages,
-you may have to apply substitutions to each tag string, for example to add
-a `v` prefix if missing, for consistency with how other project versions are
-shown. You may also decide to ignore specific tags. All this can be done
 by redefining the default `list_tags()` function in a new `projects/<projectname>.sh`
 file. Here's an example (`projects/zephyr.sh` file):
 
@@ -429,8 +428,6 @@ You can then check that Elixir works through your http server.
 
 == Coding style
 
-If you wish to contribute to Elixir's Python code, please
-follow the https://www.python.org/dev/peps/pep-0008/[official coding style for Python].
 
 == How to send patches
 

@@ -813,6 +813,29 @@ h2 {
   height: 100%;
 }
 
+.diff {
+    display: grid;
+    grid-template-columns: 50% 50%;
+}
+
+.diff-line {
+  display: block;
+}
+
+.line-added {
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 255, 0, 128);
+  display: block;
+}
+
+.line-removed {
+  width: 100%;
+  height: 100%;
+  background: #B85A5A;
+  display: block;
+}
+
 span[id^='codeline-'] {
   display: block;
   padding-left: 1em;

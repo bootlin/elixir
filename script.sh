@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 #  This file is part of Elixir, a source code cross-referencer.
 #
@@ -92,6 +92,19 @@ get_dir()
         awk '{print $2" "$5" "$4" "$1}' |
         grep -v ' \.' |
         sort -t ' ' -k 1,1r -k 2,2
+}
+
+get_diff()
+{
+    v=`echo $opt1 | version_rev`
+    v_other=`echo $opt2 | version_rev`
+    diff \
+        --unchanged-group-format= \
+        --new-group-format="+%de:%dN%c'\012'" \
+        --old-group-format="-%dE:%dn%c'\012'" \
+        --changed-group-format="=%de:%dn:%dE:%dN%c'\012'" \
+        <(git cat-file blob "$v:`denormalize $opt3`" 2>/dev/null) \
+        <(git cat-file blob "$v_other:`denormalize $opt3`" 2>/dev/null)
 }
 
 tokenize_file()
@@ -265,6 +278,10 @@ case $cmd in
 
     get-dir)
         get_dir
+        ;;
+
+    get-diff)
+        get_diff
         ;;
 
     list-blobs)
