@@ -88,41 +88,39 @@ class DiffFormater(HtmlFormatter):
         self.left = left
         super().__init__(*args[2:], **kwargs)
 
-    def wrap_diff(self, source):
-        diff_num = 0
-        next_diff, next_diff_line = None, None
+    def get_next_diff_line(self, diff_num, next_diff_line):
+        next_diff = self.diff[diff_num] if len(self.diff) > diff_num else None
+        if next_diff is not None:
+            if next_diff[0] == '-' or next_diff[0] == '+':
+                next_diff_line = next_diff[1]
+            elif self.left and next_diff[0] == '=':
+                next_diff_line = next_diff[1]
+            elif not self.left and next_diff[0] == '=':
+                next_diff_line = next_diff[3]
 
-        def get_diff_line():
-            nonlocal diff_num
-            nonlocal next_diff
-            nonlocal next_diff_line
+        return next_diff, diff_num+1, next_diff_line
 
-            next_diff = self.diff[diff_num] if len(self.diff) > diff_num else None
-            if next_diff is not None:
-                if next_diff[0] == '-' or next_diff[0] == '+':
-                    next_diff_line = next_diff[1]
-                elif self.left and next_diff[0] == '=':
-                    next_diff_line = next_diff[1]
-                elif not self.left and next_diff[0] == '=':
-                    next_diff_line = next_diff[3]
-
-            diff_num += 1
-
-        def mark_lines(source, num, css_class):
+    def mark_lines(self, source, num, css_class):
+        i = 0
+        while i < num:
             try:
-                i = 0
-                while i < num:
-                    t, line = next(source)
-                    if t == 1:
-                        yield t, f'<span class="{css_class}">{line}</span>'
-                        i += 1
-                    else:
-                        yield t, line
+                t, line = next(source)
             except StopIteration:
-                pass
+                break
+            if t == 1:
+                yield t, f'<span class="{css_class}">{line}</span>'
+                i += 1
+            else:
+                yield t, line
+
+    def yield_empty(self, num):
+        for _ in range(num):
+            yield 0, '<span class="diff-line">\n</span>'
+
+    def wrap_diff(self, source):
+        next_diff, diff_num, next_diff_line = self.get_next_diff_line(0, None)
 
         linenum = 1
-        get_diff_line()
 
         while True:
             try:
@@ -133,34 +131,25 @@ class DiffFormater(HtmlFormatter):
             yield line
 
             if linenum == next_diff_line:
-                print(linenum, self.left, next_diff)
                 if next_diff is not None:
                     if self.left and next_diff[0] == '+':
-                        for _ in range(next_diff[2]):
-                            yield 0, '<span class="diff-line">\n</span>'
+                        yield from self.yield_empty(next_diff[2])
                     elif next_diff[0] == '+':
-                        print("asd")
-                        yield from mark_lines(source, next_diff[2], 'line-added')
+                        yield from self.mark_lines(source, next_diff[2], 'line-added')
                         linenum += next_diff[2]
                     elif not self.left and next_diff[0] == '-':
-                        for _ in range(next_diff[2]):
-                            yield 0, '<span class="diff-line">\n</span>'
+                        yield from self.yield_empty(next_diff[2])
                     elif next_diff[0] == '-':
-                        yield from mark_lines(source, next_diff[2], 'line-removed')
+                        yield from self.mark_lines(source, next_diff[2], 'line-removed')
                         linenum += next_diff[2]
                     elif next_diff[0] == '=':
                         total = max(next_diff[2], next_diff[4])
                         to_print = next_diff[2] if self.left else next_diff[4]
-                        print(total, to_print)
-                        try:
-                            yield from mark_lines(source, to_print, 'line-added')
-                            for _ in range(total-to_print):
-                                yield 0, '<span class="diff-line">\n</span>'
-                        except StopIteration:
-                            pass
+                        yield from self.mark_lines(source, to_print, 'line-removed' if self.left else 'line-added')
+                        yield from self.yield_empty(total-to_print)
                         linenum += to_print
 
-                get_diff_line()
+                next_diff, diff_num, next_diff_line = self.get_next_diff_line(diff_num, next_diff_line)
 
             linenum += 1
 

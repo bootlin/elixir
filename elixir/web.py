@@ -579,7 +579,7 @@ def format_diff(filename: str, diff, code: str, code_other: str) -> Tuple[str, s
         diff,
         True,
         # Adds line numbers column to output
-        linenos=True,
+        linenos='inline',
         # Wraps line numbers in link (a) tags
         anchorlinenos=True,
         # Wraps each line in a span tag with id='codeline-{line_number}'
@@ -590,7 +590,7 @@ def format_diff(filename: str, diff, code: str, code_other: str) -> Tuple[str, s
         diff,
         False,
         # Adds line numbers column to output
-        linenos=True,
+        linenos='inline',
         # Wraps line numbers in link (a) tags
         anchorlinenos=True,
         # Wraps each line in a span tag with id='codeline-{line_number}'
