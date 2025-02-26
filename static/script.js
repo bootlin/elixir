@@ -185,10 +185,10 @@ function addClassToRangeOfElements(first, last, class_name) {
 // Sets up listeners on element that contains line numbers to handle
 // shift-clicks for range highlighting
 function setupLineRangeHandlers() {
-  // Check if page contains the element with line numbers
+  // Check if page contains the element with line numbers and code
   // If not, then likely script is not executed in context of the source page
-  const linenodiv = document.querySelector(".linenodiv");
-  if (linenodiv === null) {
+  const lxrcode = document.querySelectorAll(".lxrcode");
+  if (lxrcode === null) {
     return;
   }
 
@@ -201,7 +201,9 @@ function setupLineRangeHandlers() {
       rangeStartLine = highlightedRange[0];
       rangeEndLine = highlightedRange[1];
       highlightFromTo(rangeStartLine, rangeEndLine);
-      document.getElementById(`L${rangeStartLine}`).scrollIntoView();
+      const wrapper = document.querySelector('.wrapper');
+      const offsetTop = document.getElementById(`L${rangeStartLine}`).offsetTop;
+      wrapper.scrollTop = offsetTop < 100 ? 200 : offsetTop + 100;
     } else if (location.hash !== "" && location.hash[1] === "L") {
       rangeStartLine = parseLineId(location.hash.substring(1));
     }
@@ -214,15 +216,21 @@ function setupLineRangeHandlers() {
 
   parseFromHash();
 
-  linenodiv.addEventListener("click", ev => {
+  lxrcode.forEach(el => el.addEventListener("click", ev => {
     if (ev.ctrlKey || ev.metaKey) {
+      return;
+    }
+    let el = ev.target;
+    if (el.classList.contains('linenos')) {
+      el = el.parentNode;
+    }
+    if (!el.classList.contains('line-link')) {
       return;
     }
     ev.preventDefault();
 
     // Handler is set on the element that contains all line numbers, check if the
     // event is directed at an actual line number element
-    const el = ev.target;
     if (typeof(el.id) !== "string" || el.id[0] !== "L" || el.tagName !== "A") {
       return;
     }
@@ -271,7 +279,7 @@ function setupLineRangeHandlers() {
       highlightFromTo(rangeStartLine, rangeEndLine);
       window.location.hash = `L${rangeStartLine}-L${rangeEndLine}`;
     }
-  });
+  }));
 }
 
 /* Other fixes */
