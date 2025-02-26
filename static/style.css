@@ -718,6 +718,12 @@ h2 {
   font-weight: 400;
   color: #000;
 }
+
+.lxrident a span {
+  width: 8em;
+  display: inline-block;
+}
+
 .lxrident li li::before {
   color: #444;
 }
@@ -737,6 +743,11 @@ h2 {
 }
 .lxrident li li:last-of-type::before {
   content: '└╴';
+}
+
+.lxrident li pre {
+    display: inline-block;
+    margin: auto;
 }
 
 
