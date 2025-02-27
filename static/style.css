@@ -461,6 +461,38 @@ h2 {
   padding: 0;
 }
 
+#diff-checkbox-label {
+  color: #888;
+}
+
+#diff-exit {
+  color: #888;
+  padding-left: 1em;
+}
+
+#diff-exit:hover {
+  color: #eee;
+  color: #6d7dd2;
+  font-weight: 700;
+}
+
+#diff-checkbox {
+  padding: 1em;
+  margin-bottom: 0.5em;
+}
+
+#diff-checkbox:checked ~ li .version-link-source {
+  display: none;
+}
+
+.version-link-diff {
+  display: none;
+}
+
+#diff-checkbox:checked ~ li .version-link-diff {
+  display: inline;
+}
+
 /* reference popup */
 
 #reference-popup-wrapper {
@@ -765,9 +797,18 @@ h2 {
   display: block;
   padding: 0.15em 1.5em;
 }
+.lxrtree tr {
+  opacity: 1;
+}
 .lxrtree tr:hover {
   background: #ddd;
 }
+
+.lxrtree .warning {
+  opacity: 0.5;
+  margin-left: 1.5em;
+}
+
 .tree-icon:before {
   display: inline-block;
   width: 1.5em;
@@ -788,9 +829,33 @@ h2 {
 }
 
 .size {
-  opacity: 0.6;
+  color: rgba(0, 0, 0, 0.6);
   min-height: 1.5em; /* line_height + 2 * padding = 1.2em + 2 * 0.15em */
   text-align: right;
+}
+
+.file-added {
+  background: #c2ffad;
+}
+
+.lxrtree .file-added:hover {
+  background: #c9e9c0;
+}
+
+.file-removed {
+  background: #fcc0c0;
+}
+
+.lxrtree .file-removed:hover {
+  background: #e7c8c8;
+}
+
+.file-changed {
+  background: #f8edc3;
+}
+
+.lxrtree .file-changed:hover {
+  background: #e5dfca;
 }
 
 
@@ -805,6 +870,19 @@ h2 {
 
 .lxrcode pre * {
   vertical-align: top;
+}
+
+.lxrcode .note-banner {
+  width: 100%;
+  text-align: center;
+  padding: 0.3em;
+  background-color: #e9e9e9;
+  color: #555;
+}
+
+.lxrcode .warning {
+  opacity: 0.5;
+  margin: 1.5em;
 }
 
 .lxrcode .note-banner {

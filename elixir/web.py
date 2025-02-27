@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+
 #  This file is part of Elixir, a source code cross-referencer.
 #
 #  Copyright (C) 2017--2020 Mikaël Bouillot <mikael.bouillot@bootlin.com>
@@ -28,7 +29,8 @@ import datetime
 import dataclasses
 from collections import OrderedDict, namedtuple
 from re import search, sub
-from typing import Any, Callable, NamedTuple, Tuple
+from typing import Any, Callable, NamedTuple, Optional, Tuple
+from difflib import SequenceMatcher
 from urllib import parse
 import falcon
 import jinja2
@@ -42,7 +44,7 @@ from .api import ApiIdentGetterResource
 from .query import get_query
 from .web_utils import ProjectConverter, IdentConverter, validate_version, validate_project, validate_ident, \
         get_elixir_version_string, get_elixir_repo_url, RequestContext, Config, DirectoryEntry
-from .diff import format_diff
+from .diff import format_diff, diff_directory_entries
 
 VERSION_CACHE_DURATION_SECONDS = 2 * 60  # 2 minutes
 ADD_ISSUE_LINK = "https://github.com/bootlin/elixir/issues/new"
@@ -110,7 +112,7 @@ def get_project_error_page(req, resp, exception: ElixirProjectError):
 
         versions_raw = get_versions_cached(query, req.context, project)
         get_url_with_new_version = lambda v: stringify_source_path(project, v, '/')
-        versions, current_version_path = get_versions(versions_raw, get_url_with_new_version, version)
+        versions, current_version_path = get_versions(versions_raw, get_url_with_new_version, None, version)
 
         if current_version_path[2] is None:
             # If details about current version are not available, make base links
@@ -194,6 +196,10 @@ def validate_project_and_version(ctx, project, version):
 def get_source_base_url(project: str, version: str) -> str:
     return f'/{ parse.quote(project, safe="") }/{ parse.quote(version, safe="") }/source'
 
+def stringify_diff_path(project: str, version: str, version_other: str, path: str) -> str:
+    return f'/{ parse.quote(project, safe="") }/{ parse.quote(version, safe="") }/diff/' + \
+        f'{ parse.quote(version_other, safe="") }/{ path }'
+
 # Converts ParsedSourcePath to a string with corresponding URL path
 def stringify_source_path(project: str, version: str, path: str) -> str:
     if not path.startswith('/'):
@@ -251,6 +257,11 @@ class SourceResource:
 
         query.close()
 
+# Returns base url of diff pages
+# project and version are assumed to be unquoted
+def get_diff_base_url(project: str, version: str, version_other: str) -> str:
+    return f'/{ parse.quote(project, safe="") }/{ parse.quote(version, safe="") }/diff/{ parse.quote(version_other, safe="") }'
+
 # Handles source URLs without a path, ex. '/u-boot/v2023.10/source'.
 # Note lack of trailing slash
 class SourceWithoutPathResource(SourceResource):
@@ -258,7 +269,7 @@ class SourceWithoutPathResource(SourceResource):
         return super().on_get(req, resp, project, version, '')
 
 class DiffResource:
-    def on_get(self, req, resp, project: str, version: str, version_other: str, path: str):
+    def on_get(self, req, resp, project: str, version: str, version_other: str, path: str = ''):
         project, version, query = validate_project_and_version(req.context, project, version)
         version_other = validate_version(parse.unquote(version_other))
         if version_other is None or version_other == 'latest':
@@ -432,7 +443,7 @@ def get_projects(basedir: str) -> list[ProjectEntry]:
 
 # Tuple of version name and URL to chosen resource with that version
 # Used to render version list in the sidebar
-VersionEntry = namedtuple('VersionEntry', 'version, url')
+VersionEntry = namedtuple('VersionEntry', 'version, url, diff_url')
 
 # Takes result of Query.get_versions() and prepares it for the sidebar template.
 #  Returns an OrderedDict with version information and optionally a triple with
@@ -445,6 +456,7 @@ VersionEntry = namedtuple('VersionEntry', 'version, url')
 # current_version: string with currently browsed version
 def get_versions(versions: OrderedDict[str, OrderedDict[str, str]],
                  get_url: Callable[[str], str],
+                 get_diff_url: Optional[Callable[[str], str]],
                  current_version: str) -> Tuple[dict[str, dict[str, list[VersionEntry]]], Tuple[str|None, str|None, str|None]]:
 
     result = OrderedDict()
@@ -456,13 +468,14 @@ def get_versions(versions: OrderedDict[str, OrderedDict[str, str]],
                     result[major] = OrderedDict()
                 if minor not in result[major]:
                     result[major][minor] = []
-                result[major][minor].append(VersionEntry(v, get_url(v)))
+                result[major][minor].append(
+                    VersionEntry(v, get_url(v), get_diff_url(v) if get_diff_url is not None else None)
+                )
                 if v == current_version:
                     current_version_path = (major, minor, v)
 
     return result, current_version_path
 
-# Caches get_versions result in a context object
 def get_versions_cached(q, ctx, project):
     with ctx.versions_cache_lock:
         if project not in ctx.versions_cache:
@@ -481,9 +494,9 @@ def get_versions_cached(q, ctx, project):
 # project: name of the project
 # version: version of the project
 def get_layout_template_context(q: Query, ctx: RequestContext, get_url_with_new_version: Callable[[str], str],
-                                project: str, version: str) -> dict[str, Any]:
+                                get_diff_url: Optional[Callable[[str], str]], project: str, version: str) -> dict[str, Any]:
     versions_raw = get_versions_cached(q, ctx, project)
-    versions, current_version_path = get_versions(versions_raw, get_url_with_new_version, version)
+    versions, current_version_path = get_versions(versions_raw, get_url_with_new_version, get_diff_url, version)
 
     return {
         'projects': get_projects(ctx.config.project_dir),
@@ -658,11 +671,11 @@ def get_directory_entries(q: Query, base_url, tag: str, path: str) -> list[Direc
     lines = q.get_dir_contents(tag, path)
 
     for l in lines:
-        type, name, size, perm = l.split(' ')
+        type, name, size, perm, blob_id = l.split(' ')
         file_path = f"{ path }/{ name }"
 
         if type == 'tree':
-            dir_entries.append(DirectoryEntry('tree', name, file_path, f"{ base_url }{ file_path }", None))
+            dir_entries.append(DirectoryEntry('tree', name, file_path, f"{ base_url }{ file_path }", None, None))
         elif type == 'blob':
             # 120000 permission means it's a symlink
             if perm == '120000':
@@ -670,9 +683,9 @@ def get_directory_entries(q: Query, base_url, tag: str, path: str) -> list[Direc
                 link_contents = q.get_file_raw(tag, file_path)
                 link_target_path = os.path.abspath(dir_path + link_contents)
 
-                dir_entries.append(DirectoryEntry('symlink', name, link_target_path, f"{ base_url }{ link_target_path }", size))
+                dir_entries.append(DirectoryEntry('symlink', name, link_target_path, f"{ base_url }{ link_target_path }", size, None))
             else:
-                dir_entries.append(DirectoryEntry('blob', name, file_path, f"{ base_url }{ file_path }", size))
+                dir_entries.append(DirectoryEntry('blob', name, file_path, f"{ base_url }{ file_path }", size, None))
 
     return dir_entries
 
@@ -727,10 +740,11 @@ def generate_source_page(ctx: RequestContext, q: Query,
         title_path = f'{ path_split[-1] } - { "/".join(path_split) } - '
 
     get_url_with_new_version = lambda v: stringify_source_path(project, v, path)
+    get_diff_url = lambda v_other: stringify_diff_path(project, version, v_other, path)
 
     # Create template context
     data = {
-        **get_layout_template_context(q, ctx, get_url_with_new_version, project, version),
+        **get_layout_template_context(q, ctx, get_url_with_new_version, get_diff_url, project, version),
 
         'title_path': title_path,
         'path': path,
@@ -747,15 +761,15 @@ def generate_diff_page(ctx: RequestContext, q: Query,
                        project: str, version: str, version_other: str, path: str) -> tuple[int, str]:
 
     status = falcon.HTTP_OK
-    source_base_url = get_source_base_url(project, version)
+    diff_base_url = get_diff_base_url(project, version, version_other)
 
     # Generate breadcrumbs
     path_split = path.split('/')[1:]
     path_temp = ''
-    breadcrumb_links = []
+    breadcrumb_urls = []
     for p in path_split:
         path_temp += '/'+p
-        breadcrumb_links.append((p, f'{ source_base_url }{ path_temp }'))
+        breadcrumb_urls.append((p, f'{ diff_base_url }{ path_temp }'))
 
     type = q.get_file_type(version, path)
     type_other = q.get_file_type(version_other, path)
@@ -795,25 +809,18 @@ def generate_diff_page(ctx: RequestContext, q: Query,
                 warning = f'Files are the same in {version} and {version_other}.'
             else:
                 missing_version = version_other if type == 'blob' else version
-                warning = f'File does not exist or is not a file {missing_version}.'
+                warning = f'File does not exist, or is not a file in {missing_version}. ({version} displayed)'
 
             template_ctx = {
                 'code': generate_source(q, project, version if type == 'blob' else version_other, path),
-                'warning': warning
+                'warning': warning,
             }
             template = ctx.jinja_env.get_template('source.html')
     else:
         raise ElixirProjectError('File not found', f'This file does not exist in {version} nor in {version_other}.',
                                  status=falcon.HTTP_NOT_FOUND,
                                  query=q, project=project, version=version,
-                                 extra_template_args={'breadcrumb_links': breadcrumb_links})
-
-    if type_other != 'blob':
-        raise ElixirProjectError('File not found', f'This file is not present in {version_other}.',
-                                 status=falcon.HTTP_NOT_FOUND,
-                                 query=q, project=project, version=version,
-                                 extra_template_args={'breadcrumb_links': breadcrumb_links})
-
+                                 extra_template_args={'breadcrumb_urls': breadcrumb_urls})
 
     # Create titles like this:
     # root path: "Linux source code (v5.5.6) - Bootlin"
@@ -827,20 +834,21 @@ def generate_diff_page(ctx: RequestContext, q: Query,
         title_path = f'{ path_split[-1] } - { "/".join(path_split) } - '
 
     get_url_with_new_version = lambda v: stringify_source_path(project, v, path)
+    get_diff_url = lambda v_other: stringify_diff_path(project, version, v_other, path)
 
-    template = ctx.jinja_env.get_template('diff.html')
-
-    code, code_other = generate_diff(q, project, version, version_other, path)
     # Create template context
     data = {
-        **get_layout_template_context(q, ctx, get_url_with_new_version, project, version),
+        **get_layout_template_context(q, ctx, get_url_with_new_version, get_diff_url, project, version),
         **template_ctx,
 
-        'code': code,
-        'code_other': code_other,
+        'diff_mode_available': True,
+        'diff_checked': True,
+        'diff_exit_url': stringify_source_path(project, version, path),
+
         'title_path': title_path,
         'path': path,
-        'breadcrumb_links': breadcrumb_links,
+        'breadcrumb_urls': breadcrumb_urls,
+        'base_url': diff_base_url,
     }
 
     return (status, template.render(data))
@@ -923,7 +931,7 @@ def generate_ident_page(ctx: RequestContext, q: Query,
     get_url_with_new_version = lambda v: stringify_ident_path(project, v, family, ident)
 
     data = {
-        **get_layout_template_context(q, ctx, get_url_with_new_version, project, version),
+        **get_layout_template_context(q, ctx, get_url_with_new_version, None, project, version),
 
         'searched_ident': ident,
         'current_family': family,
@@ -1003,6 +1011,7 @@ def get_application():
     app.add_route('/{project}/{version}/ident/{ident}', IdentWithoutFamilyResource())
     app.add_route('/{project}/{version}/{family}/ident/{ident}', IdentResource())
     app.add_route('/{project}/{version}/diff/{version_other}/{path:path}', DiffResource())
+    app.add_route('/{project}/{version}/diff/{version_other}', DiffResource())
 
     app.add_route('/acp', AutocompleteResource())
     app.add_route('/api/ident/{project:project}/{ident:ident}', ApiIdentGetterResource())

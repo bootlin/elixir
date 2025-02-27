@@ -88,5 +88,6 @@ class IdentConverter(falcon.routing.BaseConverter):
 # path: path of the file, path to the target in case of symlinks
 # url: absolute URL of the file
 # size: int, file size in bytes, None for directories and symlinks
-DirectoryEntry = namedtuple('DirectoryEntry', 'type, name, path, url, size')
+# diff: file state in a diff - "added", "removed", "changed" or None
+DirectoryEntry = namedtuple('DirectoryEntry', 'type, name, path, url, size, diff')
 
