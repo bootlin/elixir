@@ -62,7 +62,6 @@ pre {
   font-size: 0.9em;
   line-height: 1.2;
   padding: 0;
-  color: #787878;
 }
 
 table {
@@ -882,7 +881,11 @@ span[id^='codeline-'] {
   padding-left: unset;
 }
 
-.diff span[id^='codeline-'] > a {
+.diff span[id^='codeline-'] span {
+  display: inline-block;
+}
+
+.diff .line-link {
   background: #e9e9e9;
   color: #999;
   padding-left: 1em;
@@ -938,12 +941,6 @@ span[id^='codeline-'].line-highlight {
   outline-offset: -1px;
 }
 
-.highlight pre {
-  padding-top: 0;
-}
-.highlight pre span:first-child {
-}
-
 .highlight .code a {
   color: inherit;
   font-weight: 700;
@@ -954,7 +951,8 @@ span[id^='codeline-'].line-highlight {
   border-bottom: 1px dotted #000;
 }
 
-.highlight a {
+.highlight .source-link,
+.highlight .ident {
   color: inherit;
   font-weight: 700;
   background: linear-gradient(to bottom, #0000 10%, #f4f6ff 10%, #f4f6ff 90%, #0000 90%);
@@ -1052,7 +1050,7 @@ span[id^='codeline-'].line-highlight {
 
 /* highlight */
 
-.highlight .code pre {
+.highlight pre {
   color: #000;
   -moz-tab-size: 8;
   -o-tab-size: 8;

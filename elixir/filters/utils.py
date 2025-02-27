@@ -91,3 +91,6 @@ def decode_number(string):
 
     return int(result)
 
+def format_source_link(url: str, label: str) -> str:
+    return f'<a class="source-link" href="{ url }">{ label }</a>'
+

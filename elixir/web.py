@@ -558,7 +558,7 @@ def generate_source(q: Query, project: str, version: str, path: str) -> str:
     html_code_block = format_code(fname, code)
 
     # Replace line numbers by links to the corresponding line in the current file
-    html_code_block = sub('href="#codeline-(\d+)', 'name="L\\1" id="L\\1" href="#L\\1', html_code_block)
+    html_code_block = sub('href="#codeline-(\d+)', 'class="line-link" name="L\\1" id="L\\1" href="#L\\1', html_code_block)
 
     for f in filters:
         html_code_block = f.untransform_formatted_code(filter_ctx, html_code_block)
@@ -642,8 +642,10 @@ def generate_diff(q: Query, project: str, version: str, version_other: str, path
     html_code_block, html_code_other_block = format_diff(fname, diff, code, code_other)
 
     # Replace line numbers by links to the corresponding line in the current file
-    html_code_block = sub('href="#codeline-(\d+)', 'name="L\\1" id="L\\1" href="#L\\1', html_code_block)
-    html_code_other_block = sub('href="#codeline-(\d+)', 'name="OL\\1" id="OL\\1" href="#OL\\1', html_code_other_block)
+    html_code_block = sub('href="#codeline-(\d+)',
+                          'class="line-link" name="L\\1" id="L\\1" href="#L\\1', html_code_block)
+    html_code_other_block = sub('href="#codeline-(\d+)',
+                          'class="line-link" name="OL\\1" id="OL\\1" href="#OL\\1', html_code_other_block)
 
     for f in filters:
         html_code_block = f.untransform_formatted_code(filter_ctx, html_code_block)

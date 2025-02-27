@@ -1,5 +1,5 @@
 import re
-from .utils import Filter, FilterContext, encode_number, decode_number, extension_matches
+from .utils import Filter, FilterContext, encode_number, decode_number, extension_matches, format_source_link
 
 # Filters for dts includes as follows:
 # Replaces include directives in dts/dtsi files with links to source
@@ -24,7 +24,7 @@ class DtsiFilter(Filter):
     def untransform_formatted_code(self, ctx: FilterContext, html: str) -> str:
         def replace_dtsi(m):
             w = self.dtsi[decode_number(m.group(1)) - 1]
-            return f'<a href="{ ctx.get_relative_source_url(w) }">{ w }</a>'
+            return format_source_link(ctx.get_relative_source_url(w), w)
 
         return re.sub('__KEEPDTSI__([A-J]+)', replace_dtsi, html, flags=re.MULTILINE)
 

@@ -1,5 +1,5 @@
 import re
-from .utils import Filter, FilterContext, decode_number, encode_number, filename_without_ext_matches
+from .utils import Filter, FilterContext, decode_number, encode_number, filename_without_ext_matches, format_source_link
 
 # Filters for Config.in includes
 # source "path/file"
@@ -23,7 +23,7 @@ class ConfigInFilter(Filter):
     def untransform_formatted_code(self, ctx: FilterContext, html: str) -> str:
         def replace_configin(m):
             w = self.configin[decode_number(m.group(1)) - 1]
-            return f'<a href="{ ctx.get_absolute_source_url(w) }">{ w }</a>'
+            return format_source_link(ctx.get_absolute_source_url(w), w)
 
         return re.sub('__KEEPCONFIGIN__([A-J]+)', replace_configin, html, flags=re.MULTILINE)
 
