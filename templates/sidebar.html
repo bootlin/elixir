@@ -19,10 +19,19 @@
 
         <h3 class="screenreader">Versions</h3>
         <ul class="versions">
+            {% if diff_mode_available %}
+                <input id="diff-checkbox" type="checkbox" {% if diff_checked %} checked {% endif %} />
+                <label id="diff-checkbox-label" for="diff-checkbox">Diff mode</label>
+                {% if diff_exit_url %}
+                    <a id="diff-exit" href="{{ diff_exit_url }}">Exit diff mode</a>
+                {% endif %}
+            {% endif %}
+
             {% set current_major, current_minor, current_version = current_version_path %}
             {% for major, major_versions in (versions|default({})).items() %}
             <li>
                 <span class="{{ 'active' if current_major == major else '' }}">{{ major }}</span>
+
                 <ul>
                 {% for minor, minor_versions in major_versions.items() %}
                     {% if minor == minor_versions[0] and minor_versions|length == 1 %}
@@ -35,9 +44,14 @@
                             <ul>
                                 {% for v in minor_versions %}
                                     <li class="li-link {{ 'active' if v.version == current_tag else '' }}">
-                                        <a href="{{ v.url }}">
+                                        <a class="version-link-source" href="{{ v.url }}">
                                             {{ v.version }}
                                         </a>
+                                        {% if v.diff_url is not none %}
+                                            <a class="version-link-diff" href="{{ v.diff_url }}">
+                                                {{ v.version }}
+                                            </a>
+                                        {% endif %}
                                     </li>
                                 {% endfor %}
                             </ul>

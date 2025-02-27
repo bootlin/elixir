@@ -27,7 +27,7 @@ import time
 import datetime
 from collections import OrderedDict, namedtuple
 from re import search, sub
-from typing import Any, Callable, NamedTuple, Tuple
+from typing import Any, Callable, NamedTuple, Optional, Tuple
 from urllib import parse
 import falcon
 import jinja2
@@ -107,7 +107,7 @@ def get_project_error_page(req, resp, exception: ElixirProjectError):
 
         versions_raw = get_versions_cached(query, req.context, project)
         get_url_with_new_version = lambda v: stringify_source_path(project, v, '/')
-        versions, current_version_path = get_versions(versions_raw, get_url_with_new_version, version)
+        versions, current_version_path = get_versions(versions_raw, get_url_with_new_version, None, version)
 
         template_ctx = {
             **template_ctx,
@@ -191,6 +191,10 @@ def validate_project_and_version(ctx, project, version):
 # project and version are assumed to be unquoted
 def get_source_base_url(project: str, version: str) -> str:
     return f'/{ parse.quote(project, safe="") }/{ parse.quote(version, safe="") }/source'
+
+def stringify_diff_path(project: str, version: str, version_other: str, path: str) -> str:
+    return f'/{ parse.quote(project, safe="") }/{ parse.quote(version, safe="") }/diff/' + \
+        f'{ parse.quote(version_other, safe="") }/{ path }'
 
 # Converts ParsedSourcePath to a string with corresponding URL path
 def stringify_source_path(project: str, version: str, path: str) -> str:
@@ -403,7 +407,7 @@ def get_projects(basedir: str) -> list[ProjectEntry]:
 
 # Tuple of version name and URL to chosen resource with that version
 # Used to render version list in the sidebar
-VersionEntry = namedtuple('VersionEntry', 'version, url')
+VersionEntry = namedtuple('VersionEntry', 'version, url, diff_url')
 
 # Takes result of Query.query('version') and prepares it for the sidebar template.
 #  Returns an OrderedDict with version information and optionally a triple with
@@ -416,6 +420,7 @@ VersionEntry = namedtuple('VersionEntry', 'version, url')
 # current_version: string with currently browsed version
 def get_versions(versions: OrderedDict[str, OrderedDict[str, str]],
                  get_url: Callable[[str], str],
+                 get_diff_url: Optional[Callable[[str], str]],
                  current_version: str) -> Tuple[dict[str, dict[str, list[VersionEntry]]], Tuple[str|None, str|None, str|None]]:
 
     result = OrderedDict()
@@ -427,13 +432,14 @@ def get_versions(versions: OrderedDict[str, OrderedDict[str, str]],
                     result[major] = OrderedDict()
                 if minor not in result[major]:
                     result[major][minor] = []
-                result[major][minor].append(VersionEntry(v, get_url(v)))
+                result[major][minor].append(
+                    VersionEntry(v, get_url(v), get_diff_url(v) if get_diff_url is not None else None)
+                )
                 if v == current_version:
                     current_version_path = (major, minor, v)
 
     return result, current_version_path
 
-# Caches get_versions result in a context object
 def get_versions_cached(q, ctx, project):
     with ctx.versions_cache_lock:
         if project not in ctx.versions_cache:
@@ -452,9 +458,9 @@ def get_versions_cached(q, ctx, project):
 # project: name of the project
 # version: version of the project
 def get_layout_template_context(q: Query, ctx: RequestContext, get_url_with_new_version: Callable[[str], str],
-                                project: str, version: str) -> dict[str, Any]:
+                                get_diff_url: Optional[Callable[[str], str]], project: str, version: str) -> dict[str, Any]:
     versions_raw = get_versions_cached(q, ctx, project)
-    versions, current_version_path = get_versions(versions_raw, get_url_with_new_version, version)
+    versions, current_version_path = get_versions(versions_raw, get_url_with_new_version, get_diff_url, version)
 
     return {
         'projects': get_projects(ctx.config.project_dir),
@@ -731,14 +737,16 @@ def generate_source_page(ctx: RequestContext, q: Query,
         title_path = f'{ path_split[-1] } - { "/".join(path_split) } - '
 
     get_url_with_new_version = lambda v: stringify_source_path(project, v, path)
+    get_diff_url = lambda v_other: stringify_diff_path(project, version, v_other, path)
 
     # Create template context
     data = {
-        **get_layout_template_context(q, ctx, get_url_with_new_version, project, version),
+        **get_layout_template_context(q, ctx, get_url_with_new_version, get_diff_url, project, version),
 
         'title_path': title_path,
         'path': path,
         'breadcrumb_links': breadcrumb_links,
+        'diff_mode_available': True,
 
         **template_ctx,
     }
@@ -788,19 +796,23 @@ def generate_diff_page(ctx: RequestContext, q: Query,
         title_path = f'{ path_split[-1] } - { "/".join(path_split) } - '
 
     get_url_with_new_version = lambda v: stringify_source_path(project, v, path)
+    get_diff_url = lambda v_other: stringify_diff_path(project, version, v_other, path)
 
     template = ctx.jinja_env.get_template('diff.html')
 
     code, code_other = generate_diff(q, project, version, version_other, path)
     # Create template context
     data = {
-        **get_layout_template_context(q, ctx, get_url_with_new_version, project, version),
+        **get_layout_template_context(q, ctx, get_url_with_new_version, get_diff_url, project, version),
 
         'code': code,
         'code_other': code_other,
         'title_path': title_path,
         'path': path,
         'breadcrumb_links': breadcrumb_links,
+        'diff_mode_available': True,
+        'diff_checked': True,
+        'diff_exit_url': stringify_source_path(project, version, path),
     }
 
     return (status, template.render(data))
@@ -883,7 +895,7 @@ def generate_ident_page(ctx: RequestContext, q: Query,
     get_url_with_new_version = lambda v: stringify_ident_path(project, v, family, ident)
 
     data = {
-        **get_layout_template_context(q, ctx, get_url_with_new_version, project, version),
+        **get_layout_template_context(q, ctx, get_url_with_new_version, None, project, version),
 
         'searched_ident': ident,
         'current_family': family,

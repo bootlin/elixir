@@ -462,6 +462,38 @@ h2 {
   padding: 0;
 }
 
+#diff-checkbox-label {
+  color: #888;
+}
+
+#diff-exit {
+  color: #888;
+  padding-left: 1em;
+}
+
+#diff-exit:hover {
+  color: #eee;
+  color: #6d7dd2;
+  font-weight: 700;
+}
+
+#diff-checkbox {
+  padding: 1em;
+  margin-bottom: 0.5em;
+}
+
+#diff-checkbox:checked ~ li .version-link-source {
+  display: none;
+}
+
+.version-link-diff {
+  display: none;
+}
+
+#diff-checkbox:checked ~ li .version-link-diff {
+  display: inline;
+}
+
 /* reference popup */
 
 #reference-popup-wrapper {
