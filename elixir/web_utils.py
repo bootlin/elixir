@@ -115,7 +115,7 @@ class DiffFormater(HtmlFormatter):
 
     def yield_empty(self, num):
         for _ in range(num):
-            yield 0, '<span class="diff-line">\n</span>'
+            yield 0, '<span class="diff-line">&nbsp;\n</span>'
 
     def wrap_diff(self, source):
         next_diff, diff_num, next_diff_line = self.get_next_diff_line(0, None)
