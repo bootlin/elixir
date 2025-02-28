@@ -35,7 +35,8 @@ RUN \
     libjansson4 \
     libyaml-0-2 \
     wget \
-    yq
+    yq \
+    rsync
 
 COPY ./requirements.txt /usr/local/elixir/
 
