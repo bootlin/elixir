@@ -12,3 +12,8 @@ Some HTTP servers may not support WSGI natively and may require a separate WSGI 
 We also recommend using Python virtual environments to manage dependencies.
 Check "Manual Installation" section of README for details.
 
+== 2025-03 - Query refactor
+
+The query tool was extracted to utils/query.py. Example call: `python3 -m utils.query file v6.8 /README'.
+Version and cmd (file/ident) parameters changed order, to allow for commands that do not take version as a parameter.
+
