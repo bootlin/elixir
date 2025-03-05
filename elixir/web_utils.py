@@ -90,13 +90,18 @@ class DiffFormater(HtmlFormatter):
 
     def get_next_diff_line(self, diff_num, next_diff_line):
         next_diff = self.diff[diff_num] if len(self.diff) > diff_num else None
+
         if next_diff is not None:
-            if next_diff[0] == '-' or next_diff[0] == '+':
+            if self.left and (next_diff[0] == '-' or next_diff[0] == '+'):
                 next_diff_line = next_diff[1]
+            elif next_diff[0] == '-' or next_diff[0] == '+':
+                next_diff_line = next_diff[2]
             elif self.left and next_diff[0] == '=':
                 next_diff_line = next_diff[1]
-            elif not self.left and next_diff[0] == '=':
+            elif next_diff[0] == '=':
                 next_diff_line = next_diff[3]
+            else:
+                raise Exception("invlaid next diff mode")
 
         return next_diff, diff_num+1, next_diff_line
 
@@ -133,15 +138,15 @@ class DiffFormater(HtmlFormatter):
             if linenum == next_diff_line:
                 if next_diff is not None:
                     if self.left and next_diff[0] == '+':
-                        yield from self.yield_empty(next_diff[2])
+                        yield from self.yield_empty(next_diff[3])
                     elif next_diff[0] == '+':
-                        yield from self.mark_lines(source, next_diff[2], 'line-added')
-                        linenum += next_diff[2]
-                    elif not self.left and next_diff[0] == '-':
-                        yield from self.yield_empty(next_diff[2])
+                        yield from self.mark_lines(source, next_diff[3], 'line-added')
+                        linenum += next_diff[3]
+                    elif self.left and next_diff[0] == '-':
+                        yield from self.mark_lines(source, next_diff[3], 'line-removed')
+                        linenum += next_diff[3]
                     elif next_diff[0] == '-':
-                        yield from self.mark_lines(source, next_diff[2], 'line-removed')
-                        linenum += next_diff[2]
+                        yield from self.yield_empty(next_diff[3])
                     elif next_diff[0] == '=':
                         total = max(next_diff[2], next_diff[4])
                         to_print = next_diff[2] if self.left else next_diff[4]

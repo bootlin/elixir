@@ -100,8 +100,8 @@ get_diff()
     v_other=`echo $opt2 | version_rev`
     diff \
         --unchanged-group-format= \
-        --new-group-format="+%de:%dN%c'\012'" \
-        --old-group-format="-%dE:%dn%c'\012'" \
+        --new-group-format="+%de:%dE:%dN%c'\012'" \
+        --old-group-format="-%de:%dE:%dn%c'\012'" \
         --changed-group-format="=%de:%dn:%dE:%dN%c'\012'" \
         <(git cat-file blob "$v:`denormalize $opt3`" 2>/dev/null) \
         <(git cat-file blob "$v_other:`denormalize $opt3`" 2>/dev/null)

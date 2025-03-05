@@ -272,11 +272,11 @@ class Query:
             if len(line) == 0:
                 continue
             elif line[0] == '+':
-                line_num, changes = line[1:].split(':')
-                result.append(('+', int(line_num), int(changes)))
+                line_num_left, line_num_right, changes = line[1:].split(':')
+                result.append(('+', int(line_num_left), int(line_num_right), int(changes)))
             elif line[0] == '-':
-                line_num, changes = line[1:].split(':')
-                result.append(('-', int(line_num), int(changes)))
+                line_num_left, line_num_right, changes = line[1:].split(':')
+                result.append(('-', int(line_num_left), int(line_num_right), int(changes)))
             elif line[0] == '=':
                 line_num, changes, other_line_num, other_changes = line[1:].split(':')
                 result.append(('=', int(line_num), int(changes), int(other_line_num), int(other_changes)))
