@@ -142,6 +142,7 @@ add_default_remotes $1 $# $2 xen https://xenbits.xen.org/git-http/xen.git
 add_default_remotes $1 $# $2 freebsd https://git.freebsd.org/src.git
 add_default_remotes $1 $# $2 opensbi https://github.com/riscv-software-src/opensbi
 add_default_remotes $1 $# $2 iproute2 https://git.kernel.org/pub/scm/network/iproute2/iproute2.git
+add_default_remotes $1 $# $2 vpp https://gerrit.fd.io/r/vpp
 
 # Index a single project
 if test "x$2" != "x--all"; then
