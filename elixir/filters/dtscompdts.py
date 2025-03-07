@@ -11,7 +11,7 @@ class DtsCompDtsFilter(Filter):
 
     def check_if_applies(self, ctx) -> bool:
         return super().check_if_applies(ctx) and \
-            ctx.query.supports_dts_comp() and \
+            ctx.query.dts_comp_support and \
             extension_matches(ctx.filepath, {'dts', 'dtsi'})
 
     def transform_raw_code(self, ctx, code: str) -> str:

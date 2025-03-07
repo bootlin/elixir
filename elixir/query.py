@@ -79,10 +79,6 @@ class Query:
     def close(self):
         self.db.close()
 
-    # Get state of dts_comp_support
-    def supports_dts_comp(self):
-        return self.dts_comp_support
-
     # Check if a dts compatible string exists
     def dts_comp_exists(self, ident):
         if self.dts_comp_support:
