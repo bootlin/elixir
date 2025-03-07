@@ -142,9 +142,8 @@ class Query:
         entries_str =  decode(self.script('get-dir', version, path))
         return entries_str.split("\n")[:-1]
 
-    # Returns the list of indexed versions in the following format:
-    # topmenu submenu tag
-    # Example: v3 v3.1 v3.1-rc10
+    # Returns indexed versions, as a tree of OrderedDict.
+    # It has a depth of 3, for example: v3 v3.1 v3.1-rc10.
     def get_versions(self):
         versions = OrderedDict()
 
