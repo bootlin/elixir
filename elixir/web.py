@@ -25,6 +25,7 @@ import re
 import threading
 import time
 import datetime
+import dataclasses
 from collections import OrderedDict, namedtuple
 from re import search, sub
 from typing import Any, Callable, NamedTuple, Tuple
@@ -598,28 +599,40 @@ def generate_diff(q: Query, project: str, version: str, version_other: str, path
     family = getFileFamily(fname)
 
     source_base_url = get_source_base_url(project, version)
+    source_base_url_other = get_source_base_url(project, version_other)
 
-    def get_ident_url(ident, ident_family=None):
-        if ident_family is None:
-            ident_family = family
-        return stringify_ident_path(project, version, ident_family, ident)
+    def generate_get_ident_url(version):
+        def get_ident_url(ident, ident_family=None):
+            if ident_family is None:
+                ident_family = family
+            return stringify_ident_path(project, version, ident_family, ident)
+        return get_ident_url
 
     filter_ctx = FilterContext(
         q,
         version,
         family,
         path,
-        get_ident_url,
+        generate_get_ident_url(version),
         lambda path: f'{ source_base_url }{ "/" if not path.startswith("/") else "" }{ path }',
         lambda rel_path: f'{ source_base_url }{ os.path.dirname(path) }/{ rel_path }',
     )
 
+    filter_ctx_other = dataclasses.replace(filter_ctx,
+        tag=version_other,
+        get_ident_url=generate_get_ident_url(version_other),
+        get_absolute_source_url=lambda path: f'{ source_base_url_other }{ "/" if not path.startswith("/") else "" }{ path }',
+        get_relative_source_url=lambda rel_path: f'{ source_base_url_other }{ os.path.dirname(path) }/{ rel_path }',
+    )
+
     filters = get_filters(filter_ctx, project)
+    filters_other = get_filters(filter_ctx_other, project)
 
     # Apply filters
     for f in filters:
         code = f.transform_raw_code(filter_ctx, code)
-        code_other = f.transform_raw_code(filter_ctx, code_other)
+    for f in filters_other:
+        code_other = f.transform_raw_code(filter_ctx_other, code_other)
 
     html_code_block, html_code_other_block = format_diff(fname, diff, code, code_other)
 
@@ -631,7 +644,8 @@ def generate_diff(q: Query, project: str, version: str, version_other: str, path
 
     for f in filters:
         html_code_block = f.untransform_formatted_code(filter_ctx, html_code_block)
-        html_code_other_block = f.untransform_formatted_code(filter_ctx, html_code_other_block)
+    for f in filters_other:
+        html_code_other_block = f.untransform_formatted_code(filter_ctx_other, html_code_other_block)
 
     return html_code_block, html_code_other_block
 
