@@ -104,7 +104,7 @@ project_filters = {
     ],
     'vpp': [
         *default_filters,
-        (CppPathIncFilter, {"prefix_path": ['src', 'src/plugins']}),
+        (CppPathIncFilter, {"prefix_path": ['src', 'src/plugins', 'src/vpp-api', 'src/vpp-api/vapi']}),
         MakefileFileFilter,
     ],
     'zephyr': [
