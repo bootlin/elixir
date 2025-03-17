@@ -35,8 +35,11 @@ class CppPathIncFilter(Filter):
     def untransform_formatted_code(self, ctx: FilterContext, html: str) -> str:
         def replace_cpppathinc(m):
             w = self.cpppathinc[decode_number(m.group(1)) - 1]
-            path = f'/%s/{ w }' % self.prefix_path
-            return f'<a href="{ ctx.get_absolute_source_url(path) }">{ w }</a>'
+            for p in self.prefix_path:
+                path = f'/%s/{ w }' % p
+                if ctx.query.query('exist', ctx.tag, path):
+                    return f'<a href="{ ctx.get_absolute_source_url(path) }">{ w }</a>'
+            return w
 
         return re.sub('__KEEPCPPPATHINC__([A-J]+)', replace_cpppathinc, html, flags=re.MULTILINE)
 
