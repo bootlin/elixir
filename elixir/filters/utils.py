@@ -28,9 +28,11 @@ class FilterContext:
 # up to the filter, but it's important to be careful to not break formatting.
 # The second part runs on HTML, replacing markings left by the first part with HTML code.
 # path_exceptions: list of regexes, disables filter if path of the filtered file matches a regex from the list
+# prefix_path: will be used to replace the prefix path during the untransform_formatted_code step
 class Filter:
-    def __init__(self, path_exceptions: List[str] = []):
+    def __init__(self, path_exceptions: List[str] = [], prefix_path: str = "include"):
         self.path_exceptions = path_exceptions
+        self.prefix_path = prefix_path
 
     # Return True if filter can be applied to file with path
     def check_if_applies(self, ctx: FilterContext) -> bool:
