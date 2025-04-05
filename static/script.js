@@ -113,13 +113,19 @@ function setupSidebarSwitch() {
   });
 }
 
+function getPrefix(lineId) {
+  if (lineId[0] == "L") {
+    return "L";
+  } else if (lineId.startsWith("OL")) {
+    return "OL";
+  } else {
+    return "";
+  }
+}
+
 // Parse and validate line identifier in format L${number}
 function parseLineId(lineId) {
-  if (lineId[0] != "L") {
-    return;
-  }
-
-  let lineIdNum = parseInt(lineId.substring(1));
+  const lineIdNum = parseInt(lineId.substring(getPrefix(lineId).length));
   console.assert(!isNaN(lineIdNum), "Invalid line id");
 
   let lineElement = document.getElementById(lineId);
@@ -151,18 +157,24 @@ function parseLineRangeAnchor(hashStr) {
     firstLine = lineTmp;
   }
 
-  return [firstLine, lastLine];
+  return [firstLine, lastLine, getPrefix(hash[0])];
 }
 
 // Highlights line number elements from firstLine to lastLine
-function highlightFromTo(firstLine, lastLine) {
-  const firstLineElement = document.getElementById(`L${ firstLine }`);
-  const lastLineElement = document.getElementById(`L${ lastLine }`);
+function highlightFromTo(firstLine, lastLine, prefix='L') {
+  const firstLineElement = document.getElementById(`${ prefix }${ firstLine }`);
+  const lastLineElement = document.getElementById(`${ prefix }${ lastLine }`);
 
-  const firstCodeLine = document.getElementById(`codeline-${ firstLine }`);
-  const lastCodeLine = document.getElementById(`codeline-${ lastLine }`);
+  let firstCodeLine = firstLineElement.parentNode;
+  // handle line-added/changed/deleted wrappers
+  if (firstCodeLine.parentNode.tagName != "PRE") {
+    firstCodeLine = firstCodeLine.parentNode;
+  }
+  let lastCodeLine = lastLineElement.parentNode;
+  if (lastCodeLine.parentNode.tagName != "PRE") {
+    lastCodeLine = lastCodeLine.parentNode;
+  }
 
-  addClassToRangeOfElements(firstLineElement.parentNode, lastLineElement.parentNode, "line-highlight");
   addClassToRangeOfElements(firstCodeLine, lastCodeLine, "line-highlight");
 }
 
@@ -192,7 +204,7 @@ function setupLineRangeHandlers() {
     return;
   }
 
-  let rangeStartLine, rangeEndLine;
+  let rangeStartLine, rangeEndLine, rangePrefix;
 
   const parseFromHash = () => {
     const highlightedRange = parseLineRangeAnchor(window.location.hash);
@@ -200,12 +212,15 @@ function setupLineRangeHandlers() {
     if (highlightedRange !== undefined) {
       rangeStartLine = highlightedRange[0];
       rangeEndLine = highlightedRange[1];
-      highlightFromTo(rangeStartLine, rangeEndLine);
+      rangePrefix = highlightedRange[2];
+      highlightFromTo(rangeStartLine, rangeEndLine, rangePrefix);
       const wrapper = document.querySelector('.wrapper');
-      const offsetTop = document.getElementById(`L${rangeStartLine}`).offsetTop;
+      const offsetTop = document.getElementById(`${rangePrefix}${rangeStartLine}`).offsetTop;
       wrapper.scrollTop = offsetTop < 100 ? 200 : offsetTop + 100;
     } else if (location.hash !== "" && location.hash[1] === "L") {
       rangeStartLine = parseLineId(location.hash.substring(1));
+    } else if (location.hash !== "" && location.hash.startsWith("OL")) {
+      rangeStartLine = parseLineId(location.hash.substring(2));
     }
   }
 
@@ -231,16 +246,17 @@ function setupLineRangeHandlers() {
 
     // Handler is set on the element that contains all line numbers, check if the
     // event is directed at an actual line number element
-    if (typeof(el.id) !== "string" || el.id[0] !== "L" || el.tagName !== "A") {
+    if (typeof(el.id) !== "string" || !(el.id[0] == "L" || el.id.startsWith("OL")) || el.tagName !== "A") {
       return;
     }
 
     clearRangeHighlight();
 
-    if (rangeStartLine === undefined || !ev.shiftKey) {
+    if (rangeStartLine === undefined || !ev.shiftKey || rangePrefix != getPrefix(el.id)) {
       rangeStartLine = parseLineId(el.id);
+      rangePrefix = getPrefix(el.id);
       rangeEndLine = undefined;
-      highlightFromTo(rangeStartLine, rangeStartLine);
+      highlightFromTo(rangeStartLine, rangeStartLine, rangePrefix);
       window.location.hash = el.id;
     } else if (ev.shiftKey) {
       if (rangeEndLine === undefined) {
@@ -276,8 +292,8 @@ function setupLineRangeHandlers() {
         }
       }
 
-      highlightFromTo(rangeStartLine, rangeEndLine);
-      window.location.hash = `L${rangeStartLine}-L${rangeEndLine}`;
+      highlightFromTo(rangeStartLine, rangeEndLine, rangePrefix);
+      window.location.hash = `${rangePrefix}${rangeStartLine}-${rangePrefix}${rangeEndLine}`;
     }
   }));
 }

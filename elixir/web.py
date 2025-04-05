@@ -729,6 +729,7 @@ def generate_source_page(ctx: RequestContext, q: Query,
         'title_path': title_path,
         'path': path,
         'breadcrumb_urls': breadcrumb_urls,
+        'diff_mode_available': True,
 
         **template_ctx,
     }
