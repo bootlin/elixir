@@ -28,9 +28,10 @@
             {% endif %}
 
             {% set current_major, current_minor, current_version = current_version_path %}
+            {% set other_major, other_minor, other_version = other_version_path %}
             {% for major, major_versions in (versions|default({})).items() %}
             <li>
-                <span class="{{ 'active' if current_major == major else '' }}">{{ major }}</span>
+                <span class="{{ 'active' if major in (current_major, other_major) else '' }}">{{ major }}</span>
 
                 <ul>
                 {% for minor, minor_versions in major_versions.items() %}
@@ -40,10 +41,13 @@
                         </li>
                     {% else %}
                         <li>
-                            <span class="{{ 'active' if minor == current_minor else '' }}">{{ minor }}</span>
+                            <span class="{{ 'active' if minor in (current_minor, other_minor) else '' }}">{{ minor }}</span>
                             <ul>
                                 {% for v in minor_versions %}
-                                    <li class="li-link {{ 'active' if v.version == current_tag else '' }}">
+                                    <li class="li-link
+                                               {{ 'active' if v.version == current_tag else '' }}
+                                               {{ 'active-other' if v.version == other_tag else '' }}
+                                        ">
                                         <a class="version-link-source" href="{{ v.url }}">
                                             {{ v.version }}
                                         </a>

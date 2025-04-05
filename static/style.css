@@ -453,8 +453,11 @@ h2 {
   margin: 0;
 }
 .sidebar nav li.active a {
-  color: #eee;
   color: #6d7dd2;
+  font-weight: 700;
+}
+.sidebar nav li.active-other a {
+  color: #d2c26d;
   font-weight: 700;
 }
 .sidebar nav ul {

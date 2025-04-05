@@ -445,6 +445,8 @@ def get_projects(basedir: str) -> list[ProjectEntry]:
 # Used to render version list in the sidebar
 VersionEntry = namedtuple('VersionEntry', 'version, url, diff_url')
 
+VersionPath = namedtuple('VersionPath', 'major, minor, path')
+
 # Takes result of Query.get_versions() and prepares it for the sidebar template.
 #  Returns an OrderedDict with version information and optionally a triple with
 #  (major, minor, version) of current_version. The triple is useful, because sometimes
@@ -457,10 +459,10 @@ VersionEntry = namedtuple('VersionEntry', 'version, url, diff_url')
 def get_versions(versions: OrderedDict[str, OrderedDict[str, str]],
                  get_url: Callable[[str], str],
                  get_diff_url: Optional[Callable[[str], str]],
-                 current_version: str) -> Tuple[dict[str, dict[str, list[VersionEntry]]], Tuple[str|None, str|None, str|None]]:
+                 current_version: str) -> Tuple[dict[str, dict[str, list[VersionEntry]]], VersionPath]:
 
     result = OrderedDict()
-    current_version_path = (None, None, None)
+    current_version_path = VersionPath(None, None, None)
     for major, minor_verions in versions.items():
         for minor, patch_versions in minor_verions.items():
             for v in patch_versions:
@@ -472,9 +474,19 @@ def get_versions(versions: OrderedDict[str, OrderedDict[str, str]],
                     VersionEntry(v, get_url(v), get_diff_url(v) if get_diff_url is not None else None)
                 )
                 if v == current_version:
-                    current_version_path = (major, minor, v)
+                    current_version_path = VersionPath(major, minor, v)
 
     return result, current_version_path
+
+def find_version_path(versions: OrderedDict[str, OrderedDict[str, str]],
+                      version: str) -> VersionPath:
+    for major, minor_verions in versions.items():
+        for minor, patch_versions in minor_verions.items():
+            for v in patch_versions:
+                if v == version:
+                    return VersionPath(major, minor, v)
+
+    return VersionPath(None, None, None)
 
 def get_versions_cached(q, ctx, project):
     with ctx.versions_cache_lock:
@@ -502,6 +514,7 @@ def get_layout_template_context(q: Query, ctx: RequestContext, get_url_with_new_
         'projects': get_projects(ctx.config.project_dir),
         'versions': versions,
         'current_version_path': current_version_path,
+        'other_version_path': (None, None, None),
         'topbar_families': TOPBAR_FAMILIES,
         'elixir_version_string': ctx.config.version_string,
         'elixir_repo_url': ctx.config.repo_url,
@@ -809,7 +822,8 @@ def generate_diff_page(ctx: RequestContext, q: Query,
                 warning = f'Files are the same in {version} and {version_other}.'
             else:
                 missing_version = version_other if type == 'blob' else version
-                warning = f'File does not exist, or is not a file in {missing_version}. ({version} displayed)'
+                shown_version = version if type == 'blob' else version_other
+                warning = f'File does not exist, or is not a file in {missing_version}. ({shown_version} displayed)'
 
             template_ctx = {
                 'code': generate_source(q, project, version if type == 'blob' else version_other, path),
@@ -841,6 +855,7 @@ def generate_diff_page(ctx: RequestContext, q: Query,
         **get_layout_template_context(q, ctx, get_url_with_new_version, get_diff_url, project, version),
         **template_ctx,
 
+        'other_version_path': find_version_path(get_versions_cached(q, ctx, project), version_other),
         'diff_mode_available': True,
         'diff_checked': True,
         'diff_exit_url': stringify_source_path(project, version, path),
