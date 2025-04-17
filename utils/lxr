@@ -75,7 +75,10 @@ restart_container()
 {
         docker kill lxr || true
         docker rm lxr || true
-        docker run -d --name lxr -p 8080:80 -v /srv/elixir-data:/srv/elixir-data:ro elixir
+        docker run -d --name lxr -p 8080:80 \
+            -v /srv/elixir-data:/srv/elixir-data:ro \
+            --network=anubis_default \
+            elixir
 }
 
 deploy()
