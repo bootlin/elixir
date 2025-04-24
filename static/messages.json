@@ -1,136 +1,119 @@
 [
     {
         "desktop": {
-            "title": "In-person Linux kernel drivers training",
-            "body": "Jun 16-20, 2025",
-            "action": "Register",
-            "link": "https://shop.bootlin.com/en/event/126"
-        },
-        "mobile": {
-            "title": "In-person Linux kernel drivers training",
-            "body": "June 16-20, 2025",
-            "link": "https://shop.bootlin.com/en/event/126"
-        }
-    },
-    {
-        "desktop": {
             "title": "Embedded Linux training",
-            "body": "Mar 31-Apr 8, 2025",
+            "body": "Jun 16-27, 2025",
             "action": "Register",
-            "link": "https://shop.bootlin.com/en/event/122"
+            "link": "https://shop.bootlin.com/en/event/135"
         },
         "mobile": {
             "title": "Embedded Linux training",
-            "body": "Mar 31-Apr 8, 2025",
-            "link": "https://shop.bootlin.com/en/event/122"
-        }
-    },
-    {
-        "desktop": {
-            "title": "Embedded Linux training",
-            "body": "Mar 10-20, 2025, special US time zones",
-            "action": "Register",
-            "link": "https://shop.bootlin.com/en/event/114"
-        },
-        "mobile": {
-            "title": "Embedded Linux training",
-            "body": "Mar 10-20, 2025, special US time zones",
-            "action": "Register",
-            "link": "https://shop.bootlin.com/en/event/114"
+            "body": "Jun 16-27, 2025",
+            "link": "https://shop.bootlin.com/en/event/135"
         }
     },
     {
         "desktop": {
             "title": "Linux kernel drivers training",
-            "body": "May 6-19, 2025",
+            "body": "Jun 9-19, 2025",
             "action": "Register",
-            "link": "https://shop.bootlin.com/en/event/123"
+            "link": "https://shop.bootlin.com/en/event/139"
         },
         "mobile": {
             "title": "Linux kernel drivers training",
-            "body": "May 6-19, 2025",
-            "link": "https://shop.bootlin.com/en/event/123"
-        }
-    },
-    {
-        "desktop": {
-            "title": "Linux kernel drivers training",
-            "body": "Mar 31-Apr 9, 2025, special US time zones",
-            "action": "Register",
-            "link": "https://shop.bootlin.com/en/event/118"
-        },
-        "mobile": {
-            "title": "Linux kernel drivers training",
-            "body": "Mar 31-Apr 9, 2025, special US time zones",
-            "action": "Register",
-            "link": "https://shop.bootlin.com/en/event/118"
+            "body": "Jun 9-19, 2025",
+            "link": "https://shop.bootlin.com/en/event/139"
         }
     },
     {
         "desktop": {
             "title": "Yocto / OpenEmbedded training",
-            "body": "Feb 10-13, 2025",
+            "body": "May 19-23, 2025",
             "action": "Register",
-            "link": "https://shop.bootlin.com/en/event/125"
+            "link": "https://shop.bootlin.com/en/event/133"
         },
         "mobile": {
             "title": "Yocto / OpenEmbedded training",
             "body": "Feb 10-13, 2025",
-            "link": "https://shop.bootlin.com/en/event/125"
-        }
-    },
-    {
-        "desktop": {
-            "title": "Yocto / OpenEmbedded training",
-            "body": "Mar 24-27, 2025, special US time zones",
-            "action": "Register",
-            "link": "https://shop.bootlin.com/en/event/116"
-        },
-        "mobile": {
-            "title": "Yocto / OpenEmbedded training",
-            "body": "Mar 24-27, 2025, special US time zones",
-            "action": "Register",
-            "link": "https://shop.bootlin.com/en/event/116"
+            "link": "https://shop.bootlin.com/en/event/133"
         }
     },
     {
         "desktop": {
             "title": "Real-Time Linux with PREEMPT_RT training",
-            "body": "Feb 18-20, 2025",
+            "body": "Oct 14-16, 2025",
             "action": "Register",
-            "link": "https://shop.bootlin.com/en/event/104"
+            "link": "https://shop.bootlin.com/en/event/129"
         },
         "mobile": {
             "title": "Real-Time Linux with PREEMPT_RT training",
-            "body": "Feb 18-20, 2025",
-            "link": "https://shop.bootlin.com/en/event/104"
+            "body": "Oct 14-16, 2025",
+            "link": "https://shop.bootlin.com/en/event/129"
        }
     },
     {
         "desktop": {
             "title": "Linux debugging, profiling, tracing and performance analysis training",
-            "body": "Apr 14-17, 2025",
+            "body": "May 19-23, 2025",
             "action": "Register",
-            "link": "https://shop.bootlin.com/en/event/124"
+            "link": "https://shop.bootlin.com/en/event/132"
         },
         "mobile": {
             "title": "Linux debugging, profiling, tracing and performance analysis training",
-            "body": "Apr 14-17, 2025",
-            "link": "https://shop.bootlin.com/en/event/124"
+            "body": "May 19-23, 2025",
+            "link": "https://shop.bootlin.com/en/event/132"
        }
     },
     {
         "desktop": {
             "title": "Linux debugging, profiling, tracing and performance analysis training",
-            "body": "Mar 24-27, 2025, special US time zones",
+            "body": "Jul 21-25, 2025",
             "action": "Register",
-            "link": "https://shop.bootlin.com/en/event/117"
+            "link": "https://shop.bootlin.com/en/event/137"
         },
         "mobile": {
             "title": "Linux debugging, profiling, tracing and performance analysis training",
-            "body": "Mar 24-27, 2025, special US time zones",
+            "body": "Jul 21-25, 2025",
+            "link": "https://shop.bootlin.com/en/event/137"
+       }
+    },
+    {
+        "desktop": {
+            "title": "Buildroot System Development training",
+            "body": "Sep 22-26, 2025",
             "action": "Register",
-            "link": "https://shop.bootlin.com/en/event/117"
+            "link": "https://shop.bootlin.com/en/event/131"
+        },
+        "mobile": {
+            "title": "Buildroot System Development training",
+            "body": "Sep 22-26, 2025",
+            "link": "https://shop.bootlin.com/en/event/131"
+       }
+    },
+    {
+        "desktop": {
+            "title": "Embedded Linux Networking training",
+            "body": "Sep 1-5, 2025",
+            "action": "Register",
+            "link": "https://shop.bootlin.com/en/event/141"
+        },
+        "mobile": {
+            "title": "Embedded Linux Networking training",
+            "body": "Sep 1-5, 2025",
+            "link": "https://shop.bootlin.com/en/event/141"
+       }
+    },
+    {
+        "desktop": {
+            "title": "Embedded Linux Audio training",
+            "body": "Sep 22-26, 2025",
+            "action": "Register",
+            "link": "https://shop.bootlin.com/en/event/136"
+        },
+        "mobile": {
+            "title": "Embedded Linux Audio training",
+            "body": "Sep 22-26, 2025",
+            "link": "https://shop.bootlin.com/en/event/136"
        }
     },
     {
