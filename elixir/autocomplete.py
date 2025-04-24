@@ -33,6 +33,7 @@ class AutocompleteResource:
         ident_prefix = req.get_param('q')
         family = req.get_param('f')
         project = req.get_param('p')
+        opensearch_mode = req.get_param('opensearch') == 'true'
 
         ident_prefix = validate_ident(ident_prefix)
         if ident_prefix is None:
@@ -82,7 +83,11 @@ class AutocompleteResource:
 
         resp.status = falcon.HTTP_200
         resp.content_type = falcon.MEDIA_JSON
-        resp.media = response
+
+        if not opensearch_mode:
+            resp.media = response
+        else:
+            resp.media = [ident_prefix, response]
 
         query.close()
 
