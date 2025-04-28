@@ -1,4 +1,5 @@
 import re
+from typing import List
 from .utils import Filter, FilterContext, encode_number, decode_number, extension_matches
 
 # Filters for cpp includes like these:
@@ -8,8 +9,10 @@ from .utils import Filter, FilterContext, encode_number, decode_number, extensio
 # If we make references to other projects, we could
 # end up with links to headers which are outside the project
 # Example: u-boot/v2023.10/source/env/embedded.c#L16
+# prefix_path: a list of paths, will be used to replace the prefix path during the untransform_formatted_code step
 class CppPathIncFilter(Filter):
-    def __init__(self, *args, **kwargs):
+    def __init__(self, prefix_path: List[str] = ["include"], *args, **kwargs):
+        self.prefix_path = prefix_path
         super().__init__(*args, **kwargs)
         self.cpppathinc = []
 
