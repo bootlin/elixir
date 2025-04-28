@@ -40,7 +40,7 @@ class CppPathIncFilter(Filter):
             w = self.cpppathinc[decode_number(m.group(1)) - 1]
             for p in self.prefix_path:
                 path = f'/%s/{ w }' % p
-                if ctx.query.query('exist', ctx.tag, path):
+                if ctx.query.file_exists(ctx.tag, path):
                     return f'<a href="{ ctx.get_absolute_source_url(path) }">{ w }</a>'
             return w
 
