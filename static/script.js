@@ -361,7 +361,7 @@ function addBannerContents(bannerElement, msg) {
 }
 
 function updateMessageBanner() {
-  fetch('/static/messages.json')
+  fetch('/static/messages.json?v=1')
     .then(r => r.json())
     .then(messages => {
       const msg = randomChoice(messages);
@@ -372,7 +372,7 @@ function updateMessageBanner() {
 }
 
 function cycleBanner(delay=500) {
-  fetch('/static/messages.json')
+  fetch('/static/messages.json?v=1')
     .then(r => r.json())
     .then(messages => {
       cycleBannerWithData(messages, delay);
