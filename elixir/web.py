@@ -41,7 +41,7 @@ from .autocomplete import AutocompleteResource
 from .api import ApiIdentGetterResource
 from .query import get_query
 from .web_utils import ProjectConverter, IdentConverter, validate_version, validate_project, validate_ident, \
-        get_elixir_version_string, get_elixir_repo_url, RequestContext, Config
+        get_elixir_version_string, get_elixir_repo_url, RequestContext, Config, DirectoryEntry
 from .diff import format_diff
 
 VERSION_CACHE_DURATION_SECONDS = 2 * 60  # 2 minutes
@@ -648,14 +648,6 @@ def generate_diff(q: Query, project: str, version: str, version_other: str, path
         html_code_other_block = f.untransform_formatted_code(filter_ctx_other, html_code_other_block)
 
     return html_code_block, html_code_other_block
-
-# Represents a file entry in git tree
-# type : either tree (directory), blob (file) or symlink
-# name: filename of the file
-# path: path of the file, path to the target in case of symlinks
-# url: absolute URL of the file
-# size: int, file size in bytes, None for directories and symlinks
-DirectoryEntry = namedtuple('DirectoryEntry', 'type, name, path, url, size')
 
 # Returns a list of DirectoryEntry objects with information about files in a directory
 # base_url: file URLs will be created by appending file path to this URL. It shouldn't end with a slash
