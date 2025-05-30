@@ -1,5 +1,5 @@
 import re
-from .utils import Filter, FilterContext, encode_number, decode_number, extension_matches
+from .utils import Filter, FilterContext, encode_number, decode_number, extension_matches, format_source_link
 
 # Filters for cpp includes like these:
 # #include "file"
@@ -24,8 +24,7 @@ class CppIncFilter(Filter):
     def untransform_formatted_code(self, ctx: FilterContext, html: str) -> str:
         def replace_cppinc(m):
             w = self.cppinc[decode_number(m.group(1)) - 1]
-            url = ctx.get_relative_source_url(w)
-            return f'<a href="{ url }">{ w }</a>'
+            return format_source_link(ctx.get_relative_source_url(w), w)
 
         return re.sub('__KEEPCPPINC__([A-J]+)', replace_cppinc, html, flags=re.MULTILINE)
 

@@ -1,6 +1,6 @@
 from os.path import dirname
 import re
-from .utils import Filter, FilterContext, decode_number, encode_number, filename_without_ext_matches
+from .utils import Filter, FilterContext, decode_number, encode_number, filename_without_ext_matches, format_source_link
 
 # Filters for files listed in Makefiles
 # path/file
@@ -38,7 +38,7 @@ class MakefileFileFilter(Filter):
                 filedir += '/'
 
             npath = filedir + w
-            return f'<a href="{ ctx.get_absolute_source_url(npath) }">{ w }</a>'
+            return format_source_link(ctx.get_absolute_source_url(npath), w)
 
         return re.sub('__KEEPMAKEFILEFILE__([A-J]+)', replace_makefilefile, html, flags=re.MULTILINE)
 

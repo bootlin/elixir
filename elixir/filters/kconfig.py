@@ -1,5 +1,5 @@
 import re
-from .utils import Filter, FilterContext, encode_number, decode_number, filename_without_ext_matches
+from .utils import Filter, FilterContext, encode_number, decode_number, filename_without_ext_matches, format_source_link
 
 # Filters for Kconfig includes
 # Replaces KConfig includes (source keyword) with links to included files
@@ -24,7 +24,7 @@ class KconfigFilter(Filter):
     def untransform_formatted_code(self, ctx: FilterContext, html: str) -> str:
         def replace_kconfig(m):
             w = self.kconfig[decode_number(m.group(1)) - 1]
-            return f'<a href="{ ctx.get_absolute_source_url(w) }">{ w }</a>'
+            return format_source_link(ctx.get_absolute_source_url(w), w)
 
         return re.sub('__KEEPKCONFIG__([A-J]+)', replace_kconfig, html, flags=re.MULTILINE)
 
