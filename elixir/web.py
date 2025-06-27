@@ -271,34 +271,42 @@ def stringify_ident_path(project, version, family, ident) -> str:
     path = f'{ get_ident_base_url(project, version, family) }/{ parse.quote(ident, safe="") }'
     return path.rstrip('/')
 
-# Handles redirect on a POST to ident resource
+# Handles redirect from ident with form (POST/GET with query parameters)
+# to default ident URL format
 class IdentPostRedirectResource:
-    def on_get(self, req, resp, project, version, family=None, ident=None):
-        project, version, _ = validate_project_and_version(req.context, project, version)
-        resp.status = falcon.HTTP_FOUND
-        resp.location = stringify_source_path(project, version, "")
+    def on_get(self, req, resp, project: str, version: str, family: str|None = None, _ident: str|None = None):
+        get_ident = req.get_param('i', required=False)
+        get_family = req.get_param('f', required=False)
+        if get_ident is None:
+            project, version, _ = validate_project_and_version(req.context, project, version)
+            resp.status = falcon.HTTP_FOUND
+            resp.location = stringify_source_path(project, version, "")
+        else:
+            return self.handle(req, resp, project, version, get_ident, get_family)
 
     def on_post(self, req, resp, project: str, version: str, family: str|None = None, _ident: str|None = None):
-        project, version, query = validate_project_and_version(req.context, project, version)
-
         form = req.get_media()
         post_ident = form.get('i')
         post_family = form.get('f')
+        return self.handle(req, resp, project, version, post_ident, post_family)
 
-        if not validFamily(post_family):
-            post_family = 'C'
+    def handle(self, req, resp, project: str, version: str, ident: str, family: str):
+        project, version, query = validate_project_and_version(req.context, project, version)
 
-        if not post_ident:
+        if not validFamily(family):
+            family = 'C'
+
+        if not ident:
             raise ElixirProjectError('Error', 'Invalid identifier',
                               project=project, version=version, query=query,
                               extra_template_args={
-                                  'searched_ident': parse.unquote(form.get('i')),
+                                  'searched_ident': parse.unquote(ident),
                                   'current_family': family,
                               })
 
-        post_ident = post_ident.strip()
+        ident = ident.strip()
         resp.status = falcon.HTTP_MOVED_PERMANENTLY
-        resp.location = stringify_ident_path(project, version, post_family, post_ident)
+        resp.location = stringify_ident_path(project, version, family, ident)
 
         query.close()
 
