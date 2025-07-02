@@ -1,3 +1,4 @@
+import os.path
 import logging
 from multiprocessing import cpu_count
 from multiprocessing.pool import Pool
@@ -116,17 +117,20 @@ def collect_blobs(db: DB, tag: bytes) -> Dict[int, Tuple[bytes, str]]:
         idx = 0
 
     # Get blob hashes and associated file names (without path)
-    blobs = scriptLines('list-blobs', '-f', tag)
+    blobs = scriptLines('list-blobs', '-p', tag)
     versionBuf = []
     idx_to_hash_and_filename = {}
 
     # Collect new blobs, assign database ids to the blobs
     for blob in blobs:
-        hash, filename = blob.split(b' ',maxsplit=1)
-        blob_exist = db.blob.exists(hash)
-        versionBuf.append((idx, filename))
-        if not blob_exist:
-            idx_to_hash_and_filename[idx] = (hash, filename.decode())
+        hash, path = blob.split(b' ',maxsplit=1)
+        filename = os.path.basename(path.decode())
+        blob_idx = db.blob.get(hash)
+        if blob_idx is not None:
+            versionBuf.append((blob_idx, path))
+        else:
+            versionBuf.append((idx, path))
+            idx_to_hash_and_filename[idx] = (hash, filename)
             db.blob.put(hash, idx)
             db.hash.put(idx, hash)
             db.file.put(idx, filename)
@@ -138,8 +142,8 @@ def collect_blobs(db: DB, tag: bytes) -> Dict[int, Tuple[bytes, str]]:
     # Add mapping blob id -> path to version database
     versionBuf.sort()
     obj = PathList()
-    for idx, path in versionBuf:
-        obj.append(idx, path)
+    for i, path in versionBuf:
+        obj.append(i, path)
     db.vers.put(tag, obj, sync=True)
 
     return idx_to_hash_and_filename
@@ -274,7 +278,6 @@ def update_version(db: DB, tag: bytes, pool: Pool, dts_comp_support: bool):
     chunksize = int(len(idxes) / cpu_count())
     chunksize = min(max(1, chunksize), 100)
 
-    collect_blobs(db, tag)
     logger.info("collecting blobs done")
 
     for result in pool.imap_unordered(get_defs, idxes, chunksize):
