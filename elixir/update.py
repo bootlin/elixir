@@ -3,7 +3,7 @@ import logging
 import time
 from multiprocessing import cpu_count, set_start_method
 from multiprocessing.pool import Pool
-from typing import Dict, Iterable, List, Optional, Tuple, Set
+from typing import Dict, Iterable, List, Optional, Tuple
 
 from find_compatible_dts import FindCompatibleDTS
 
@@ -194,8 +194,11 @@ def get_defs(file_id: FileId) -> Optional[DefsDict]:
 
     return defs
 
+def call_get_refs(arg: Tuple[FileId, str]) -> Optional[RefsDict]:
+    return get_refs(arg[0], BsdDB(arg[1], True, lambda x: x))
+
 # Collect references from the tokenizer for a file
-def get_refs(file_id: FileId) -> Optional[RefsDict]:
+def get_refs(file_id: FileId, defs: BsdDB) -> Optional[RefsDict]:
     idx, hash, filename = file_id
     refs = {}
     family = getFileFamily(filename)
@@ -216,6 +219,9 @@ def get_refs(file_id: FileId) -> Optional[RefsDict]:
 
             # We only index CONFIG_??? in makefiles
             if (family != 'M' or tok.startswith(b'CONFIG_')):
+                if not defs.exists(tok):
+                    continue
+
                 if tok not in refs:
                     refs[tok] = {}
 
@@ -335,10 +341,13 @@ def update_version(db: DB, tag: bytes, pool: Pool, dts_comp_support: bool):
 
         logger.info("dts comps docs done")
 
-    ref_idxes = [idx for idx in idxes if getFileFamily(idx[2]) is not None]
+
+    db.defs.sync()
+
+    ref_idxes = [(idx, db.defs.filename) for idx in idxes if getFileFamily(idx[2]) is not None]
     ref_chunksize = int(len(ref_idxes) / cpu_count())
     ref_chunksize = min(max(1, ref_chunksize), 100)
-    for result in pool.imap_unordered(get_refs, ref_idxes, ref_chunksize):
+    for result in pool.imap_unordered(call_get_refs, ref_idxes, ref_chunksize):
         if result is not None:
             add_refs(db, idx_to_hash_and_filename, result)
 
@@ -352,8 +361,8 @@ if __name__ == "__main__":
     set_start_method('spawn')
     with Pool() as pool:
         for tag in scriptLines('list-tags'):
-            if not tag.startswith(b'v6.1') or b'rc' in tag:
-                continue
+            #if not tag.startswith(b'v6.1') or b'rc' in tag:
+            #    continue
 
             if not db.vers.exists(tag):
                 logger.info("updating tag %s", tag)

@@ -298,7 +298,7 @@ class CachedBsdDB:
             self.put_raw(k, v)
 
         self.db.sync()
-    
+
     def close(self):
         self.sync()
         self.db.close()
