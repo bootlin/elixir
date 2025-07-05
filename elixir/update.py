@@ -306,7 +306,10 @@ def update_version(db: DB, tag: bytes, pool: Pool, dts_comp_support: bool):
     logger.info("docs done")
 
     if dts_comp_support:
-        for result in pool.imap_unordered(get_comps, idxes, chunksize):
+        comp_idxes = [idx for idx in idxes if getFileFamily(idx[2]) not in (None, 'K', 'M')]
+        comp_chunksize = int(len(comp_idxes) / cpu_count())
+        comp_chunksize = min(max(1, comp_chunksize), 100)
+        for result in pool.imap_unordered(get_comps, comp_idxes, comp_chunksize):
             if result is not None:
                 add_comps(db, *result)
 
@@ -318,7 +321,10 @@ def update_version(db: DB, tag: bytes, pool: Pool, dts_comp_support: bool):
 
         logger.info("dts comps docs done")
 
-    for result in pool.imap_unordered(get_refs, idxes, chunksize):
+    ref_idxes = [idx for idx in idxes if getFileFamily(idx[2]) is not None]
+    ref_chunksize = int(len(ref_idxes) / cpu_count())
+    ref_chunksize = min(max(1, ref_chunksize), 100)
+    for result in pool.imap_unordered(get_refs, ref_idxes, ref_chunksize):
         if result is not None:
             add_refs(db, idx_to_hash_and_filename, result)
 

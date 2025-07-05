@@ -64,24 +64,33 @@ class DefList:
         a line number and a file family.
         Also stores in which families the ident exists for faster tests.'''
     def __init__(self, data=b'#'):
-        self.data, self.families = data.split(b'#')
+        data, self.families = data.split(b'#')
+        self.entries = [self.decode_entry(d) for d in deflist_regex.findall(data)]
+        self.sorted = False
+
+    def decode_entry(self, entry):
+        id = int(entry[0])
+        type = defTypeR [entry[1].decode()]
+        line = int(entry[2])
+        family = entry[3].decode()
+        return id, type, line, family
+
+    def encode_entry(self, entry):
+        return str(entry[0]) + defTypeD[entry[1]] + str(entry[2]) + entry[3]
 
     def iter(self, dummy=False):
         # Get all element in a list of sublists and sort them
-        entries = deflist_regex.findall(self.data)
-        entries.sort(key=lambda x:int(x[0]))
-        for id, type, line, family in entries:
-            id = int(id)
-            type = defTypeR [type.decode()]
-            line = int(line)
-            family = family.decode()
+        if not self.sorted:
+            self.entries.sort(key=lambda x:int(x[0]))
+            self.sorted = True
+
+        for id, type, line, family in self.entries:
             yield id, type, line, family
         if dummy:
             yield maxId, None, None, None
 
     def exists(self, idx, line_num):
-        entries = deflist_regex.findall(self.data)
-        for id, _, line, _ in entries:
+        for id, _, line, _ in self.entries:
             if id == idx and int(line) == line_num:
                 return True
 
@@ -90,14 +99,18 @@ class DefList:
     def append(self, id, type, line, family):
         if type not in defTypeD:
             return
-        p = str(id) + defTypeD[type] + str(line) + family
-        if self.data != b'':
-            p = ',' + p
-        self.data += p.encode()
+
+        self.sorted = False
+        self.entries.append((id, type, line, family))
         self.add_family(family)
 
     def pack(self):
-        return self.data + b'#' + self.families
+        if not self.sorted:
+            self.entries.sort(key=lambda x:int(x[0]))
+            self.sorted = True
+
+        data = ",".join(self.encode_entry(entry) for entry in self.entries)
+        return data.encode() + b'#' + self.families
 
     def add_family(self, family):
         family = family.encode()
@@ -110,7 +123,7 @@ class DefList:
         return self.families.decode().split(',')
 
     def get_macros(self):
-        return deflist_macro_regex.findall(self.data.decode()) or ''
+        return [entry[3] for entry in self.entries if entry[1] == 'macro']
 
 class PathList:
     '''Stores associations between a blob ID and a file path.
@@ -139,25 +152,36 @@ class RefList:
         and the corresponding family.'''
     def __init__(self, data=b''):
         self.data = data
+        self.entries = [self.decode_entry(x.split(b':')) for x in self.data.split(b'\n')[:-1]]
+        self.sorted = False
+
+    def decode_entry(self, k):
+        return (int(k[0].decode()), k[1].decode(), k[2].decode())
 
     def iter(self, dummy=False):
         # Split all elements in a list of sublists and sort them
-        entries = [x.split(b':') for x in self.data.split(b'\n')[:-1]]
-        entries.sort(key=lambda x:int(x[0]))
-        for b, c, d in entries:
-            b = int(b.decode())
-            c = c.decode()
-            d = d.decode()
+        if not self.sorted:
+            self.sorted = True
+            self.entries.sort(key=lambda x:int(x[0]))
+
+        for b, c, d in self.entries:
             yield b, c, d
         if dummy:
             yield maxId, None, None
 
     def append(self, id, lines, family):
-        p = str(id) + ':' + lines + ':' + family + '\n'
-        self.data += p.encode()
+        self.sorted = False
+        self.entries.append((id, lines, family))
 
     def pack(self):
-        return self.data
+        if not self.sorted:
+            self.sorted = True
+            self.entries.sort(key=lambda x:int(x[0]))
+
+        result = ""
+        for id, lines, family in self.entries:
+            result += str(id) + ":" + lines + ":" + family + "\n"
+        return result.encode()
 
 class BsdDB:
     def __init__(self, filename, readonly, contentType, shared=False, cachesize=None):
@@ -230,16 +254,14 @@ class CachedBsdDB:
         if key in self.cache:
             return True
 
-        key = autoBytes(key)
-        return self.db.exists(key)
+        return self.db.exists(autoBytes(key))
 
     def get(self, key):
         if key in self.cache:
             self.cache.move_to_end(key)
             return self.cache[key]
 
-        key = autoBytes(key)
-        p = self.db.get(key)
+        p = self.db.get(autoBytes(key))
         if p is None:
             return None
         p = self.ctype(p)
