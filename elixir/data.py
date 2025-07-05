@@ -18,6 +18,7 @@
 #  You should have received a copy of the GNU Affero General Public License
 #  along with Elixir.  If not, see <http://www.gnu.org/licenses/>.
 
+from typing import OrderedDict
 import berkeleydb
 import re
 from . import lib
@@ -208,18 +209,94 @@ class BsdDB:
     def __len__(self):
         return self.db.stat()["nkeys"]
 
+class CachedBsdDB:
+    def __init__(self, filename, readonly, contentType, cachesize):
+        self.filename = filename
+        self.db = berkeleydb.db.DB()
+        flags = 0
+
+        self.cachesize = cachesize
+        self.cache = OrderedDict()
+
+        if readonly:
+            flags |= berkeleydb.db.DB_RDONLY
+            self.db.open(filename, flags=flags)
+        else:
+            flags |= berkeleydb.db.DB_CREATE
+            self.db.open(filename, flags=flags, mode=0o644, dbtype=berkeleydb.db.DB_BTREE)
+        self.ctype = contentType
+
+    def exists(self, key):
+        if key in self.cache:
+            return True
+
+        key = autoBytes(key)
+        return self.db.exists(key)
+
+    def get(self, key):
+        if key in self.cache:
+            self.cache.move_to_end(key)
+            return self.cache[key]
+
+        key = autoBytes(key)
+        p = self.db.get(key)
+        if p is None:
+            return None
+        p = self.ctype(p)
+
+        self.cache[key] = p
+        self.cache.move_to_end(key)
+        if len(self.cache) > self.cachesize:
+            old_k, old_v = self.cache.popitem(last=False)
+            self.put_raw(old_k, old_v)
+
+        return p
+
+    def get_keys(self):
+        return self.db.keys()
+
+    def put(self, key, val):
+        self.cache[key] = val
+        self.cache.move_to_end(key)
+        if len(self.cache) > self.cachesize:
+            old_k, old_v = self.cache.popitem(last=False)
+            self.put_raw(old_k, old_v)
+
+    def put_raw(self, key, val, sync=False):
+        key = autoBytes(key)
+        val = autoBytes(val)
+        if type(val) is not bytes:
+            val = val.pack()
+        self.db.put(key, val)
+        if sync:
+            self.db.sync()
+
+    def sync(self):
+        for k, v in self.cache.items():
+            self.put_raw(k, v)
+
+        self.db.sync()
+    
+    def close(self):
+        self.sync()
+        self.db.close()
+
+    def __len__(self):
+        return self.db.stat()["nkeys"]
+
 class DB:
-    def __init__(self, dir, readonly=True, dtscomp=False, shared=False, update_cache=False):
+    def __init__(self, dir, readonly=True, dtscomp=False, shared=False, update_cache=None):
         if os.path.isdir(dir):
             self.dir = dir
         else:
             raise FileNotFoundError(errno.ENOENT, os.strerror(errno.ENOENT), dir)
 
         ro = readonly
-        cachesize = None
 
         if update_cache:
-            cachesize = CACHESIZE
+            db_cls = lambda dir, ro, ctype: CachedBsdDB(dir, ro, ctype, cachesize=update_cache)
+        else:
+            db_cls = lambda dir, ro, ctype: BsdDB(dir, ro, ctype, shared=shared)
 
         self.vars = BsdDB(dir + '/variables.db', ro, lambda x: int(x.decode()), shared=shared)
             # Key-value store of basic information
@@ -230,7 +307,7 @@ class DB:
         self.file = BsdDB(dir + '/filenames.db', ro, lambda x: x.decode(), shared=shared)
             # Map serial number to filename
         self.vers = BsdDB(dir + '/versions.db', ro, PathList, shared=shared)
-        self.defs = BsdDB(dir + '/definitions.db', ro, DefList, shared=shared, cachesize=cachesize)
+        self.defs = db_cls(dir + '/definitions.db', ro, DefList)
         self.defs_cache = {}
         NOOP = lambda x: x
         self.defs_cache['C'] = BsdDB(dir + '/definitions-cache-C.db', ro, NOOP, shared=shared)
@@ -238,12 +315,12 @@ class DB:
         self.defs_cache['D'] = BsdDB(dir + '/definitions-cache-D.db', ro, NOOP, shared=shared)
         self.defs_cache['M'] = BsdDB(dir + '/definitions-cache-M.db', ro, NOOP, shared=shared)
         assert sorted(self.defs_cache.keys()) == sorted(lib.CACHED_DEFINITIONS_FAMILIES)
-        self.refs = BsdDB(dir + '/references.db', ro, RefList, shared=shared, cachesize=cachesize)
-        self.docs = BsdDB(dir + '/doccomments.db', ro, RefList, shared=shared, cachesize=cachesize)
+        self.refs = db_cls(dir + '/references.db', ro, RefList)
+        self.docs = db_cls(dir + '/doccomments.db', ro, RefList)
         self.dtscomp = dtscomp
         if dtscomp:
-            self.comps = BsdDB(dir + '/compatibledts.db', ro, RefList, shared=shared, cachesize=cachesize)
-            self.comps_docs = BsdDB(dir + '/compatibledts_docs.db', ro, RefList, shared=shared, cachesize=cachesize)
+            self.comps = db_cls(dir + '/compatibledts.db', ro, RefList)
+            self.comps_docs = db_cls(dir + '/compatibledts_docs.db', ro, RefList)
             # Use a RefList in case there are multiple doc comments for an identifier
 
     def close(self):
