@@ -1,6 +1,7 @@
 import os.path
 import logging
 import time
+import cProfile
 from multiprocessing import cpu_count, set_start_method
 from multiprocessing.pool import Pool
 from typing import Dict, Iterable, List, Optional, Tuple
@@ -40,13 +41,13 @@ IdxCache = Dict[int, Tuple[bytes, str, bool]]
 def def_in_version(db: DB, idx_to_hash_and_filename: IdxCache, ident: bytes) -> bool:
     defs_this_ident = db.defs.get(ident)
     if not defs_this_ident:
-        return False
+        return None
 
     for def_idx, _, _, _ in defs_this_ident.iter():
         if def_idx in idx_to_hash_and_filename:
-            return True
+            return defs_this_ident
 
-    return False
+    return None
 
 # Add definitions to database
 def add_defs(db: DB, defs: DefsDict):
@@ -63,12 +64,8 @@ def add_defs(db: DB, defs: DefsDict):
 # Add references to database
 def add_refs(db: DB, idx_to_hash_and_filename: IdxCache, refs: RefsDict):
     for ident, idx_to_lines in refs.items():
-        deflist = db.defs.get(ident)
-        if deflist is None:
-            continue
-
-        in_version = def_in_version(db, idx_to_hash_and_filename, ident)
-        if not in_version:
+        deflist = def_in_version(db, idx_to_hash_and_filename, ident)
+        if not deflist:
             continue
 
         def deflist_exists(idx: int, line: int):
@@ -347,9 +344,11 @@ def update_version(db: DB, tag: bytes, pool: Pool, dts_comp_support: bool):
     ref_idxes = [(idx, db.defs.filename) for idx in idxes if getFileFamily(idx[2]) is not None]
     ref_chunksize = int(len(ref_idxes) / cpu_count())
     ref_chunksize = min(max(1, ref_chunksize), 100)
-    for result in pool.imap_unordered(call_get_refs, ref_idxes, ref_chunksize):
-        if result is not None:
-            add_refs(db, idx_to_hash_and_filename, result)
+    with cProfile.Profile() as pr:
+        for result in pool.imap_unordered(call_get_refs, ref_idxes, ref_chunksize):
+            if result is not None:
+                    add_refs(db, idx_to_hash_and_filename, result)
+    pr.dump_stats("refs"+str(int(time.time())))
 
     logger.info("refs done")
     logger.info("update done")

@@ -187,18 +187,25 @@ class BsdDB:
     def __init__(self, filename, readonly, contentType, shared=False, cachesize=None):
         self.filename = filename
         self.db = berkeleydb.db.DB()
-        flags = berkeleydb.db.DB_THREAD if shared else 0
+        self.flags = berkeleydb.db.DB_THREAD if shared else 0
+
+        self.readonly = readonly
+        if self.readonly:
+            self.flags |= berkeleydb.db.DB_RDONLY
+        else:
+            self.flags |= berkeleydb.db.DB_CREATE
 
         if cachesize is not None:
             self.db.set_cachesize(cachesize[0], cachesize[1])
 
-        if readonly:
-            flags |= berkeleydb.db.DB_RDONLY
-            self.db.open(filename, flags=flags)
-        else:
-            flags |= berkeleydb.db.DB_CREATE
-            self.db.open(filename, flags=flags, mode=0o644, dbtype=berkeleydb.db.DB_BTREE)
+        self.open()
         self.ctype = contentType
+
+    def open(self):
+        if self.readonly:
+            self.db.open(self.filename, flags=self.flags)
+        else:
+            self.db.open(self.filename, flags=self.flags, mode=0o644, dbtype=berkeleydb.db.DB_BTREE)
 
     def exists(self, key):
         key = autoBytes(key)
