@@ -343,8 +343,6 @@ def update_version(db: DB, tag: bytes, pool: Pool, dts_comp_support: bool):
             add_refs(db, idx_to_hash_and_filename, result)
 
     logger.info("refs done")
-
-    generate_defs_caches(db)
     logger.info("update done")
 
 if __name__ == "__main__":
@@ -361,5 +359,6 @@ if __name__ == "__main__":
                 logger.info("updating tag %s", tag)
                 update_version(db, tag, pool, dts_comp_support)
 
+    generate_defs_caches(db)
     db.close()
 
