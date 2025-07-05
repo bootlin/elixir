@@ -329,17 +329,14 @@ def update_version(db: DB, tag: bytes, pool: Pool, dts_comp_support: bool):
 
 if __name__ == "__main__":
     dts_comp_support = bool(int(script('dts-comp')))
-    db = None
+    db = DB(getDataDir(), readonly=False, dtscomp=dts_comp_support, shared=False, update_cache=100000)
 
     set_start_method('spawn')
     with Pool() as pool:
         for tag in scriptLines('list-tags'):
-            if db is None:
-                db = DB(getDataDir(), readonly=False, dtscomp=dts_comp_support, shared=False, update_cache=50000)
-
             if not db.vers.exists(tag):
                 logger.info("updating tag %s", tag)
                 update_version(db, tag, pool, dts_comp_support)
-                db.close()
-                db = None
+
+    db.close()
 
