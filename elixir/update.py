@@ -43,7 +43,7 @@ def def_in_version(db: DB, idx_to_hash_and_filename: IdxCache, ident: bytes) -> 
     if not defs_this_ident:
         return None
 
-    for def_idx, _, _, _ in defs_this_ident.iter():
+    for def_idx in defs_this_ident.entries.keys():
         if def_idx in idx_to_hash_and_filename:
             return defs_this_ident
 
@@ -69,9 +69,13 @@ def add_refs(db: DB, idx_to_hash_and_filename: IdxCache, refs: RefsDict):
             continue
 
         def deflist_exists(idx: int, line: int):
-            for def_idx, _, def_line, _ in deflist.iter():
-                if def_idx == idx and def_line == line:
+            if idx not in deflist.entries:
+                return False
+
+            for _, def_line, _ in deflist.entries[idx]:
+                if def_line == line:
                     return True
+
             return False
 
         obj = db.refs.get(ident)
@@ -344,11 +348,9 @@ def update_version(db: DB, tag: bytes, pool: Pool, dts_comp_support: bool):
     ref_idxes = [(idx, db.defs.filename) for idx in idxes if getFileFamily(idx[2]) is not None]
     ref_chunksize = int(len(ref_idxes) / cpu_count())
     ref_chunksize = min(max(1, ref_chunksize), 100)
-    with cProfile.Profile() as pr:
-        for result in pool.imap_unordered(call_get_refs, ref_idxes, ref_chunksize):
-            if result is not None:
-                    add_refs(db, idx_to_hash_and_filename, result)
-    pr.dump_stats("refs"+str(int(time.time())))
+    for result in pool.imap_unordered(call_get_refs, ref_idxes, ref_chunksize):
+        if result is not None:
+                add_refs(db, idx_to_hash_and_filename, result)
 
     logger.info("refs done")
     logger.info("update done")
