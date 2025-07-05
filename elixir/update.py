@@ -1,5 +1,6 @@
 import os.path
 import logging
+import time
 from multiprocessing import cpu_count, set_start_method
 from multiprocessing.pool import Pool
 from typing import Dict, Iterable, List, Optional, Tuple, Set
@@ -247,7 +248,13 @@ def get_docs(file_id: FileId) -> Optional[Tuple[int, str, LinesListDict]]:
     family = getFileFamily(filename)
     if family in (None, 'M'): return
 
+    start = time.time()
     lines = (line.decode() for line in scriptLines('parse-docs', hash, filename))
+    parser_time = time.time()-start
+
+    if parser_time > 10:
+        print("docs timeout", parser_time, file_id)
+
     docs = collect_get_blob_output(lines)
 
     return (idx, family, docs)
@@ -259,7 +266,14 @@ def get_comps(file_id: FileId) -> Optional[Tuple[int, str, LinesListDict]]:
     if family in (None, 'K', 'M'): return
 
     compatibles_parser = FindCompatibleDTS()
+
+    start = time.time()
     lines = compatibles_parser.run(scriptLines('get-blob', hash), family)
+    parser_time = time.time()-start
+
+    if parser_time > 10:
+        print("comps docs timeout", parser_time, file_id)
+
     comps = collect_get_blob_output(lines)
 
     return (idx, family, comps)
@@ -340,6 +354,9 @@ if __name__ == "__main__":
     set_start_method('spawn')
     with Pool() as pool:
         for tag in scriptLines('list-tags'):
+            if not tag.startswith(b'v6.1') or b'rc' in tag:
+                continue
+
             if not db.vers.exists(tag):
                 logger.info("updating tag %s", tag)
                 update_version(db, tag, pool, dts_comp_support)
