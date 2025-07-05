@@ -1,7 +1,6 @@
 import os.path
 import logging
 import time
-import cProfile
 from multiprocessing import cpu_count, set_start_method
 from multiprocessing.pool import Pool
 from typing import Dict, Iterable, List, Optional, Tuple
@@ -343,7 +342,9 @@ def update_version(db: DB, tag: bytes, pool: Pool, dts_comp_support: bool):
         logger.info("dts comps docs done")
 
 
-    db.defs.sync()
+    db.defs.close()
+    db.defs.readonly = True
+    db.defs.open()
 
     ref_idxes = [(idx, db.defs.filename) for idx in idxes if getFileFamily(idx[2]) is not None]
     ref_chunksize = int(len(ref_idxes) / cpu_count())
@@ -351,6 +352,10 @@ def update_version(db: DB, tag: bytes, pool: Pool, dts_comp_support: bool):
     for result in pool.imap_unordered(call_get_refs, ref_idxes, ref_chunksize):
         if result is not None:
                 add_refs(db, idx_to_hash_and_filename, result)
+
+    db.defs.close()
+    db.defs.readonly = False
+    db.defs.open()
 
     logger.info("refs done")
     logger.info("update done")

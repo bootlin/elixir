@@ -246,19 +246,28 @@ class BsdDB:
 class CachedBsdDB:
     def __init__(self, filename, readonly, contentType, cachesize):
         self.filename = filename
-        self.db = berkeleydb.db.DB()
-        flags = 0
+        self.db = None
+        self.readonly = readonly
 
         self.cachesize = cachesize
         self.cache = OrderedDict()
 
-        if readonly:
+        self.open()
+
+        self.ctype = contentType
+
+    def open(self):
+        if self.db is None:
+            self.db = berkeleydb.db.DB()
+
+        flags = 0
+
+        if self.readonly:
             flags |= berkeleydb.db.DB_RDONLY
-            self.db.open(filename, flags=flags)
+            self.db.open(self.filename, flags=flags)
         else:
             flags |= berkeleydb.db.DB_CREATE
-            self.db.open(filename, flags=flags, mode=0o644, dbtype=berkeleydb.db.DB_BTREE)
-        self.ctype = contentType
+            self.db.open(self.filename, flags=flags, mode=0o644, dbtype=berkeleydb.db.DB_BTREE)
 
     def exists(self, key):
         if key in self.cache:
@@ -280,7 +289,8 @@ class CachedBsdDB:
         self.cache.move_to_end(key)
         if len(self.cache) > self.cachesize:
             old_k, old_v = self.cache.popitem(last=False)
-            self.put_raw(old_k, old_v)
+            if not self.readonly:
+                self.put_raw(old_k, old_v)
 
         return p
 
@@ -288,6 +298,9 @@ class CachedBsdDB:
         return self.db.keys()
 
     def put(self, key, val):
+        if self.readonly:
+            raise Exception("database is readonly")
+
         self.cache[key] = val
         self.cache.move_to_end(key)
         if len(self.cache) > self.cachesize:
@@ -295,6 +308,9 @@ class CachedBsdDB:
             self.put_raw(old_k, old_v)
 
     def put_raw(self, key, val, sync=False):
+        if self.readonly:
+            raise Exception("database is readonly")
+
         key = autoBytes(key)
         val = autoBytes(val)
         if type(val) is not bytes:
@@ -304,14 +320,16 @@ class CachedBsdDB:
             self.db.sync()
 
     def sync(self):
-        for k, v in self.cache.items():
-            self.put_raw(k, v)
+        if not self.readonly:
+            for k, v in self.cache.items():
+                self.put_raw(k, v)
 
         self.db.sync()
 
     def close(self):
         self.sync()
         self.db.close()
+        self.db = None
 
     def __len__(self):
         return self.db.stat()["nkeys"]
