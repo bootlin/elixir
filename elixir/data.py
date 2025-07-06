@@ -155,17 +155,19 @@ class RefList:
         and the corresponding family.'''
     def __init__(self, data=b''):
         self.data = data
-        self.entries = [self.decode_entry(x.split(b':')) for x in self.data.split(b'\n')[:-1]]
+        self.entries = None
         self.sorted = False
 
     def decode_entry(self, k):
         return (int(k[0].decode()), k[1].decode(), k[2].decode())
 
+    def populate_entries(self):
+        self.entries = [self.decode_entry(x.split(b':')) for x in self.data.split(b'\n')[:-1]]
+        self.entries.sort(key=lambda x:int(x[0]))
+
     def iter(self, dummy=False):
-        # Split all elements in a list of sublists and sort them
-        if not self.sorted:
-            self.sorted = True
-            self.entries.sort(key=lambda x:int(x[0]))
+        if self.entries is None:
+            self.populate_entries()
 
         for b, c, d in self.entries:
             yield b, c, d
@@ -173,18 +175,19 @@ class RefList:
             yield maxId, None, None
 
     def append(self, id, lines, family):
-        self.sorted = False
-        self.entries.append((id, lines, family))
+        if self.entries is not None:
+            self.entries.append((id, lines, family))
+        else:
+            self.data += (str(id) + ":" + lines + ":" + family + "\n").encode()
 
     def pack(self):
-        if not self.sorted:
-            self.sorted = True
-            self.entries.sort(key=lambda x:int(x[0]))
-
-        result = ""
-        for id, lines, family in self.entries:
-            result += str(id) + ":" + lines + ":" + family + "\n"
-        return result.encode()
+        if self.entries is not None:
+            result = ""
+            for id, lines, family in self.entries:
+                result += str(id) + ":" + lines + ":" + family + "\n"
+            return result.encode()
+        else:
+            return self.data
 
 class BsdDB:
     def __init__(self, filename, readonly, contentType, shared=False, cachesize=None):
