@@ -156,6 +156,7 @@ class RefList:
     def __init__(self, data=b''):
         self.data = data
         self.entries = None
+        self.to_append = []
         self.sorted = False
 
     def decode_entry(self, k):
@@ -163,6 +164,8 @@ class RefList:
 
     def populate_entries(self):
         self.entries = [self.decode_entry(x.split(b':')) for x in self.data.split(b'\n')[:-1]]
+        self.entries += self.to_append
+        self.to_append = []
         self.entries.sort(key=lambda x:int(x[0]))
 
     def iter(self, dummy=False):
@@ -178,7 +181,7 @@ class RefList:
         if self.entries is not None:
             self.entries.append((id, lines, family))
         else:
-            self.data += (str(id) + ":" + lines + ":" + family + "\n").encode()
+            self.to_append.append((id, lines, family))
 
     def pack(self):
         if self.entries is not None:
@@ -187,6 +190,11 @@ class RefList:
                 result += str(id) + ":" + lines + ":" + family + "\n"
             return result.encode()
         else:
+            result = ""
+            for id, lines, family in self.to_append:
+                result += str(id) + ":" + lines + ":" + family + "\n"
+            self.data += result.encode()
+            self.to_append = []
             return self.data
 
 class BsdDB:
