@@ -2,6 +2,7 @@ import os.path
 import logging
 import time
 import signal
+import cProfile
 from multiprocessing import cpu_count, set_start_method
 from multiprocessing.pool import Pool
 from typing import Dict, Iterable, List, Optional, Tuple
@@ -364,6 +365,7 @@ def update_version(db: DB, tag: bytes, pool: Pool, dts_comp_support: bool):
         logger.info("dts comps docs done")
 
 
+    #with cProfile.Profile() as pr:
     db.defs.close()
     db.defs.readonly = True
     db.defs.open()
@@ -372,6 +374,8 @@ def update_version(db: DB, tag: bytes, pool: Pool, dts_comp_support: bool):
     ref_idxes = [(idx, db.defs.filename) for idx in idxes]
     ref_chunksize = int(len(ref_idxes) / cpu_count())
     ref_chunksize = min(max(1, ref_chunksize), 100)
+        #pr.dump_stats("5refs"+str(int(time.time())))
+
     logger.info("ref blobs: %d", len(ref_idxes))
 
     for result in pool.imap_unordered(call_get_refs, ref_idxes, ref_chunksize):
@@ -408,7 +412,7 @@ if __name__ == "__main__":
     set_start_method('spawn')
     with Pool(initializer=ignore_sigint) as pool:
         for tag in scriptLines('list-tags'):
-            #if not tag.startswith(b'v6.1') or b'rc' in tag:
+            #if not tag.startswith(b'v6'):
             #    continue
 
             if sigint_caught:

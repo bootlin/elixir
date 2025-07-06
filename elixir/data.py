@@ -21,6 +21,7 @@
 from typing import OrderedDict
 import berkeleydb
 import re
+import time
 from . import lib
 from .lib import autoBytes
 import os
@@ -64,7 +65,8 @@ class DefList:
         a line number and a file family.
         Also stores in which families the ident exists for faster tests.'''
     def __init__(self, data=b'#'):
-        data, self.families = data.split(b'#')
+        data, tmp_families = data.split(b'#')
+        self.families = tmp_families.decode()
 
         self.modified = False
         self.entries = OrderedDict()
@@ -83,7 +85,7 @@ class DefList:
         family = entry[3].decode()
         return id, type, line, family
 
-    def encode_entry(self, entry):
+    def encode_entry(self, entry) -> str:
         return str(entry[0]) + defTypeD[entry[1]] + str(entry[2]) + entry[3]
 
     def iter(self, dummy=False):
@@ -94,14 +96,14 @@ class DefList:
         if dummy:
             yield maxId, None, None, None
 
-    def exists(self, idx, line_num):
+    def exists(self, idx: int, line_num: int):
         for id, _, line, _ in self.entries:
             if id == idx and int(line) == line_num:
                 return True
 
         return False
 
-    def append(self, id, type, line, family):
+    def append(self, id: int, type, line: int, family: str):
         if type not in defTypeD:
             return
 
@@ -113,19 +115,18 @@ class DefList:
 
         self.add_family(family)
 
-    def pack(self):
-        data = ",".join(self.encode_entry((id, *entry)) for id, vals in self.entries.items() for entry in vals)
-        return data.encode() + b'#' + self.families
+    def pack(self) -> bytes:
+        data = ",".join([self.encode_entry((id, *entry)) for id, vals in self.entries.items() for entry in vals])
+        return (data + '#' + self.families).encode()
 
-    def add_family(self, family):
-        family = family.encode()
-        if not family in self.families.split(b','):
-            if self.families != b'':
-                family = b',' + family
+    def add_family(self, family: str):
+        if not family in self.families.split(','):
+            if self.families != '':
+                family = ',' + family
             self.families += family
 
     def get_families(self):
-        return self.families.decode().split(',')
+        return self.families.split(',')
 
     def get_macros(self):
         return [entry[3] for val in self.entries.values() for entry in val if entry[1] == 'macro']
@@ -335,11 +336,16 @@ class CachedBsdDB:
             self.db.sync()
 
     def sync(self):
+        start = time.time()
+        flushed = 0
         if not self.readonly:
             for k, v in self.cache.items():
                 if v.modified:
+                    v.modified = False
                     self.put_raw(k, v)
+                    flushed += 1
 
+        print("synced", flushed, "/", len(self.cache), time.time()-start)
         self.db.sync()
 
     def close(self):
