@@ -1,6 +1,7 @@
 import os.path
 import logging
 import time
+import signal
 from multiprocessing import cpu_count, set_start_method
 from multiprocessing.pool import Pool
 from typing import Dict, Iterable, List, Optional, Tuple
@@ -360,20 +361,42 @@ def update_version(db: DB, tag: bytes, pool: Pool, dts_comp_support: bool):
     logger.info("refs done")
     logger.info("update done")
 
+
+sigint_caught = False
+
+def sigint_handler(signum, _frame):
+    global sigint_caught
+    if not sigint_caught:
+        logger.info("Caught SIGINT... the script will exit after processing this version")
+        signal.signal(signum, signal.SIG_IGN)
+        sigint_caught = True
+
+signal.signal(signal.SIGINT, sigint_handler)
+
+def ignore_sigint():
+    signal.signal(signal.SIGINT, lambda _,__: None)
+
 if __name__ == "__main__":
+
     dts_comp_support = bool(int(script('dts-comp')))
     db = DB(getDataDir(), readonly=False, dtscomp=dts_comp_support, shared=False, update_cache=100000)
 
     set_start_method('spawn')
-    with Pool() as pool:
+    with Pool(initializer=ignore_sigint) as pool:
         for tag in scriptLines('list-tags'):
             #if not tag.startswith(b'v6.1') or b'rc' in tag:
             #    continue
+
+            if sigint_caught:
+                break
 
             if not db.vers.exists(tag):
                 logger.info("updating tag %s", tag)
                 update_version(db, tag, pool, dts_comp_support)
 
+    logger.info("generating def caches")
     generate_defs_caches(db)
+    logger.info("def caches generated")
     db.close()
+
 
