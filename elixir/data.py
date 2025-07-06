@@ -66,6 +66,7 @@ class DefList:
     def __init__(self, data=b'#'):
         data, self.families = data.split(b'#')
 
+        self.modified = False
         self.entries = OrderedDict()
         tmp_entries = [self.decode_entry(d) for d in deflist_regex.findall(data)]
         tmp_entries.sort(key=lambda x:int(x[0]))
@@ -104,6 +105,7 @@ class DefList:
         if type not in defTypeD:
             return
 
+        self.modified = True
         if id not in self.entries:
             self.entries[id] = [(type, line, family)]
         else:
@@ -158,6 +160,7 @@ class RefList:
         self.entries = None
         self.to_append = []
         self.sorted = False
+        self.modified = False
 
     def decode_entry(self, k):
         return (int(k[0].decode()), k[1].decode(), k[2].decode())
@@ -178,6 +181,7 @@ class RefList:
             yield maxId, None, None
 
     def append(self, id, lines, family):
+        self.modified = True
         if self.entries is not None:
             self.entries.append((id, lines, family))
         else:
@@ -333,7 +337,8 @@ class CachedBsdDB:
     def sync(self):
         if not self.readonly:
             for k, v in self.cache.items():
-                self.put_raw(k, v)
+                if v.modified:
+                    self.put_raw(k, v)
 
         self.db.sync()
 
