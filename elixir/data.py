@@ -65,34 +65,25 @@ class DefList:
         a line number and a file family.
         Also stores in which families the ident exists for faster tests.'''
     def __init__(self, data=b'#'):
-        data, tmp_families = data.split(b'#')
-        self.families = tmp_families.decode()
+        data, self.families = data.split(b'#')
 
         self.modified = False
         self.entries = OrderedDict()
-        tmp_entries = [self.decode_entry(d) for d in deflist_regex.findall(data)]
-        tmp_entries.sort(key=lambda x:int(x[0]))
+        tmp_entries = [
+            (int(d[0]), d[1], int(d[2]), d[3])
+            for d in deflist_regex.findall(data)
+        ]
         for id, type, line, family in tmp_entries:
             if id not in self.entries:
                 self.entries[id] = [(type, line, family)]
             else:
                 self.entries[id].append((type, line, family))
 
-    def decode_entry(self, entry):
-        id = int(entry[0])
-        type = defTypeR [entry[1].decode()]
-        line = int(entry[2])
-        family = entry[3].decode()
-        return id, type, line, family
-
-    def encode_entry(self, entry) -> str:
-        return str(entry[0]) + defTypeD[entry[1]] + str(entry[2]) + entry[3]
-
     def iter(self, dummy=False):
         # Get all element in a list of sublists and sort them
         for id, val in self.entries.items():
             for type, line, family in val:
-                yield id, type, line, family
+                yield id, defTypeR[type.decode()], int(line), family.decode()
         if dummy:
             yield maxId, None, None, None
 
@@ -109,27 +100,32 @@ class DefList:
 
         self.modified = True
         if id not in self.entries:
-            self.entries[id] = [(type, line, family)]
+            self.entries[id] = [(defTypeD[type].encode(), line, family.encode())]
         else:
-            self.entries[id].append((type, line, family))
+            self.entries[id].append((defTypeD[type].encode(), line, family.encode()))
 
         self.add_family(family)
 
     def pack(self) -> bytes:
-        data = ",".join([self.encode_entry((id, *entry)) for id, vals in self.entries.items() for entry in vals])
-        return (data + '#' + self.families).encode()
+        entries = [(id, *entry) for id, vals in self.entries.items() for entry in vals]
+        entries.sort(key=lambda x:int(x[0]))
+        data = b",".join([
+            str(arg[0]).encode() + arg[1] + str(arg[2]).encode() + arg[3]
+            for arg in entries
+        ])
+        return data + b'#' + self.families
 
     def add_family(self, family: str):
-        if not family in self.families.split(','):
-            if self.families != '':
+        if not family in self.families.split(b','):
+            if self.families != b'':
                 family = ',' + family
-            self.families += family
+            self.families += family.encode()
 
     def get_families(self):
-        return self.families.split(',')
+        return [f.decode() for f in self.families.split(b',')]
 
     def get_macros(self):
-        return [entry[3] for val in self.entries.values() for entry in val if entry[1] == 'macro']
+        return [entry[2].decode() for val in self.entries.values() for entry in val if entry[0] == b'M']
 
 class PathList:
     '''Stores associations between a blob ID and a file path.
