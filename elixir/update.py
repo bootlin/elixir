@@ -5,6 +5,7 @@ import signal
 from multiprocessing import cpu_count, set_start_method
 from multiprocessing.pool import Pool
 from typing import Dict, Iterable, List, Optional, Tuple
+from collections import OrderedDict
 
 from find_compatible_dts import FindCompatibleDTS
 
@@ -37,17 +38,30 @@ LinesListDict = Dict[str, List[int]]
 # File idx -> (hash, filename, is a new file?)
 IdxCache = Dict[int, Tuple[bytes, str, bool]]
 
+class Cache:
+    def __init__(self, size):
+        self.cache = OrderedDict()
+        self.size = size
+
+    def contains(self, key):
+        return key in self.cache
+
+    def get(self, key):
+        self.cache.move_to_end(key)
+        return self.cache[key]
+
+    def put(self, key, val):
+        self.cache[key] = val
+        self.cache.move_to_end(key)
+        if len(self.cache) > self.size:
+            self.cache.popitem(last=False)
+
 # Check if definition for ident is visible in current version
-def def_in_version(db: DB, idx_to_hash_and_filename: IdxCache, ident: bytes) -> bool:
-    defs_this_ident = db.defs.get(ident)
-    if not defs_this_ident:
-        return None
-
-    for def_idx in defs_this_ident.entries.keys():
+def def_in_version(def_ident: DefList, idx_to_hash_and_filename: IdxCache) -> bool:
+    for def_idx in def_ident.entries.keys():
         if def_idx in idx_to_hash_and_filename:
-            return defs_this_ident
-
-    return None
+            return True
+    return False
 
 # Add definitions to database
 def add_defs(db: DB, defs: DefsDict):
@@ -62,10 +76,19 @@ def add_defs(db: DB, defs: DefsDict):
         db.defs.put(ident, obj)
 
 # Add references to database
-def add_refs(db: DB, idx_to_hash_and_filename: IdxCache, refs: RefsDict):
+def add_refs(db: DB, in_ver_cache: Cache, idx_to_hash_and_filename: IdxCache, refs: RefsDict):
     for ident, idx_to_lines in refs.items():
-        deflist = def_in_version(db, idx_to_hash_and_filename, ident)
-        if not deflist:
+        deflist = db.defs.get(ident)
+        if deflist is None:
+            continue
+
+        if not in_ver_cache.contains(ident):
+            in_version = def_in_version(deflist, idx_to_hash_and_filename)
+            if not in_version:
+                in_ver_cache.put(ident, False)
+                continue
+            in_ver_cache.put(ident, True)
+        elif not in_ver_cache.get(ident):
             continue
 
         def deflist_exists(idx: int, line: int):
@@ -347,12 +370,13 @@ def update_version(db: DB, tag: bytes, pool: Pool, dts_comp_support: bool):
     db.defs.readonly = True
     db.defs.open()
 
+    in_def_cache = Cache(10000)
     ref_idxes = [(idx, db.defs.filename) for idx in idxes if getFileFamily(idx[2]) is not None]
     ref_chunksize = int(len(ref_idxes) / cpu_count())
     ref_chunksize = min(max(1, ref_chunksize), 100)
     for result in pool.imap_unordered(call_get_refs, ref_idxes, ref_chunksize):
         if result is not None:
-                add_refs(db, idx_to_hash_and_filename, result)
+            add_refs(db, in_def_cache, idx_to_hash_and_filename, result)
 
     db.defs.close()
     db.defs.readonly = False
