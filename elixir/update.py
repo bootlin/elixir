@@ -333,7 +333,7 @@ def update_version(db: DB, tag: bytes, pool: Pool, dts_comp_support: bool):
     chunksize = int(len(idxes) / cpu_count())
     chunksize = min(max(1, chunksize), 100)
 
-    logger.info("collecting blobs done")
+    logger.info("collecting blobs done, new blobs: %d", len(idxes))
 
     for result in pool.imap_unordered(get_defs, idxes, chunksize):
         if result is not None:
@@ -372,6 +372,8 @@ def update_version(db: DB, tag: bytes, pool: Pool, dts_comp_support: bool):
     ref_idxes = [(idx, db.defs.filename) for idx in idxes if getFileFamily(idx[2]) is not None]
     ref_chunksize = int(len(ref_idxes) / cpu_count())
     ref_chunksize = min(max(1, ref_chunksize), 100)
+    logger.info("ref blobs: %d", len(ref_idxes))
+
     for result in pool.imap_unordered(call_get_refs, ref_idxes, ref_chunksize):
         if result is not None:
             add_refs(db, in_def_cache, idx_to_hash_and_filename, result)
@@ -420,5 +422,6 @@ if __name__ == "__main__":
     generate_defs_caches(db)
     logger.info("def caches generated")
     db.close()
+    logger.info("database closed")
 
 
