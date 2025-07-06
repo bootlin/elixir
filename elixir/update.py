@@ -9,7 +9,7 @@ from collections import OrderedDict
 
 from find_compatible_dts import FindCompatibleDTS
 
-from elixir.data import DB, BsdDB, DefList, PathList, RefList
+from elixir.data import DB, BsdDB, CachedBsdDB, DefList, PathList, RefList
 from elixir.lib import (
     compatibleFamily,
     compatibleMacro,
@@ -91,31 +91,14 @@ def add_refs(db: DB, in_ver_cache: Cache, idx_to_hash_and_filename: IdxCache, re
         elif not in_ver_cache.get(ident):
             continue
 
-        def deflist_exists(idx: int, line: int):
-            if idx not in deflist.entries:
-                return False
-
-            for _, def_line, _ in deflist.entries[idx]:
-                if def_line == line:
-                    return True
-
-            return False
-
         obj = db.refs.get(ident)
         if obj is None:
             obj = RefList()
 
-        modified = False
-        for (idx, family), lines in idx_to_lines.items():
-            lines = [n for n in lines if not deflist_exists(idx, n)]
+        for (idx, family), lines_str in idx_to_lines.items():
+            obj.append(idx, lines_str, family)
 
-            if len(lines) != 0:
-                lines_str = ','.join((str(n) for n in lines))
-                obj.append(idx, lines_str, family)
-                modified = True
-
-        if modified:
-            db.refs.put(ident, obj)
+        db.refs.put(ident, obj)
 
 # Add documentation references to database
 def add_docs(db: DB, idx: int, family: str, docs: Dict[str, List[int]]):
@@ -219,10 +202,10 @@ def get_defs(file_id: FileId) -> Optional[DefsDict]:
     return defs
 
 def call_get_refs(arg: Tuple[FileId, str]) -> Optional[RefsDict]:
-    return get_refs(arg[0], BsdDB(arg[1], True, lambda x: x))
+    return get_refs(arg[0], CachedBsdDB(arg[1], True, DefList, 1000))
 
 # Collect references from the tokenizer for a file
-def get_refs(file_id: FileId, defs: BsdDB) -> Optional[RefsDict]:
+def get_refs(file_id: FileId, defs: CachedBsdDB) -> Optional[RefsDict]:
     idx, hash, filename = file_id
     refs = {}
     family = getFileFamily(filename)
@@ -236,6 +219,16 @@ def get_refs(file_id: FileId, defs: BsdDB) -> Optional[RefsDict]:
     even = True
     line_num = 1
 
+    def deflist_exists(deflist, idx: int, line: int):
+        if idx not in deflist.entries:
+            return False
+
+        for _, def_line, _ in deflist.entries[idx]:
+            if def_line == line:
+                return True
+
+        return False
+
     for tok in tokens:
         even = not even
         if even:
@@ -243,19 +236,24 @@ def get_refs(file_id: FileId, defs: BsdDB) -> Optional[RefsDict]:
 
             # We only index CONFIG_??? in makefiles
             if (family != 'M' or tok.startswith(b'CONFIG_')):
-                if not defs.exists(tok):
+                deflist = defs.get(tok)
+                if not deflist:
+                    continue
+
+                if deflist_exists(deflist, idx, line_num):
                     continue
 
                 if tok not in refs:
                     refs[tok] = {}
 
                 if (idx, family) not in refs[tok]:
-                    refs[tok][(idx, family)] = []
-
-                refs[tok][(idx, family)].append(line_num)
+                    refs[tok][(idx, family)] = str(line_num)
+                else:
+                    refs[tok][(idx, family)] += "," + str(line_num)
 
         else:
             line_num += tok.count(b'\1')
+
 
     return refs
 
