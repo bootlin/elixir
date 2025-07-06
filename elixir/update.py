@@ -369,7 +369,7 @@ def update_version(db: DB, tag: bytes, pool: Pool, dts_comp_support: bool):
     db.defs.open()
 
     in_def_cache = Cache(10000)
-    ref_idxes = [(idx, db.defs.filename) for idx in idxes if getFileFamily(idx[2]) is not None]
+    ref_idxes = [(idx, db.defs.filename) for idx in idxes]
     ref_chunksize = int(len(ref_idxes) / cpu_count())
     ref_chunksize = min(max(1, ref_chunksize), 100)
     logger.info("ref blobs: %d", len(ref_idxes))
