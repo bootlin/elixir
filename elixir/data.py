@@ -319,7 +319,7 @@ class CachedBsdDB:
         self.cache.move_to_end(key)
         if len(self.cache) > self.cachesize:
             old_k, old_v = self.cache.popitem(last=False)
-            if not self.readonly:
+            if old_v.modified:
                 self.put_raw(old_k, old_v)
 
         return p
@@ -336,7 +336,8 @@ class CachedBsdDB:
         self.cache.move_to_end(key)
         if len(self.cache) > self.cachesize:
             old_k, old_v = self.cache.popitem(last=False)
-            self.put_raw(old_k, old_v)
+            if old_v.modified:
+                self.put_raw(old_k, old_v)
 
     def put_raw(self, key, val, sync=False):
         if self.readonly:
