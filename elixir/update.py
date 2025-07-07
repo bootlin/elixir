@@ -2,6 +2,7 @@ import os.path
 import logging
 import time
 import signal
+import bisect
 import cProfile
 from multiprocessing import cpu_count, set_start_method
 from multiprocessing.pool import Pool
@@ -59,9 +60,15 @@ class Cache:
 
 # Check if definition for ident is visible in current version
 def def_in_version(def_ident: DefList, idx_to_hash_and_filename: IdxCache) -> bool:
-    for def_idx in def_ident.entries.keys():
+    def_ident.populate_entries()
+
+    prev_idx = None
+    for def_idx, _, _, _ in reversed(def_ident.entries):
+        if def_idx == prev_idx:
+            continue
         if def_idx in idx_to_hash_and_filename:
             return True
+        prev_idx = def_idx
     return False
 
 # Add definitions to database
@@ -221,12 +228,15 @@ def get_refs(file_id: FileId, defs: CachedBsdDB) -> Optional[RefsDict]:
     line_num = 1
 
     def deflist_exists(deflist, idx: int, line: int):
-        if idx not in deflist.entries:
-            return False
+        deflist.populate_entries()
+        start = bisect.bisect_left(deflist.entries, idx, key=lambda x: x[0])
 
-        for _, def_line, _ in deflist.entries[idx]:
-            if def_line == line:
-                return True
+        for def_idx, _, def_line, _ in deflist.entries[start:]:
+            if def_idx == idx:
+                if def_line == line:
+                    return True
+            else:
+                break
 
         return False
 
