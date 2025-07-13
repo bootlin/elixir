@@ -16,7 +16,7 @@ def cmd_versions(q, **kwargs):
                 print(v)
 
 def cmd_ident(q, version, ident, family, **kwargs):
-    symbol_definitions, symbol_references, symbol_doccomments = q.search_ident(version, ident, family)
+    symbol_definitions, symbol_references, symbol_doccomments, peeks = q.search_ident(version, ident, family)
     print("Symbol Definitions:")
     for symbol_definition in symbol_definitions:
         print(symbol_definition)
@@ -28,6 +28,11 @@ def cmd_ident(q, version, ident, family, **kwargs):
     print("\nDocumented in:")
     for symbol_doccomment in symbol_doccomments:
         print(symbol_doccomment)
+
+    print("\nSymbol peeks:")
+    for file, content in peeks.items():
+        for num, line in content.items():
+            print(f"{file}:{num}: {line}")
 
 def cmd_file(q, version, path, **kwargs):
     code = q.get_tokenized_file(version, path)

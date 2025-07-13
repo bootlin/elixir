@@ -46,7 +46,7 @@ class ApiIdentGetterResource:
         if version == 'latest':
             version = query.get_latest_tag()
 
-        symbol_definitions, symbol_references, symbol_doccomments = query.search_ident(version, ident, family)
+        symbol_definitions, symbol_references, symbol_doccomments, peeks = query.search_ident(version, ident, family)
 
         resp.status = falcon.HTTP_200
         resp.content_type = falcon.MEDIA_JSON

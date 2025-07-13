@@ -179,9 +179,12 @@ class Query:
     def search_ident(self, version, ident, family):
         # DT bindings compatible strings are handled differently
         if family == 'B':
-            return self.get_idents_comps(version, ident)
+            defs, refs, docs = self.get_idents_comps(version, ident)
         else:
-            return self.get_idents_defs(version, ident, family)
+            defs, refs, docs = self.get_idents_defs(version, ident, family)
+
+        peeks = self.get_peeks_of_syms(version, defs, refs)
+        return defs, refs, docs, peeks
 
     # Returns the latest tag that is included in the database.
     # This excludes release candidates.
