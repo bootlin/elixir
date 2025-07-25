@@ -1,244 +1,110 @@
 [
     {
-        "desktop": {
-            "title": "Embedded Linux training (on-line)",
-            "body": "Jul 22-31, 2025",
-            "action": "Register",
-            "link": "https://shop.bootlin.com/en/event/150"
-        },
-        "mobile": {
-            "title": "Embedded Linux training (on-line)",
-            "body": "Jul 22-31, 2025",
-            "link": "https://shop.bootlin.com/en/event/150"
-        }
+        "title": "Embedded Linux training (on-line)",
+        "body": "Jul 22-31, 2025",
+        "action": "Register",
+        "link": "https://shop.bootlin.com/en/event/150"
     },
     {
-        "desktop": {
-            "title": "Embedded Linux training (on-line)",
-            "body": "Sep 15-26, 2025",
-            "action": "Register",
-            "link": "https://shop.bootlin.com/en/event/155"
-        },
-        "mobile": {
-            "title": "Embedded Linux training (on-line)",
-            "body": "Sep 15-26, 2025",
-            "link": "https://shop.bootlin.com/en/event/155"
-        }
+        "title": "Embedded Linux training (on-line)",
+        "body": "Sep 15-26, 2025",
+        "action": "Register",
+        "link": "https://shop.bootlin.com/en/event/155"
     },
     {
-        "desktop": {
-            "title": "Embedded Linux training (in-person)",
-            "body": "Oct 13-17, 2025",
-            "action": "Register",
-            "link": "https://shop.bootlin.com/en/event/143"
-        },
-        "mobile": {
-            "title": "Embedded Linux training (in-person)",
-            "body": "Oct 13-17, 2025",
-            "link": "https://shop.bootlin.com/en/event/143"
-        }
+        "title": "Embedded Linux training (in-person)",
+        "body": "Oct 13-17, 2025",
+        "action": "Register",
+        "link": "https://shop.bootlin.com/en/event/143"
     },
     {
-        "desktop": {
-            "title": "Linux kernel drivers training",
-            "body": "Jul 16-25, 2025",
-            "action": "Register",
-            "link": "https://shop.bootlin.com/en/event/151"
-        },
-        "mobile": {
-            "title": "Linux kernel drivers training",
-            "body": "Jul 16-25, 2025",
-            "link": "https://shop.bootlin.com/en/event/151"
-        }
+        "title": "Linux kernel drivers training",
+        "body": "Jul 16-25, 2025",
+        "action": "Register",
+        "link": "https://shop.bootlin.com/en/event/151"
     },
     {
-        "desktop": {
-            "title": "Linux kernel drivers training",
-            "body": "Sep 15-25, 2025",
-            "action": "Register",
-            "link": "https://shop.bootlin.com/en/event/156"
-        },
-        "mobile": {
-            "title": "Linux kernel drivers training",
-            "body": "Sep 15-26, 2025",
-            "link": "https://shop.bootlin.com/en/event/156"
-        }
+        "title": "Linux kernel drivers training",
+        "body": "Sep 15-25, 2025",
+        "action": "Register",
+        "link": "https://shop.bootlin.com/en/event/156"
     },
     {
-        "desktop": {
-            "title": "Yocto / OpenEmbedded training (on-line)",
-            "body": "Jul 24-30, 2025",
-            "action": "Register",
-            "link": "https://shop.bootlin.com/en/event/152"
-        },
-        "mobile": {
-            "title": "Yocto / OpenEmbedded training (on-line)",
-            "body": "Jul 24-30, 2025",
-            "link": "https://shop.bootlin.com/en/event/152"
-        }
+        "title": "Yocto / OpenEmbedded training (on-line)",
+        "body": "Jul 24-30, 2025",
+        "action": "Register",
+        "link": "https://shop.bootlin.com/en/event/152"
     },
     {
-        "desktop": {
-            "title": "Yocto / OpenEmbedded training (on-line)",
-            "body": "Sep 15-19, 2025",
-            "action": "Register",
-            "link": "https://shop.bootlin.com/en/event/153"
-        },
-        "mobile": {
-            "title": "Yocto / OpenEmbedded training (on-line)",
-            "body": "Sep 15-19, 2025",
-            "link": "https://shop.bootlin.com/en/event/153"
-        }
+        "title": "Yocto / OpenEmbedded training (on-line)",
+        "body": "Sep 15-19, 2025",
+        "action": "Register",
+        "link": "https://shop.bootlin.com/en/event/153"
     },
     {
-        "desktop": {
-            "title": "Yocto / OpenEmbedded training (in-person)",
-            "body": "Nov 4-6, 2025",
-            "action": "Register",
-            "link": "https://shop.bootlin.com/en/event/145"
-        },
-        "mobile": {
-            "title": "Yocto / OpenEmbedded training (in-person)",
-            "body": "Nov 4-6, 2025",
-            "link": "https://shop.bootlin.com/en/event/145"
-        }
+        "title": "Yocto / OpenEmbedded training (in-person)",
+        "body": "Nov 4-6, 2025",
+        "action": "Register",
+        "link": "https://shop.bootlin.com/en/event/145"
     },
     {
-        "desktop": {
-            "title": "Real-Time Linux with PREEMPT_RT training",
-            "body": "Oct 14-16, 2025",
-            "action": "Register",
-            "link": "https://shop.bootlin.com/en/event/129"
-        },
-        "mobile": {
-            "title": "Real-Time Linux with PREEMPT_RT training",
-            "body": "Oct 14-16, 2025",
-            "link": "https://shop.bootlin.com/en/event/129"
-       }
+        "title": "Real-Time Linux with PREEMPT_RT training",
+        "body": "Oct 14-16, 2025",
+        "action": "Register",
+        "link": "https://shop.bootlin.com/en/event/129"
     },
     {
-        "desktop": {
-            "title": "Linux debugging, profiling, tracing and performance analysis training",
-            "body": "Jul 21-25, 2025",
-            "action": "Register",
-            "link": "https://shop.bootlin.com/en/event/137"
-        },
-        "mobile": {
-            "title": "Linux debugging, profiling, tracing and performance analysis training",
-            "body": "Jul 21-25, 2025",
-            "link": "https://shop.bootlin.com/en/event/137"
-       }
+        "title": "Linux debugging, profiling, tracing and performance analysis training",
+        "body": "Jul 21-25, 2025",
+        "action": "Register",
+        "link": "https://shop.bootlin.com/en/event/137"
     },
     {
-        "desktop": {
-            "title": "Buildroot System Development training",
-            "body": "Sep 22-26, 2025",
-            "action": "Register",
-            "link": "https://shop.bootlin.com/en/event/131"
-        },
-        "mobile": {
-            "title": "Buildroot System Development training",
-            "body": "Sep 22-26, 2025",
-            "link": "https://shop.bootlin.com/en/event/131"
-       }
+        "title": "Buildroot System Development training",
+        "body": "Sep 22-26, 2025",
+        "action": "Register",
+        "link": "https://shop.bootlin.com/en/event/131"
     },
     {
-        "desktop": {
-            "title": "Embedded Linux Networking training",
-            "body": "Nov 3-7, 2025",
-            "action": "Register",
-            "link": "https://shop.bootlin.com/en/event/147"
-        },
-        "mobile": {
-            "title": "Embedded Linux Networking training",
-            "body": "Nov 3-7, 2025",
-            "link": "https://shop.bootlin.com/en/event/147"
-       }
+        "title": "Embedded Linux Networking training",
+        "body": "Nov 3-7, 2025",
+        "action": "Register",
+        "link": "https://shop.bootlin.com/en/event/147"
     },
     {
-        "desktop": {
-            "title": "Embedded Linux Audio training",
-            "body": "Sep 22-26, 2025",
-            "action": "Register",
-            "link": "https://shop.bootlin.com/en/event/136"
-        },
-        "mobile": {
-            "title": "Embedded Linux Audio training",
-            "body": "Sep 22-26, 2025",
-            "link": "https://shop.bootlin.com/en/event/136"
-       }
+        "title": "Embedded Linux Audio training",
+        "body": "Sep 22-26, 2025",
+        "action": "Register",
+        "link": "https://shop.bootlin.com/en/event/136"
     },
     {
-        "desktop": {
-            "title": "Linux BSP development engineering services",
-            "body": "Need help to port Linux and bootloaders to your hardware?",
-            "link": "https://bootlin.com/engineering/linux-board-support-package/"
-        },
-        "mobile": {
-            "title": "Linux BSP development engineering services",
-            "body": "Need help to port Linux and bootloaders to your hardware?",
-            "link": "https://bootlin.com/engineering/linux-board-support-package/"
-       }
+        "title": "Linux BSP development engineering services",
+        "body": "Need help to port Linux and bootloaders to your hardware?",
+        "link": "https://bootlin.com/engineering/linux-board-support-package/"
     },
     {
-        "desktop": {
-            "title": "Open-source upstreaming",
-            "body": "Need help get the support for your hardware in upstream Linux?",
-            "link": "https://bootlin.com/engineering/upstreaming/"
-        },
-        "mobile": {
-            "title": "Open-source upstreaming",
-            "body": "Need help get the support for your hardware in upstream Linux?",
-            "link": "https://bootlin.com/engineering/upstreaming/"
-       }
+        "title": "Open-source upstreaming",
+        "body": "Need help get the support for your hardware in upstream Linux?",
+        "link": "https://bootlin.com/engineering/upstreaming/"
     },
     {
-        "desktop": {
-            "title": "Linux BSP upgrade and security maintenance",
-            "body": "Need help to get security updates for your Linux BSP?",
-            "link": "https://bootlin.com/engineering/linux-board-support-package/"
-        },
-        "mobile": {
-            "title": "Linux BSP upgrade and security maintenance",
-            "body": "Need help to get security updates for your Linux BSP?",
-            "link": "https://bootlin.com/engineering/linux-board-support-package/"
-       }
+        "title": "Linux BSP upgrade and security maintenance",
+        "body": "Need help to get security updates for your Linux BSP?",
+        "link": "https://bootlin.com/engineering/linux-board-support-package/"
     },
     {
-        "desktop": {
-            "title": "Yocto distribution development and maintenance",
-            "body": "Need a Yocto distribution for your embedded project?",
-            "link": "https://bootlin.com/engineering/linux-board-support-package/"
-        },
-        "mobile": {
-            "title": "Yocto distribution development and maintenance",
-            "body": "Need a Yocto distribution for your embedded project?",
-            "link": "https://bootlin.com/engineering/linux-board-support-package/"
-       }
+        "title": "Yocto distribution development and maintenance",
+        "body": "Need a Yocto distribution for your embedded project?",
+        "link": "https://bootlin.com/engineering/linux-board-support-package/"
     },
     {
-        "desktop": {
-            "title": "Buildroot integration, development and maintenance",
-            "body": "Need a Buildroot system for your embedded project?",
-            "link": "https://bootlin.com/engineering/linux-board-support-package/"
-        },
-        "mobile": {
-            "title": "Buildroot integration, development and maintenance",
-            "body": "Need a Buildroot system for your embedded project?",
-            "link": "https://bootlin.com/engineering/linux-board-support-package/"
-       }
+        "title": "Buildroot integration, development and maintenance",
+        "body": "Need a Buildroot system for your embedded project?",
+        "link": "https://bootlin.com/engineering/linux-board-support-package/"
     },
     {
-        "desktop": {
-            "title": "Zephyr development and porting",
-            "body": "Building a Zephyr-based projects?",
-            "link": "https://bootlin.com/engineering/zephyr/"
-        },
-        "mobile": {
-            "title": "Zephyr development and porting",
-            "body": "Building a Zephyr-based projects?",
-            "link": "https://bootlin.com/engineering/zephyr/"
-       }
+        "title": "Zephyr development and porting",
+        "body": "Building a Zephyr-based projects?",
+        "link": "https://bootlin.com/engineering/zephyr/"
     }
-
 ]
