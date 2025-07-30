@@ -27,7 +27,7 @@ import time
 import datetime
 from collections import OrderedDict, namedtuple
 from re import search, sub
-from typing import Any, Callable, NamedTuple, Tuple
+from typing import Any, Callable, Dict, NamedTuple, Tuple
 from urllib import parse
 import falcon
 import jinja2
@@ -662,11 +662,12 @@ LineWithURL = namedtuple('LineWithURL', 'lineno, url')
 # type : type of the symbol
 # path: path of the file that contains the symbol
 # line: list of LineWithURL
-SymbolEntry = namedtuple('SymbolEntry', 'type, path, lines')
+# peeks: map of code line previews for this path
+SymbolEntry = namedtuple('SymbolEntry', 'type, path, lines, peeks')
 
 # Converts SymbolInstance into SymbolEntry
 # path of SymbolInstance will be appended to base_url
-def symbol_instance_to_entry(base_url: str, symbol: SymbolInstance) -> SymbolEntry:
+def symbol_instance_to_entry(base_url: str, symbol: SymbolInstance, peeks: Dict[str, Dict[int, str]]) -> SymbolEntry:
     # TODO this should be a responsibility of Query
     if type(symbol.line) is str:
         line_numbers = symbol.line.split(',')
@@ -674,11 +675,13 @@ def symbol_instance_to_entry(base_url: str, symbol: SymbolInstance) -> SymbolEnt
         line_numbers = [symbol.line]
 
     lines = [
-        LineWithURL(l, f'{ base_url }/{ symbol.path }#L{ l }')
+        LineWithURL(int(l), f'{ base_url }/{ symbol.path }#L{ l }')
         for l in line_numbers
     ]
 
-    return SymbolEntry(symbol.type, symbol.path, lines)
+    current_peeks = peeks.get(symbol.path, {})
+
+    return SymbolEntry(symbol.type, symbol.path, lines, current_peeks)
 
 # Generates response (status code and optionally HTML) of the `ident` route
 # basedir: path to data directory, ex: "/srv/elixir-data"
@@ -687,14 +690,15 @@ def generate_ident_page(ctx: RequestContext, q: Query,
 
     status = falcon.HTTP_OK
     source_base_url = get_source_base_url(project, version)
-    symbol_definitions, symbol_references, symbol_doccomments = q.search_ident(version, ident, family)
+    symbol_definitions, symbol_references, symbol_doccomments, peeks = q.search_ident(version, ident, family)
     symbol_sections = []
+    empty_peeks = {}
 
     if len(symbol_definitions) or len(symbol_references):
         if len(symbol_doccomments):
             symbol_sections.append({
                 'title': 'Documented',
-                'symbols': {'_unknown': [symbol_instance_to_entry(source_base_url, sym) for sym in symbol_doccomments]},
+                'symbols': {'_unknown': [symbol_instance_to_entry(source_base_url, sym, empty_peeks) for sym in symbol_doccomments]},
             })
 
         if len(symbol_definitions):
@@ -703,9 +707,9 @@ def generate_ident_page(ctx: RequestContext, q: Query,
             # TODO this should be a responsibility of Query
             for sym in symbol_definitions:
                 if sym.type not in defs_by_type:
-                    defs_by_type[sym.type] = [symbol_instance_to_entry(source_base_url, sym)]
+                    defs_by_type[sym.type] = [symbol_instance_to_entry(source_base_url, sym, peeks)]
                 else:
-                    defs_by_type[sym.type].append(symbol_instance_to_entry(source_base_url, sym))
+                    defs_by_type[sym.type].append(symbol_instance_to_entry(source_base_url, sym, peeks))
 
             symbol_sections.append({
                 'title': 'Defined',
@@ -719,7 +723,7 @@ def generate_ident_page(ctx: RequestContext, q: Query,
         if len(symbol_references):
             symbol_sections.append({
                 'title': 'Referenced',
-                'symbols': {'_unknown': [symbol_instance_to_entry(source_base_url, sym) for sym in symbol_references]},
+                'symbols': {'_unknown': [symbol_instance_to_entry(source_base_url, sym, peeks) for sym in symbol_references]},
             })
         else:
             symbol_sections.append({

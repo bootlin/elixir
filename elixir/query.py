@@ -63,8 +63,8 @@ class Query:
         self.db = data.DB(data_dir, readonly=True, dtscomp=self.dts_comp_support)
         self.file_cache = {}
 
-    def script(self, *args):
-        return script(*args, env=self.getEnv())
+    def script(self, *args, input=None):
+        return script(*args, input=input, env=self.getEnv())
 
     def scriptLines(self, *args):
         return scriptLines(*args, env=self.getEnv())
@@ -179,9 +179,12 @@ class Query:
     def search_ident(self, version, ident, family):
         # DT bindings compatible strings are handled differently
         if family == 'B':
-            return self.get_idents_comps(version, ident)
+            defs, refs, docs = self.get_idents_comps(version, ident)
         else:
-            return self.get_idents_defs(version, ident, family)
+            defs, refs, docs = self.get_idents_defs(version, ident, family)
+
+        peeks = self.get_peeks_of_syms(version, defs, refs)
+        return defs, refs, docs, peeks
 
     # Returns the latest tag that is included in the database.
     # This excludes release candidates.
@@ -331,4 +334,50 @@ class Query:
             symbol_doccomments.append(SymbolInstance(path, docline))
 
         return symbol_definitions, symbol_references, symbol_doccomments
+
+    def get_files_and_zip(self, version, syms):
+        batch = b"\n".join([f"{version}:{sym.path}".encode() for sym in syms])
+        batch_res = self.script('get-files-batch', input=batch)
+
+        # See https://git-scm.com/docs/git-cat-file#_batch_output for the format:
+        #
+        # <oid> SP <type> SP <size> LF
+        # <contents> LF
+        # <oid> SP <type> SP <size> LF
+        # <contents> LF
+        # <oid> SP <type> SP <size> LF
+        # <contents> LF
+        # 
+        for sym in syms:
+            meta, batch_res = batch_res.split(b"\n", 1)
+            _, _, size = meta.split(b" ")
+            size = int(size) + 1 # newline after each file
+            content = batch_res[:size].split(b"\n")
+            batch_res = batch_res[size:]
+            yield sym, content
+
+    def get_peeks_of_syms(self, version, symbol_definitions, symbol_references):
+        peeks = {}
+
+        def request_peeks(syms):
+            if len(syms) > 100:
+                return
+
+            for sym, content in self.get_files_and_zip(version, syms):
+                if sym.path not in peeks:
+                    peeks[sym.path] = {}
+
+                if type(sym.line) is int:
+                    lines = (sym.line,)
+                else:
+                    lines = map(int, sym.line.split(','))
+
+                for num in lines:
+                    index = num - 1
+                    if index >= 0 and index < len(content):
+                        peeks[sym.path][num] = decode(content[index]).strip()
+
+        request_peeks(symbol_definitions)
+        request_peeks(symbol_references)
+        return peeks
 
