@@ -32,11 +32,13 @@ script_dir=`pwd`
 cd "$cur_dir"
 dts_comp_support=0 # DT bindings compatible strings support (disable by default)
 
+# Converts git repository tag to name visible in Elixir
 version_dir()
 {
     cat;
 }
 
+# Converts tag name visible in Elixir to git repository tag
 version_rev()
 {
     cat;
@@ -214,6 +216,11 @@ dts_comp()
     echo $dts_comp_support
 }
 
+# Ran from utils/index to allow projects modify the repository after fetch
+fetch_hook() {
+    return;
+}
+
 project=$(basename `dirname $LXR_REPO_DIR`)
 
 plugin=$script_dir/projects/$project.sh
@@ -289,6 +296,10 @@ case $cmd in
 
     dts-comp)
         dts_comp
+        ;;
+
+    fetch-hook)
+        fetch_hook
         ;;
 
     help)
