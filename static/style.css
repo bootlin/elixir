@@ -1486,16 +1486,17 @@ main {
 }
 
 .nav-links {
+  /* Fixed spacing between links */
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 2ch;
   padding: 0.5em 1em;
   margin: 0;
   background-color: rgba(0,0,0,.5);
   width: 100%;
   font-size: 0.8em;
   line-height: 1.7;
-}
-.nav-links li {
-  display: inline-block;
-  margin: 0 0.5em;
 }
 .nav-links a {
   text-transform: uppercase;
@@ -1530,6 +1531,12 @@ main {
 /* responsive */
 
 @media (max-width: 748px) {
+  .nav-links {
+    /* Fluid spacing to avoid carriage returns on mobile */
+    padding: 0.5em 0;
+    justify-content: space-around;
+    gap: 0.6ch;
+  }
   .banners {
     justify-content: flex-start;
   }
