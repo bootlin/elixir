@@ -22,9 +22,9 @@ toc::[]
 
 = Requirements
 
-* Python >= 3.8
+* Python >= 3.9
 * Git >= 1.9
-* The Jinja2 and Pygments (>= 2.7) Python libraries
+* The Jinja2 and Pygments Python libraries
 * Berkeley DB (and its Python binding)
 * Universal Ctags
 * Perl (for non-greedy regexes and automated testing)
@@ -43,13 +43,66 @@ queries, respectively.
 When installing the system, you should test each layer manually and make
 sure it works correctly before moving on to the next one.
 
-= Manual Installation
+= Recommended setup: Docker
+
+Dockerfiles are provided in the `docker/` directory.
+To build the image, run the following commands:
+
+ # git clone https://github.com/bootlin/elixir.git ./elixir
+ # docker build -t elixir --build-arg ELIXIR_VERSION=`git rev-parse --short HEAD` -f ./elixir/docker/Dockerfile ./elixir
+
+ELIXIR_VER build argument is optional. Since .git directory is not copied into Docker image by default,
+the option is used to pass a version string to Elixir.
+
+You can then run the image using `docker run`.
+Here we mount a host directory as Elixir data:
+
+ # mkdir ./elixir-data
+ # docker run -v ./elixir-data/:/srv/elixir-data -d --name elixir-container elixir
+
+The Docker image does not contain any repositories.
+To index a repository, you can use the `index-repository` script.
+For example, to add the https://musl.libc.org/[musl] repository, run:
+
+ # docker exec -it elixir-container index /srv/elixir-data musl
+
+Or, to run indexing in a separate container:
+
+ # docker run -v ./elixir-data/:/srv/elixir-data \
+    --entrypoint index elixir /srv/elixir-data musl
+
+You can also use `index /srv/elixir-data --all` to start indexing all officially supported repositories.
+
+After indexing is done, Elixir should be available under the following URL on your host:
+http://172.17.0.2/musl/latest/source
+
+If 172.17.0.2 does not answer, you can check the IP address of the container by running:
+
+ # docker inspect elixir-container | grep IPAddress
+
+== Automatic repository updates with Docker
+
+The Docker image does not automatically update repositories by itself.
+You can, for example, start `index /srv/elixir-data --all` in the container (or in a separate container, with Elixir data volume/directory mounted)
+from cron on the host to periodically update repositories.
+
+== Using Docker image as a development server
+
+You can easily use the Docker image as a development server by following the steps above, but mounting Elixir source directory from the host
+into `/usr/local/elixir/` in the container when running `docker run elixir`.
+
+Changes in the code made on the host should be automatically reflected in the container.
+You can use `apache2ctl` to restart Apache.
+Error logs are available in `/var/log/apache2/error.log` within the container.
+
+= Manual Installation (without Docker)
+
+Installation tutorial has been tested on Debian 12.
+Other distributions may require more adjustments.
 
 == Install Dependencies
 
-____
-For Debian
-____
+For Debian 12:
 
 ----
 sudo apt install python3-pip python3-venv libdb-dev python3-dev build-essential universal-ctags perl git apache2 libapache2-mod-wsgi-py3 libjansson4
@@ -134,23 +187,24 @@ cd /usr/local/elixir/
 ./update.py <number of threads>
 ----
 
-____
 Generating the full database can take a long time: it takes about 15 hours on a Xeon E3-1245 v5 to index 1800 tags in the Linux kernel. For that reason, you may want to tweak the script (for example, by limiting the number of tags with a "head") in order to test the update and query commands. You can even create a new Git repository and just create one tag instead of using the official kernel repository which is very large.
-____
 
 == Second Test
 
 Verify that the queries work:
 
- $ python3 -m utils.query ident v4.10 raw_spin_unlock_irq C
- $ python3 -m utils.query file v4.10 /kernel/sched/clock.c
+----
+python3 -m utils.query ident v4.10 raw_spin_unlock_irq C
+python3 -m utils.query file v4.10 /kernel/sched/clock.c
+----
 
 NOTE: `v4.10` can be replaced with any other tag.
+
 NOTE: Don't forget to activate the virtual environment!
 
 == Configure httpd
 
-The CGI interface (`web.py`) is meant to be called from your web
+The WSGI interface (`elixir/web.py`) is meant to be called from your web
 server. Since it includes support for indexing multiple projects,
 it expects a different variable (`LXR_PROJ_DIR`) which points to a
 directory with a specific structure:
@@ -162,9 +216,6 @@ directory with a specific structure:
  ** `<project 2>`
   *** `data`
   *** `repo`
- ** `<project 3>`
-  *** `data`
-  *** `repo`
 
 It will then generate the other two variables upon calling the query
 command.
@@ -172,13 +223,29 @@ command.
 Now replace `/etc/apache2/sites-enabled/000-default.conf` with `docker/000-default.conf`.
 Note: If using httpd (RedHat/Centos) instead of apache2 (Ubuntu/Debian),
 the default config file to edit is `/etc/httpd/conf.d/elixir.conf`.
+Rember to replace the `SetEnv LXR_PROJ_DIR` value with path to your projects directory.
+
+Then, enable rewrite module.
+
+----
+a2enmod rewrite
+----
+
+You will also need to allow git to read from repositories in project directory.
+An example gitconfig file that allows all access is available in `docker/gitconfig`.
+You can copy it to `/etc/gitconfig`.
+
+NOTE: Placing this config file in /etc/gitconfig marks all git repositories as safe,
+for all users.
+This may not be acceptable, depending on your security requirements. Git version
+that allows leading path matches in gitconfig is not available in Debian yet,
+listing all repositories indexed by Elixir explicitly would be required.
 
 Finally, start the httpd server.
 
 ----
 systemctl restart apache2
 ----
-
 
 == Configure SELinux policy
 
@@ -200,22 +267,11 @@ In case you want to check SELinux log related with httpd, run the following code
 audit2why -a | grep httpd | less
 ----
 
-== Configure systemd log directory
-
-By default, the error log of elixir will be put in /tmp/elixir-errors.
-However, systemd enables PrivateTmp by default.
-And, the final error directory will be like /tmp/systemd-private-xxxxx-httpd.service-xxxx/tmp/elixir-errors.
-If you want to disable it, configure httpd.service with the following attribute:
-----
-PrivateTmp=false
-----
-
 == Configuration for other servers
 
 Other HTTP servers (like nginx or lighthttpd) may not support WSGI and may require a separate WSGI server, like uWSGI.
 
-Information about how to configure uWSGI with Lighthttpd can be found here:
-https://redmine.lighttpd.net/projects/lighttpd/wiki/HowToPythonWSGI#Python-WSGI-apps-via-uwsgi-SCGI-FastCGI-or-HTTP-using-the-uWSGI-server
+Information about how to configure uWSGI with Lighthttpd can be found link:https://redmine.lighttpd.net/projects/lighttpd/wiki/HowToPythonWSGI#Python-WSGI-apps-via-uwsgi-SCGI-FastCGI-or-HTTP-using-the-uWSGI-server[here]
 
 Pull requests with example uWSGI configuration for Elixir are welcome.
 
@@ -255,63 +311,11 @@ as a front-end to reduce the load on the server running the Elixir code.
 == Keeping Elixir databases up to date
 
 To keep your Elixir databases up to date and index new versions that are released,
-we're proposing to use a script like `index /srv/elixir-data --all` which is called
-through a daily cron job.
+we're proposing to use a script like `utils/index /srv/elixir-data --all` which is
+called through a daily cron job.
 
 You can set `$ELIXIR_THREADS` if you want to change the number of threads used by
 update.py for indexing (by default the number of CPUs on your system).
-
-= Building Docker images
-
-Dockerfiles are provided in the `docker/` directory.
-To build the image, run the following commands:
-
- # git clone https://github.com/bootlin/elixir.git ./elixir
- # docker build -t elixir --build-arg ELIXIR_VERSION=`git rev-parse --short HEAD` -f ./elixir/docker/Dockerfile ./elixir
-
-ELIXIR_VER build argument is optional. Since .git directory is not copied into Docker image by default,
-the option is used to pass a version string to Elixir.
-
-You can then run the image using `docker run`.
-Here we mount a host directory as Elixir data:
-
- # mkdir ./elixir-data
- # docker run -v ./elixir-data/:/srv/elixir-data -d --name elixir-container elixir
-
-The Docker image does not contain any repositories.
-To index a repository, you can use the `index-repository` script.
-For example, to add the https://musl.libc.org/[musl] repository, run:
-
- # docker exec -it elixir-container index /srv/elixir-data musl
-
-Or, to run indexing in a separate container:
-
- # docker run -v ./elixir-data/:/srv/elixir-data \
-    --entrypoint index elixir /srv/elixir-data musl
-
-You can also use `index /srv/elixir-data --all` to start indexing all officially supported repositories.
-
-After indexing is done, Elixir should be available under the following URL on your host:
-http://172.17.0.2/musl/latest/source
-
-If 172.17.0.2 does not answer, you can check the IP address of the container by running:
-
- # docker inspect elixir-container | grep IPAddress
-
-== Automatic repository updates
-
-The Docker image does not automatically update repositories by itself.
-You can, for example, start `index /srv/elixir-data --all` in the container (or in a separate container, with Elixir data volume/directory mounted)
-from cron on the host to periodically update repositories.
-
-== Using Docker image as a development server
-
-You can easily use the Docker image as a development server by following the steps above, but mounting Elixir source directory from the host
-into `/usr/local/elixir/` in the container when running `docker run elixir`.
-
-Changes in the code made on the host should be automatically reflected in the container.
-You can use `apache2ctl` to restart Apache.
-Error logs are available in `/var/log/apache2/error.log` within the container.
 
 = Hardware requirements
 
@@ -327,8 +331,7 @@ At Bootlin, here are a few details about the server we're using:
 * As of July 2019, our Elixir service consumes 17 GB of data (supporting all projects),
 or for the Linux kernel alone (version 5.2 being the latest), 12 GB for indexing data,
 and 2 GB for the git repository.
-* We're using an LXD instance with 8 GB of RAM on a cloud server with 8 CPU cores
-running at 3.1 GHz.
+* We're using a dedicated server with 16 GB of RAM on and 8 CPU cores running at 3.8 GHz.
 
 = Contributing to Elixir
 
@@ -459,5 +462,5 @@ issue comment] for another example of a similar situation.)
 
 = License
 
-Elixir is copyright (c) 2017--2020 its contributors.  It is licensed AGPLv3.
+Elixir is copyright (c) 2017--2025 its contributors.  It is licensed AGPLv3.
 See the `COPYING` file included with Elixir for details.
