@@ -78,6 +78,10 @@ project_filters = {
         *common_kconfig_filters,
         *common_makefile_filters,
     ],
+    'iproute2': [
+        *default_filters,
+        *common_makefile_filters,
+    ],
     'linux': [
         *default_filters,
         DtsiFilter,
