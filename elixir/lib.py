@@ -223,16 +223,17 @@ def validFamily(family):
 
 def getFileFamily(filename):
     name, ext = os.path.splitext(filename)
+    name, ext = name.lower(), ext.lower()
 
-    if ext.lower() in ['.c', '.cc', '.cpp', '.c++', '.cxx', '.h', '.s'] :
+    if ext in ['.c', '.cc', '.cpp', '.c++', '.cxx', '.h', '.s'] :
         return 'C' # C file family and ASM
-    elif ext.lower() in ['.dts', '.dtsi'] :
+    elif ext in ['.dts', '.dtsi'] :
         return 'D' # Devicetree files
-    elif name.lower()[:7] in ['kconfig'] and not ext.lower() in ['.rst']:
+    elif name[:7] == 'kconfig' and ext != '.rst':
         # Some files are named like Kconfig-nommu so we only check the first 7 letters
         # We also exclude documentation files that can be named kconfig
         return 'K' # Kconfig files
-    elif name.lower()[:8] in ['makefile'] and not ext.lower() in ['.rst']:
+    elif name[:8] == 'makefile' and ext != '.rst' or ext == '.mk':
         return 'M' # Makefiles
     else :
         return None
