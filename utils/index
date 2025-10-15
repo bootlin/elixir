@@ -140,6 +140,7 @@ add_default_remotes $1 $# $2 linux https://git.kernel.org/pub/scm/linux/kernel/g
                                    https://github.com/bootlin/linux-history.git
 add_default_remotes $1 $# $2 xen https://xenbits.xen.org/git-http/xen.git
 add_default_remotes $1 $# $2 freebsd https://git.freebsd.org/src.git
+add_default_remotes $1 $# $2 opensbi https://github.com/riscv-software-src/opensbi
 
 # Index a single project
 if test "x$2" != "x--all"; then

@@ -87,6 +87,10 @@ project_filters = {
         # Our solution is to ignore all includes in such paths
         (CppPathIncFilter, {"path_exceptions": {'^/include/uapi/.*'}}),
     ],
+    'opensbi': [
+        *default_filters,
+        *common_kconfig_filters,
+    ],
     'qemu': [
         *default_filters,
         *common_kconfig_filters,
