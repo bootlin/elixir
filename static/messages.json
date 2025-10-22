@@ -1,81 +1,51 @@
 [
     {
         "title": "Embedded Linux training (on-line)",
-        "body": "Jul 22-31, 2025",
+        "body": "Dec 1-12, 2025",
         "action": "Register",
-        "link": "https://shop.bootlin.com/en/event/150"
+        "link": "https://shop.bootlin.com/en/event/2"
     },
     {
-        "title": "Embedded Linux training (on-line)",
-        "body": "Sep 15-26, 2025",
+        "title": "Linux kernel drivers training (on-line)",
+        "body": "Dec 1-12, 2025",
         "action": "Register",
-        "link": "https://shop.bootlin.com/en/event/155"
-    },
-    {
-        "title": "Embedded Linux training (in-person)",
-        "body": "Oct 13-17, 2025",
-        "action": "Register",
-        "link": "https://shop.bootlin.com/en/event/143"
-    },
-    {
-        "title": "Linux kernel drivers training",
-        "body": "Jul 16-25, 2025",
-        "action": "Register",
-        "link": "https://shop.bootlin.com/en/event/151"
-    },
-    {
-        "title": "Linux kernel drivers training",
-        "body": "Sep 15-25, 2025",
-        "action": "Register",
-        "link": "https://shop.bootlin.com/en/event/156"
+        "link": "https://shop.bootlin.com/en/event/165"
     },
     {
         "title": "Yocto / OpenEmbedded training (on-line)",
-        "body": "Jul 24-30, 2025",
+        "body": "Dec 1-5, 2025",
         "action": "Register",
-        "link": "https://shop.bootlin.com/en/event/152"
-    },
-    {
-        "title": "Yocto / OpenEmbedded training (on-line)",
-        "body": "Sep 15-19, 2025",
-        "action": "Register",
-        "link": "https://shop.bootlin.com/en/event/153"
-    },
-    {
-        "title": "Yocto / OpenEmbedded training (in-person)",
-        "body": "Nov 4-6, 2025",
-        "action": "Register",
-        "link": "https://shop.bootlin.com/en/event/145"
+        "link": "https://shop.bootlin.com/en/event/164"
     },
     {
         "title": "Real-Time Linux with PREEMPT_RT training",
-        "body": "Oct 14-16, 2025",
+        "body": "Mar 24-26, 2026",
         "action": "Register",
-        "link": "https://shop.bootlin.com/en/event/129"
+        "link": "https://shop.bootlin.com/en/event/171"
     },
     {
         "title": "Linux debugging, profiling, tracing and performance analysis training",
-        "body": "Jul 21-25, 2025",
+        "body": "Dec 8-12, 2025",
         "action": "Register",
-        "link": "https://shop.bootlin.com/en/event/137"
+        "link": "https://shop.bootlin.com/en/event/172"
     },
     {
         "title": "Buildroot System Development training",
-        "body": "Sep 22-26, 2025",
+        "body": "Mar 9-13, 2026",
         "action": "Register",
-        "link": "https://shop.bootlin.com/en/event/131"
+        "link": "https://shop.bootlin.com/en/event/170"
     },
     {
         "title": "Embedded Linux Networking training",
-        "body": "Nov 3-7, 2025",
+        "body": "Feb 2-6, 2026",
         "action": "Register",
-        "link": "https://shop.bootlin.com/en/event/147"
+        "link": "https://shop.bootlin.com/en/event/167"
     },
     {
         "title": "Embedded Linux Audio training",
-        "body": "Sep 22-26, 2025",
+        "body": "Mar 9-13, 2026",
         "action": "Register",
-        "link": "https://shop.bootlin.com/en/event/136"
+        "link": "https://shop.bootlin.com/en/event/169"
     },
     {
         "title": "Linux BSP development engineering services",
@@ -104,7 +74,7 @@
     },
     {
         "title": "Zephyr development and porting",
-        "body": "Building a Zephyr-based projects?",
+        "body": "Building a Zephyr-based project?",
         "link": "https://bootlin.com/engineering/zephyr/"
     }
 ]
