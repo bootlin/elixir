@@ -22,6 +22,7 @@ from .lib import script, scriptLines, decode
 from . import lib
 from . import data
 import os
+import sys
 from collections import OrderedDict
 from urllib import parse
 
@@ -294,8 +295,18 @@ class Query:
         dBuf = []
         rBuf = []
         docBuf = []
+        prev_file_idx, prev_dbuf_slice = None, []
 
         for file_idx, file_path in files_this_version:
+            # The file has the same contents as the previous file (same ID,
+            # different path). Duplicate definitions for the duplicate file.
+            if file_idx == prev_file_idx and len(prev_dbuf_slice) != 0:
+                to_add = []
+                for _, int_def_type, int_def_line in prev_dbuf_slice:
+                    to_add.append((file_path, int_def_type, int_def_line))
+                dBuf.extend(to_add)
+                continue
+
             # Advance defs, refs, and docs to the current file
             while def_idx < file_idx:
                 def_idx, def_type, def_line, def_family = next(defs_this_ident)
@@ -305,11 +316,14 @@ class Query:
                 doc_idx, doc_line, doc_family = next(docs)
 
             # Copy information about this identifier into dBuf, rBuf, and docBuf.
+            dbuf_range_start = len(dBuf)
             while def_idx == file_idx:
                 if (def_family == family or family == 'A'
                     or lib.compatibleMacro(macros_this_ident, family)):
                     dBuf.append((file_path, def_type, def_line))
                 def_idx, def_type, def_line, def_family = next(defs_this_ident)
+            prev_dbuf_slice = dBuf[dbuf_range_start:]
+            prev_file_idx = file_idx
 
             if ref_idx == file_idx:
                 if lib.compatibleFamily(family, ref_family) or family == 'A':
