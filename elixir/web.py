@@ -695,7 +695,8 @@ def generate_ident_page(ctx: RequestContext, q: Query,
 
     status = falcon.HTTP_OK
     source_base_url = get_source_base_url(project, version)
-    symbol_definitions, symbol_references, symbol_doccomments = q.search_ident(version, ident, family)
+    symbol_definitions, symbol_references, symbol_doccomments, symbol_exists = q.search_ident(
+            version, ident, family)
     symbol_sections = []
 
     if len(symbol_definitions) or len(symbol_references):
@@ -734,9 +735,8 @@ def generate_ident_page(ctx: RequestContext, q: Query,
                 'message': 'No references found in the database',
             })
 
-    else:
-        if ident != '':
-            status = falcon.HTTP_NOT_FOUND
+    elif ident != '':
+        status = falcon.HTTP_NOT_FOUND
 
     get_url_with_new_version = lambda v: stringify_ident_path(project, v, family, ident)
 
@@ -747,6 +747,8 @@ def generate_ident_page(ctx: RequestContext, q: Query,
         'current_family': family,
 
         'symbol_sections': symbol_sections,
+
+        'symbol_exists': symbol_exists,
     }
 
     template = ctx.jinja_env.get_template('ident.html')

@@ -16,7 +16,7 @@ def cmd_versions(q, **kwargs):
                 print(v)
 
 def cmd_ident(q, version, ident, family, **kwargs):
-    symbol_definitions, symbol_references, symbol_doccomments = q.search_ident(version, ident, family)
+    symbol_definitions, symbol_references, symbol_doccomments, _ = q.search_ident(version, ident, family)
     print("Symbol Definitions:")
     for symbol_definition in symbol_definitions:
         print(symbol_definition)

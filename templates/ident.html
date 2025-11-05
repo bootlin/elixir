@@ -57,8 +57,13 @@
         {% endif %}
     {% endfor %}
 {% else %}
-    <h2>Identifier not used</h2>
-    <div id="error-details">Note: Autocomplete currently searches identifiers in all versions of the project.</div>
+    <h2>Unknown identifier '{{ searched_ident|e }}'</h2>
+    {% if symbol_exists %}
+    <div id="error-details">
+        The '{{ searched_ident|e }}' symbol is defined in another version.
+        Elixir cannot efficiently tell where.
+    </div>
+    {% endif %}
 {% endif %}
 </div>
 

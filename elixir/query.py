@@ -212,7 +212,7 @@ class Query:
         ident = parse.quote(ident)
 
         if not self.dts_comp_support or not self.db.comps.exists(ident):
-            return symbol_c, symbol_dts, symbol_docs
+            return symbol_c, symbol_dts, symbol_docs, False
 
         files_this_version = self.db.vers.get(version).iter()
         comps = self.db.comps.get(ident).iter(dummy=True)
@@ -253,7 +253,7 @@ class Query:
         for path, blines in sorted(compsBBuf):
             symbol_docs.append(SymbolInstance(path, blines))
 
-        return symbol_c, symbol_dts, symbol_docs
+        return symbol_c, symbol_dts, symbol_docs, True
 
     def get_idents_defs(self, version, ident, family):
 
@@ -262,10 +262,10 @@ class Query:
         symbol_doccomments = []
 
         if not self.db.defs.exists(ident):
-            return symbol_definitions, symbol_references, symbol_doccomments
+            return symbol_definitions, symbol_references, symbol_doccomments, False
 
         if not self.db.vers.exists(version):
-            return symbol_definitions, symbol_references, symbol_doccomments
+            return symbol_definitions, symbol_references, symbol_doccomments, True
 
         files_this_version = self.db.vers.get(version).iter()
         this_ident = self.db.defs.get(ident)
@@ -330,5 +330,5 @@ class Query:
         for path, docline in sorted(docBuf):
             symbol_doccomments.append(SymbolInstance(path, docline))
 
-        return symbol_definitions, symbol_references, symbol_doccomments
+        return symbol_definitions, symbol_references, symbol_doccomments, True
 
