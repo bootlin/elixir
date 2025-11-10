@@ -1,6 +1,6 @@
 from os.path import dirname
 import re
-from .utils import Filter, FilterContext, decode_number, encode_number, filename_without_ext_matches
+from .utils import Filter, FilterContext, decode_number, encode_number, filename_without_ext_matches, format_source_link
 
 # Filters for Makefile file includes like these:
 # dtb-y += file.dtb
@@ -30,7 +30,7 @@ class MakefileDtbFilter(Filter):
                 filedir += '/'
 
             npath = f'{ filedir }{ w }.dts'
-            return f'<a href="{ ctx.get_absolute_source_url(npath) }">{ w }.dtb</a>'
+            return format_source_link(ctx.get_absolute_source_url(npath), w+'.dtb')
 
         return re.sub('__KEEPMAKEFILEDTB__([A-J]+)\.dtb', replace_makefiledtb, html, flags=re.MULTILINE)
 

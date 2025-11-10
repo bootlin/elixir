@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+
 #  This file is part of Elixir, a source code cross-referencer.
 #
 #  Copyright (C) 2017--2020 Mikaël Bouillot <mikael.bouillot@bootlin.com>
@@ -25,9 +26,11 @@ import re
 import threading
 import time
 import datetime
+import dataclasses
 from collections import OrderedDict, namedtuple
 from re import search, sub
-from typing import Any, Callable, NamedTuple, Tuple
+from typing import Any, Callable, NamedTuple, Optional, Tuple
+from difflib import SequenceMatcher
 from urllib import parse
 import falcon
 import jinja2
@@ -40,7 +43,8 @@ from .autocomplete import AutocompleteResource
 from .api import ApiIdentGetterResource
 from .query import get_query
 from .web_utils import ProjectConverter, IdentConverter, validate_version, validate_project, validate_ident, \
-        get_elixir_version_string, get_elixir_repo_url, RequestContext, Config
+        get_elixir_version_string, get_elixir_repo_url, RequestContext, Config, DirectoryEntry
+from .diff import format_diff, diff_directory_entries
 
 VERSION_CACHE_DURATION_SECONDS = 2 * 60  # 2 minutes
 ADD_ISSUE_LINK = "https://github.com/bootlin/elixir/issues/new"
@@ -108,7 +112,7 @@ def get_project_error_page(req, resp, exception: ElixirProjectError):
 
         versions_raw = get_versions_cached(query, req.context, project)
         get_url_with_new_version = lambda v: stringify_source_path(project, v, '/')
-        versions, current_version_path = get_versions(versions_raw, get_url_with_new_version, version)
+        versions, current_version_path = get_versions(versions_raw, get_url_with_new_version, None, version)
 
         if current_version_path[2] is None:
             # If details about current version are not available, make base links
@@ -192,6 +196,10 @@ def validate_project_and_version(ctx, project, version):
 def get_source_base_url(project: str, version: str) -> str:
     return f'/{ parse.quote(project, safe="") }/{ parse.quote(version, safe="") }/source'
 
+def stringify_diff_path(project: str, version: str, version_other: str, path: str) -> str:
+    return f'/{ parse.quote(project, safe="") }/{ parse.quote(version, safe="") }/diff/' + \
+        f'{ parse.quote(version_other, safe="") }/{ path }'
+
 # Converts ParsedSourcePath to a string with corresponding URL path
 def stringify_source_path(project: str, version: str, path: str) -> str:
     if not path.startswith('/'):
@@ -249,11 +257,47 @@ class SourceResource:
 
         query.close()
 
+# Returns base url of diff pages
+# project and version are assumed to be unquoted
+def get_diff_base_url(project: str, version: str, version_other: str) -> str:
+    return f'/{ parse.quote(project, safe="") }/{ parse.quote(version, safe="") }/diff/{ parse.quote(version_other, safe="") }'
+
 # Handles source URLs without a path, ex. '/u-boot/v2023.10/source'.
 # Note lack of trailing slash
 class SourceWithoutPathResource(SourceResource):
     def on_get(self, req, resp, project: str, version: str):
         return super().on_get(req, resp, project, version, '')
+
+class DiffResource:
+    def on_get(self, req, resp, project: str, version: str, version_other: str, path: str = ''):
+        project, version, query = validate_project_and_version(req.context, project, version)
+        version_other = validate_version(parse.unquote(version_other))
+        if version_other is None or version_other == 'latest':
+            raise ElixirProjectError('Error', 'Invalid other version', project=project, query=query)
+
+        if not path.startswith('/') and len(path) != 0:
+            path = f'/{ path }'
+
+        if path.endswith('/'):
+            resp.status = falcon.HTTP_MOVED_PERMANENTLY
+            resp.location = stringify_source_path(project, version, path)
+            return
+
+        # Check if path contains only allowed characters
+        if not search('^[A-Za-z0-9_/.,+-]*$', path):
+            raise ElixirProjectError('Error', 'Path contains characters that are not allowed',
+                              project=project, version=version, query=query)
+
+        if version == 'latest':
+            version = parse.quote(query.get_latest_tag())
+            resp.status = falcon.HTTP_FOUND
+            resp.location = stringify_source_path(project, version, path)
+            return
+
+        resp.content_type = falcon.MEDIA_HTML
+        resp.status, resp.text = generate_diff_page(req.context, query, project, version, version_other, path)
+
+        query.close()
 
 
 # Returns base url of ident pages
@@ -407,7 +451,9 @@ def get_projects(basedir: str) -> list[ProjectEntry]:
 
 # Tuple of version name and URL to chosen resource with that version
 # Used to render version list in the sidebar
-VersionEntry = namedtuple('VersionEntry', 'version, url')
+VersionEntry = namedtuple('VersionEntry', 'version, url, diff_url')
+
+VersionPath = namedtuple('VersionPath', 'major, minor, path')
 
 # Takes result of Query.get_versions() and prepares it for the sidebar template.
 #  Returns an OrderedDict with version information and optionally a triple with
@@ -420,10 +466,11 @@ VersionEntry = namedtuple('VersionEntry', 'version, url')
 # current_version: string with currently browsed version
 def get_versions(versions: OrderedDict[str, OrderedDict[str, str]],
                  get_url: Callable[[str], str],
-                 current_version: str) -> Tuple[dict[str, dict[str, list[VersionEntry]]], Tuple[str|None, str|None, str|None]]:
+                 get_diff_url: Optional[Callable[[str], str]],
+                 current_version: str) -> Tuple[dict[str, dict[str, list[VersionEntry]]], VersionPath]:
 
     result = OrderedDict()
-    current_version_path = (None, None, None)
+    current_version_path = VersionPath(None, None, None)
     for major, minor_verions in versions.items():
         for minor, patch_versions in minor_verions.items():
             for v in patch_versions:
@@ -431,13 +478,24 @@ def get_versions(versions: OrderedDict[str, OrderedDict[str, str]],
                     result[major] = OrderedDict()
                 if minor not in result[major]:
                     result[major][minor] = []
-                result[major][minor].append(VersionEntry(v, get_url(v)))
+                result[major][minor].append(
+                    VersionEntry(v, get_url(v), get_diff_url(v) if get_diff_url is not None else None)
+                )
                 if v == current_version:
-                    current_version_path = (major, minor, v)
+                    current_version_path = VersionPath(major, minor, v)
 
     return result, current_version_path
 
-# Caches get_versions result in a context object
+def find_version_path(versions: OrderedDict[str, OrderedDict[str, str]],
+                      version: str) -> VersionPath:
+    for major, minor_verions in versions.items():
+        for minor, patch_versions in minor_verions.items():
+            for v in patch_versions:
+                if v == version:
+                    return VersionPath(major, minor, v)
+
+    return VersionPath(None, None, None)
+
 def get_versions_cached(q, ctx, project):
     with ctx.versions_cache_lock:
         if project not in ctx.versions_cache:
@@ -456,14 +514,15 @@ def get_versions_cached(q, ctx, project):
 # project: name of the project
 # version: version of the project
 def get_layout_template_context(q: Query, ctx: RequestContext, get_url_with_new_version: Callable[[str], str],
-                                project: str, version: str) -> dict[str, Any]:
+                                get_diff_url: Optional[Callable[[str], str]], project: str, version: str) -> dict[str, Any]:
     versions_raw = get_versions_cached(q, ctx, project)
-    versions, current_version_path = get_versions(versions_raw, get_url_with_new_version, version)
+    versions, current_version_path = get_versions(versions_raw, get_url_with_new_version, get_diff_url, version)
 
     return {
         'projects': get_projects(ctx.config.project_dir),
         'versions': versions,
         'current_version_path': current_version_path,
+        'other_version_path': (None, None, None),
         'topbar_families': TOPBAR_FAMILIES,
         'elixir_version_string': ctx.config.version_string,
         'elixir_repo_url': ctx.config.repo_url,
@@ -509,7 +568,7 @@ def format_code(filename: str, code: str) -> str:
     lexer.stripnl = False
     formatter = pygments.formatters.HtmlFormatter(
         # Adds line numbers column to output
-        linenos=True,
+        linenos='inline',
         # Wraps line numbers in link (a) tags
         anchorlinenos=True,
         # Wraps each line in a span tag with id='codeline-{line_number}'
@@ -556,20 +615,73 @@ def generate_source(q: Query, project: str, version: str, path: str) -> str:
     html_code_block = format_code(fname, code)
 
     # Replace line numbers by links to the corresponding line in the current file
-    html_code_block = sub('href="#codeline-(\d+)', 'name="L\\1" id="L\\1" href="#L\\1', html_code_block)
+    html_code_block = sub('href="#codeline-(\d+)', 'class="line-link" name="L\\1" id="L\\1" href="#L\\1', html_code_block)
 
     for f in filters:
         html_code_block = f.untransform_formatted_code(filter_ctx, html_code_block)
 
     return html_code_block
 
-# Represents a file entry in git tree
-# type : either tree (directory), blob (file) or symlink
-# name: filename of the file
-# path: path of the file, path to the target in case of symlinks
-# url: absolute URL of the file
-# size: int, file size in bytes, None for directories and symlinks
-DirectoryEntry = namedtuple('DirectoryEntry', 'type, name, path, url, size')
+def generate_diff(q: Query, project: str, version: str, version_other: str, path: str) -> Tuple[str, str]:
+    code = q.get_tokenized_file(version, path)
+    code_other = q.get_tokenized_file(version_other, path)
+    diff = q.get_diff(version, version_other, path)
+
+    _, fname = os.path.split(path)
+    _, extension = os.path.splitext(fname)
+    extension = extension[1:].lower()
+    family = getFileFamily(fname)
+
+    source_base_url = get_source_base_url(project, version)
+    source_base_url_other = get_source_base_url(project, version_other)
+
+    def generate_get_ident_url(version):
+        def get_ident_url(ident, ident_family=None):
+            if ident_family is None:
+                ident_family = family
+            return stringify_ident_path(project, version, ident_family, ident)
+        return get_ident_url
+
+    filter_ctx = FilterContext(
+        q,
+        version,
+        family,
+        path,
+        generate_get_ident_url(version),
+        lambda path: f'{ source_base_url }{ "/" if not path.startswith("/") else "" }{ path }',
+        lambda rel_path: f'{ source_base_url }{ os.path.dirname(path) }/{ rel_path }',
+    )
+
+    filter_ctx_other = dataclasses.replace(filter_ctx,
+        tag=version_other,
+        get_ident_url=generate_get_ident_url(version_other),
+        get_absolute_source_url=lambda path: f'{ source_base_url_other }{ "/" if not path.startswith("/") else "" }{ path }',
+        get_relative_source_url=lambda rel_path: f'{ source_base_url_other }{ os.path.dirname(path) }/{ rel_path }',
+    )
+
+    filters = get_filters(filter_ctx, project)
+    filters_other = get_filters(filter_ctx_other, project)
+
+    # Apply filters
+    for f in filters:
+        code = f.transform_raw_code(filter_ctx, code)
+    for f in filters_other:
+        code_other = f.transform_raw_code(filter_ctx_other, code_other)
+
+    html_code_block, html_code_other_block = format_diff(fname, diff, code, code_other)
+
+    # Replace line numbers by links to the corresponding line in the current file
+    html_code_block = sub('href="#codeline-(\d+)',
+                          'class="line-link" name="L\\1" id="L\\1" href="#L\\1', html_code_block)
+    html_code_other_block = sub('href="#codeline-(\d+)',
+                          'class="line-link" name="OL\\1" id="OL\\1" href="#OL\\1', html_code_other_block)
+
+    for f in filters:
+        html_code_block = f.untransform_formatted_code(filter_ctx, html_code_block)
+    for f in filters_other:
+        html_code_other_block = f.untransform_formatted_code(filter_ctx_other, html_code_other_block)
+
+    return html_code_block, html_code_other_block
 
 # Returns a list of DirectoryEntry objects with information about files in a directory
 # base_url: file URLs will be created by appending file path to this URL. It shouldn't end with a slash
@@ -580,11 +692,11 @@ def get_directory_entries(q: Query, base_url, tag: str, path: str) -> list[Direc
     lines = q.get_dir_contents(tag, path)
 
     for l in lines:
-        type, name, size, perm = l.split(' ')
+        type, name, size, perm, blob_id = l.split(' ')
         file_path = f"{ path }/{ name }"
 
         if type == 'tree':
-            dir_entries.append(DirectoryEntry('tree', name, file_path, f"{ base_url }{ file_path }", None))
+            dir_entries.append(DirectoryEntry('tree', name, file_path, f"{ base_url }{ file_path }", None, None))
         elif type == 'blob':
             # 120000 permission means it's a symlink
             if perm == '120000':
@@ -592,9 +704,9 @@ def get_directory_entries(q: Query, base_url, tag: str, path: str) -> list[Direc
                 link_contents = q.get_file_raw(tag, file_path)
                 link_target_path = os.path.abspath(dir_path + link_contents)
 
-                dir_entries.append(DirectoryEntry('symlink', name, link_target_path, f"{ base_url }{ link_target_path }", size))
+                dir_entries.append(DirectoryEntry('symlink', name, link_target_path, f"{ base_url }{ link_target_path }", size, None))
             else:
-                dir_entries.append(DirectoryEntry('blob', name, file_path, f"{ base_url }{ file_path }", size))
+                dir_entries.append(DirectoryEntry('blob', name, file_path, f"{ base_url }{ file_path }", size, None))
 
     return dir_entries
 
@@ -649,16 +761,117 @@ def generate_source_page(ctx: RequestContext, q: Query,
         title_path = f'{ path_split[-1] } - { "/".join(path_split) } - '
 
     get_url_with_new_version = lambda v: stringify_source_path(project, v, path)
+    get_diff_url = lambda v_other: stringify_diff_path(project, version, v_other, path)
 
     # Create template context
     data = {
-        **get_layout_template_context(q, ctx, get_url_with_new_version, project, version),
+        **get_layout_template_context(q, ctx, get_url_with_new_version, get_diff_url, project, version),
 
         'title_path': title_path,
         'path': path,
         'breadcrumb_urls': breadcrumb_urls,
+        'diff_mode_available': True,
 
         **template_ctx,
+    }
+
+    return (status, template.render(data))
+
+# Generates response (status code and optionally HTML) of the `diff` route
+def generate_diff_page(ctx: RequestContext, q: Query,
+                       project: str, version: str, version_other: str, path: str) -> tuple[int, str]:
+
+    status = falcon.HTTP_OK
+    diff_base_url = get_diff_base_url(project, version, version_other)
+
+    # Generate breadcrumbs
+    path_split = path.split('/')[1:]
+    path_temp = ''
+    breadcrumb_urls = []
+    for p in path_split:
+        path_temp += '/'+p
+        breadcrumb_urls.append((p, f'{ diff_base_url }{ path_temp }'))
+
+    type = q.get_file_type(version, path)
+    type_other = q.get_file_type(version_other, path)
+    blob_id = q.get_blob_id(version, path)
+    blob_id_other = q.get_blob_id(version_other, path)
+
+    if type == 'tree' or type_other == 'tree':
+        back_path = os.path.dirname(path[:-1])
+        if back_path == '/':
+            back_path = ''
+
+        def generate_warning(type, version):
+            if type == 'blob':
+                return f'{path} is a file in {version}'
+            elif type == '':
+                return f'{path} does not exist in {version}'
+
+        warnings = [generate_warning(type, version), generate_warning(type_other, version)]
+
+        template_ctx = {
+            'dir_entries': diff_directory_entries(q, diff_base_url, version, version_other, path),
+            'back_url': f'{ diff_base_url }{ back_path }' if path != '' else None,
+            'warnings': warnings
+        }
+        template = ctx.jinja_env.get_template('tree.html')
+    elif type == 'blob' or type_other == 'blob':
+        if type == type_other == 'blob' and blob_id != blob_id_other:
+            code, code_other = generate_diff(q, project, version, version_other, path)
+            template_ctx = {
+                'code': code,
+                'code_other': code_other,
+                'other_tag': parse.unquote(version_other),
+            }
+            template = ctx.jinja_env.get_template('diff.html')
+        else:
+            if blob_id == blob_id_other:
+                warning = f'Files are the same in {version} and {version_other}.'
+            else:
+                missing_version = version_other if type == 'blob' else version
+                shown_version = version if type == 'blob' else version_other
+                warning = f'File does not exist, or is not a file in {missing_version}. ({shown_version} displayed)'
+
+            template_ctx = {
+                'code': generate_source(q, project, version if type == 'blob' else version_other, path),
+                'warning': warning,
+            }
+            template = ctx.jinja_env.get_template('source.html')
+    else:
+        raise ElixirProjectError('File not found', f'This file does not exist in {version} nor in {version_other}.',
+                                 status=falcon.HTTP_NOT_FOUND,
+                                 query=q, project=project, version=version,
+                                 extra_template_args={'breadcrumb_urls': breadcrumb_urls})
+
+    # Create titles like this:
+    # root path: "Linux source code (v5.5.6) - Bootlin"
+    # first level path: "arch - Linux source code (v5.5.6) - Bootlin"
+    # deeper paths: "Makefile - arch/um/Makefile - Linux source code (v5.5.6) - Bootlin"
+    if path == '':
+        title_path = ''
+    elif len(path_split) == 1:
+        title_path = f'{ path_split[0] } - '
+    else:
+        title_path = f'{ path_split[-1] } - { "/".join(path_split) } - '
+
+    get_url_with_new_version = lambda v: stringify_source_path(project, v, path)
+    get_diff_url = lambda v_other: stringify_diff_path(project, version, v_other, path)
+
+    # Create template context
+    data = {
+        **get_layout_template_context(q, ctx, get_url_with_new_version, get_diff_url, project, version),
+        **template_ctx,
+
+        'other_version_path': find_version_path(get_versions_cached(q, ctx, project), version_other),
+        'diff_mode_available': True,
+        'diff_checked': True,
+        'diff_exit_url': stringify_source_path(project, version, path),
+
+        'title_path': title_path,
+        'path': path,
+        'breadcrumb_urls': breadcrumb_urls,
+        'base_url': diff_base_url,
     }
 
     return (status, template.render(data))
@@ -741,7 +954,7 @@ def generate_ident_page(ctx: RequestContext, q: Query,
     get_url_with_new_version = lambda v: stringify_ident_path(project, v, family, ident)
 
     data = {
-        **get_layout_template_context(q, ctx, get_url_with_new_version, project, version),
+        **get_layout_template_context(q, ctx, get_url_with_new_version, None, project, version),
 
         'searched_ident': ident,
         'current_family': family,
@@ -822,6 +1035,8 @@ def get_application():
     app.add_route('/{project}/{version}/ident', IdentPostRedirectResource())
     app.add_route('/{project}/{version}/ident/{ident}', IdentWithoutFamilyResource())
     app.add_route('/{project}/{version}/{family}/ident/{ident}', IdentResource())
+    app.add_route('/{project}/{version}/diff/{version_other}/{path:path}', DiffResource())
+    app.add_route('/{project}/{version}/diff/{version_other}', DiffResource())
 
     app.add_route('/acp', AutocompleteResource())
     app.add_route('/api/ident/{project:project}/{ident:ident}', ApiIdentGetterResource())

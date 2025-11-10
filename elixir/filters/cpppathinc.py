@@ -1,5 +1,5 @@
 import re
-from .utils import Filter, FilterContext, encode_number, decode_number, extension_matches
+from .utils import Filter, FilterContext, encode_number, decode_number, extension_matches, format_source_link
 
 # Filters for cpp includes like these:
 # #include <file>
@@ -36,7 +36,7 @@ class CppPathIncFilter(Filter):
         def replace_cpppathinc(m):
             w = self.cpppathinc[decode_number(m.group(1)) - 1]
             path = f'/include/{ w }'
-            return f'<a href="{ ctx.get_absolute_source_url(path) }">{ w }</a>'
+            return format_source_link(ctx.get_absolute_source_url(path), w)
 
         return re.sub('__KEEPCPPPATHINC__([A-J]+)', replace_cpppathinc, html, flags=re.MULTILINE)
 
