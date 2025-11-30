@@ -6,16 +6,28 @@
         "link": "https://shop.bootlin.com/en/event/174"
     },
     {
-        "title": "Linux kernel drivers training (on-line)",
-        "body": "Dec 1-10, 2025",
+        "title": "Embedded Linux training (on-line)",
+        "body": "Feb 9-20, 2026",
         "action": "Register",
-        "link": "https://shop.bootlin.com/en/event/173"
+        "link": "https://shop.bootlin.com/en/event/178"
+    },
+    {
+        "title": "Linux kernel drivers training (on-line)",
+        "body": "Feb 9-19, 2026",
+        "action": "Register",
+        "link": "https://shop.bootlin.com/en/event/177"
     },
     {
         "title": "Yocto / OpenEmbedded training (on-line)",
         "body": "Dec 8-11, 2025",
         "action": "Register",
         "link": "https://shop.bootlin.com/en/event/175"
+    },
+    {
+        "title": "Yocto / OpenEmbedded training (on-line)",
+        "body": "Feb 9-13, 2026",
+        "action": "Register",
+        "link": "https://shop.bootlin.com/en/event/176"
     },
     {
         "title": "Real-Time Linux with PREEMPT_RT training",
