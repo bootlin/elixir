@@ -31,6 +31,8 @@ class FindCompatibleDTS:
         self.regex_bindings = re.compile("([\w-]+,?[\w-]+)")
 
     def parse_c(self, content):
+        if "compatible" not in content:
+            return []
         return self.regex_c.findall(content)
 
     def parse_dts(self, content):

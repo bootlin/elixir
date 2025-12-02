@@ -165,7 +165,7 @@ parse_defs_C()
     git cat-file blob "$opt1" > "$full_path"
 
     # Use ctags to parse most of the defs
-    ctags -x --kinds-c=+p+x --extras='-{anonymous}' "$full_path" |
+    ctags -u -x --kinds-c=+p+x --extras='-{anonymous}' "$full_path" |
     grep -avE -e "^operator " -e "^CONFIG_" |
     awk '{print $1" "$2" "$3}'
 
@@ -182,7 +182,7 @@ parse_defs_K()
     tmp=`mktemp -d`
     full_path=$tmp/$opt2
     git cat-file blob "$opt1" > "$full_path"
-    ctags -x --language-force=kconfig --kinds-kconfig=c --extras-kconfig=-{configPrefixed} "$full_path" |
+    ctags -u -x --language-force=kconfig --kinds-kconfig=c --extras-kconfig=-{configPrefixed} "$full_path" |
     awk '{print "CONFIG_"$1" "$2" "$3}'
     rm "$full_path"
     rmdir $tmp
@@ -193,7 +193,7 @@ parse_defs_D()
     tmp=`mktemp -d`
     full_path=$tmp/$opt2
     git cat-file blob "$opt1" > "$full_path"
-    ctags -x --language-force=dts "$full_path" |
+    ctags -u -x --language-force=dts "$full_path" |
     awk '{print $1" "$2" "$3}'
     rm "$full_path"
     rmdir $tmp
@@ -204,7 +204,13 @@ parse_docs()
     tmpfile=`mktemp`
 
     git cat-file blob "$opt1" > "$tmpfile"
-    "$script_dir/find-file-doc-comments.pl" "$tmpfile" || exit "$?"
+
+    # Shortcut: if '/**' isn't present in the file, it cannot contain a doc.
+    # This avoids calling find-file-doc-comments.pl on most files, which is an
+    # expensive operation.
+    if grep -qF '/**' "$tmpfile"; then
+        "$script_dir/find-file-doc-comments.pl" "$tmpfile" || exit "$?"
+    fi
 
     rm -rf "$tmpfile"
 }
