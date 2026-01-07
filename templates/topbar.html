@@ -1,7 +1,7 @@
 <header class="topbar">
     <div class="breadcrumb">
         <a href="#menu" class="open-menu icon-menu screenreader" title="Open Menu">Open Menu</a>
-        <a class="project" href="{{ source_base_url }}">/</a>
+        <a class="project" href="{{ source_base_url if not base_url else base_url }}">/</a>
         {% for name, url in breadcrumb_urls %}
             <a href="{{ url }}">{{ name }}</a>
             {{ '/' if not loop.last else '' }}

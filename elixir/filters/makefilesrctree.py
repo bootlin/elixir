@@ -1,5 +1,5 @@
 import re
-from .utils import Filter, FilterContext, decode_number, encode_number, filename_without_ext_matches
+from .utils import Filter, FilterContext, decode_number, encode_number, filename_without_ext_matches, format_source_link
 
 # Filters for files listed in Makefiles using $(srctree)
 # $(srctree)/Makefile
@@ -27,8 +27,7 @@ class MakefileSrcTreeFilter(Filter):
     def untransform_formatted_code(self, ctx: FilterContext, html: str) -> str:
         def replace_makefilesrctree(m):
             w = self.makefilesrctree[decode_number(m.group(1)) - 1]
-            url = ctx.get_absolute_source_url(w)
-            return f'<a href="{ url }">$(srctree)/{ w }</a>'
+            return format_source_link(ctx.get_absolute_source_url(w), f'$(srctree)/{ w }')
 
         return re.sub('__KEEPMAKEFILESRCTREE__([A-J]+)', replace_makefilesrctree, html, flags=re.MULTILINE)
 

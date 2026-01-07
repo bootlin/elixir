@@ -1,0 +1,23 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    {{ title_path }} {{ current_project|capitalize }} diff {{ current_tag }} - Bootlin Elixir Cross Referencer
+{% endblock %}
+
+{% block description -%}
+    Elixir Cross Referencer - diff of {{ current_project|capitalize }} {{ current_tag -}} {{- '' if path|length <= 1 else ': ' + path[1:] }}
+{%- endblock %}
+
+{% block main %}
+<div class="diff">
+    <div class="lxrcode">
+        <div class="note-banner">{{ current_tag }}</div>
+        {{ code }}
+    </div>
+    <div class="lxrcode">
+        <div class="note-banner">{{ other_tag }}</div>
+        {{ code_other }}
+    </div>
+</div>
+{% endblock %}
+

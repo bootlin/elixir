@@ -15,6 +15,11 @@
 {% block main %}
 
 <div class="lxrtree">
+    {% for warning in warnings %}
+        {% if warning is not none %}
+            <div class="warning">Note: {{ warning }}</div>
+        {% endif %}
+    {% endfor %}
     <table>
         <tbody>
         {% if back_url is not none %}
@@ -23,10 +28,10 @@
                 <td><a tabindex="-1" class="size" href="{{ back_url }}"></a></td>
             </tr>
         {% endif %}
-        {% for type, name, path, url, size in dir_entries %}
-            <tr>
+        {% for type, name, path, url, size, diff_cls in dir_entries %}
+            <tr class="{{ "file-"+diff_cls if diff_cls is not none else '' -}}">
                 <td>
-                    <a class="tree-icon icon-{{- type if type != 'symlink' else 'blob' -}}"
+                    <a class="tree-icon icon-{{- type if type != 'symlink' else 'blob' }}"
                        href="{{ url }}">
                     {% if type == 'symlink' %}
                         {{ name }} -> {{  path }}
