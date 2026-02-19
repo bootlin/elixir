@@ -38,6 +38,9 @@ update_index_nolock()
         	exit 1
         fi
 
+        echo "STARTING"
+        date -Is
+
         test -z "$cold_data" && exit 1 # Last check before "rm -rf /*"!
         rm -rf "$cold_data/*"
         cp -r $hot_data/* "$cold_data/"
@@ -55,6 +58,9 @@ update_index_nolock()
         if test "$(checksum "$cold_data")" != "$(checksum "$hot_data")"; then
             ln -snf "$cold_data" /srv/elixir-data
         fi
+
+        echo "CONFIRMED SUCCESS"
+        date -Is
 }
 
 update_sources()
