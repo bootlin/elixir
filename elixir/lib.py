@@ -21,6 +21,7 @@
 import sys
 import logging
 import subprocess, os
+from typing import List
 
 logger = logging.getLogger(__name__)
 
@@ -46,7 +47,7 @@ def run_cmd(*args, env=None):
 # Invoke ./script.sh with the given arguments
 # Returns the list of output lines
 
-def scriptLines(*args, env=None):
+def scriptLines(*args, env=None) -> List[bytes]:
     p = script(*args, env=env)
     p = p.split(b'\n')
     del p[-1]
