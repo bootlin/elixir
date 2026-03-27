@@ -185,8 +185,11 @@ class Query:
 
     # Returns the latest tag that is included in the database.
     # This excludes release candidates.
-    def get_latest_tag(self):
-        sorted_tags = self.scriptLines('get-latest-tags')
+    def get_latest_tag(self, rc):
+        if rc:
+            sorted_tags = reversed(self.scriptLines('list-tags'))
+        else:
+            sorted_tags = self.scriptLines('get-latest-tags')
 
         for tag in sorted_tags:
             if self.db.vers.exists(tag):

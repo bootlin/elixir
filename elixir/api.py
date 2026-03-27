@@ -43,8 +43,9 @@ class ApiIdentGetterResource:
             resp.status = falcon.HTTP_NOT_FOUND
             return
 
-        if version == 'latest':
-            version = query.get_latest_tag()
+        if version in ('latest', 'latest-rc'):
+            rc = version == 'latest-rc'
+            version = query.get_latest_tag(rc=rc)
 
         symbol_definitions, symbol_references, symbol_doccomments, _ = query.search_ident(version, ident, family)
 

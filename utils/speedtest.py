@@ -83,14 +83,16 @@ def init_query(project):
 
 
 def get_ident(query, ident, version):
-    if version == 'latest':
-        version = query.get_latest_tag()
+    if version == ('latest', 'latest-rc'):
+        rc = version == 'latest'
+        version = query.get_latest_tag(rc=rc)
 
     return query.search_ident(version, ident[0], ident[1])
 
 def get_file(query, path, version):
-    if version == 'latest':
-        version = query.get_latest_tag()
+    if version == ('latest', 'latest-rc'):
+        rc = version == 'latest'
+        version = query.get_latest_tag(rc=rc)
 
     return query.get_file(version, path)
 
