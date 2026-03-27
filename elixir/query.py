@@ -184,7 +184,7 @@ class Query:
             return self.get_idents_defs(version, ident, family)
 
     # Returns the latest tag that is included in the database.
-    # This excludes release candidates.
+    # This excludes release candidates if `rc` is False.
     def get_latest_tag(self, rc):
         if rc:
             sorted_tags = reversed(self.scriptLines('list-tags'))
