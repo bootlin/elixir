@@ -59,14 +59,10 @@ project_fetch() {
 
 # $1 is the project path (parent of data/ and repo/).
 project_index() {
-    if test -z "$ELIXIR_THREADS"; then
-        ELIXIR_THREADS="$(nproc)"
-    fi
-
     elixir_sources="$(dirname "$(dirname "$0")")"
 
     LXR_REPO_DIR=$1/repo LXR_DATA_DIR=$1/data \
-        python3 "$elixir_sources/update.py" $ELIXIR_THREADS
+        python3 -m elixir.update
 }
 
 # $1 is the Elixir root data path.
