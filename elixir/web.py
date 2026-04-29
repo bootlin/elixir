@@ -230,7 +230,7 @@ class SourceResource:
             return
 
         # Check if path contains only allowed characters
-        if not search('^[A-Za-z0-9_/.,+-]*$', path):
+        if not search('^[A-Za-z0-9_/.,+-=]*$', path):
             raise ElixirProjectError('Error', 'Path contains characters that are not allowed',
                               project=project, version=version, query=query)
 
