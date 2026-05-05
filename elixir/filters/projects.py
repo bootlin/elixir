@@ -20,7 +20,6 @@ from .makefiledir import MakefileDirFilter
 from .makefilesubdir import MakefileSubdirFilter
 from .makefilefile import MakefileFileFilter
 from .makefilesrctree import MakefileSrcTreeFilter
-from .makefilesubdir import MakefileSubdirFilter
 
 
 # List of filters applied to all projects
