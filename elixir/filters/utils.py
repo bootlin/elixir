@@ -5,7 +5,7 @@ from typing import Callable, List
 from ..query import Query
 
 # Context data used by Filters
-# tag: browsed version, unqoted
+# tag: browsed version, unquoted
 # family: family of file
 # path: path of file
 # get_ident_url: function that returns URL to identifier passed as argument
