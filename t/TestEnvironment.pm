@@ -96,13 +96,13 @@ has script_sh => (
     default => sub { find_program('script.sh') }
 );
 has query_py => (
-    default => sub { find_program('query.py') }
+    default => sub { find_program('elixir', 'query.py') }
 );
 has update_py => (
     default => sub { find_program('update.py') }
 );
 has web_py => (
-    default => sub { find_program(qw(http web.py)) }
+    default => sub { find_program('elixir', 'web.py') }
 );
 has find_doc => (
     default => sub { find_program('find-file-doc-comments.pl') }
