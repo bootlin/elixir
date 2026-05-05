@@ -216,7 +216,7 @@ class IndexResource:
         return
 
 # Handles source URLs
-# Path parameters are asssumed to be unquoted by converters
+# Path parameters are assumed to be unquoted by converters
 class SourceResource:
     def on_get(self, req, resp, project: str, version: str, path: str):
         project, version, query = validate_project_and_version(req.context, project, version)
@@ -313,7 +313,7 @@ class IdentPostRedirectResource:
 
 # Handles ident URLs when family is specified in the URL, both POST and GET
 # See IdentPostRedirectResource for behavior on POST
-# Path parameters are asssumed to be unquoted by converters
+# Path parameters are assumed to be unquoted by converters
 class IdentResource(IdentPostRedirectResource):
     def on_get(self, req, resp, project: str, version: str, family: str, ident: str):
         project, version, query = validate_project_and_version(req.context, project, version)
@@ -428,8 +428,8 @@ def get_versions(versions: OrderedDict[str, OrderedDict[str, str]],
 
     result = OrderedDict()
     current_version_path = (None, None, None)
-    for major, minor_verions in versions.items():
-        for minor, patch_versions in minor_verions.items():
+    for major, minor_versions in versions.items():
+        for minor, patch_versions in minor_versions.items():
             for v in patch_versions:
                 if major not in result:
                     result[major] = OrderedDict()
@@ -455,7 +455,7 @@ def get_versions_cached(q, ctx, project):
 
         return cached_versions[1]
 
-# Retruns template context used by the layout template
+# Returns template context used by the layout template
 # get_url_with_new_version: see get_url parameter of get_versions
 # project: name of the project
 # version: version of the project
@@ -790,7 +790,7 @@ class RequestContextMiddleware:
             self.versions_cache_lock,
         )
 
-# Serialies caught exceptions to JSON or HTML
+# Serializes caught exceptions to JSON or HTML
 # See https://falcon.readthedocs.io/en/stable/api/app.html#falcon.App.set_error_serializer
 def error_serializer(req, resp, exception):
     preferred = req.client_prefers((falcon.MEDIA_HTML, falcon.MEDIA_JSON))
