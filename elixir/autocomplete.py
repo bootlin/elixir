@@ -68,14 +68,15 @@ class AutocompleteResource:
         # In practice this should mean "the key that starts with provided prefix"
         # See docs about the default comparison function for B-Tree databases:
         # https://docs.oracle.com/cd/E17276_01/html/api_reference/C/dbset_bt_compare.html
-        key, _ = cur.get(query_bytes, DB_SET_RANGE)
-        while i <= 10:
+        result = cur.get(query_bytes, DB_SET_RANGE)
+        while result is not None and i < 10:
+            key, _ = result
             if key.startswith(query_bytes):
                 # If found key starts with the prefix, add to response
                 # and move to the next key
                 i += 1
                 response.append(process(key.decode("utf-8")))
-                key, _ = cur.next()
+                result = cur.next()
             else:
                 # If found key does not start with the prefix, stop
                 break
