@@ -157,7 +157,7 @@ def get_error_page(req, resp, exception: ElixirProjectError):
         'source_base_url': '/',
 
         'referer': req.referer,
-        'bug_report_url': ADD_ISSUE_LINK + parse.quote(report_error_details),
+        'bug_report_url': ADD_ISSUE_LINK + "?body=" + parse.quote(report_error_details),
         'report_error_details': report_error_details,
 
         'error_title': exception.title,
