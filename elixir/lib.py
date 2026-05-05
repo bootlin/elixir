@@ -28,14 +28,8 @@ CURRENT_DIR = os.path.abspath(os.path.dirname(os.path.abspath(__file__)) + '/../
 
 def script(*args, env=None):
     args = (os.path.join(CURRENT_DIR, 'script.sh'),) + args
-    # subprocess.run was introduced in Python 3.5
-    # fall back to subprocess.check_output if it's not available
-    if hasattr(subprocess, 'run'):
-        p = subprocess.run(args, stdout=subprocess.PIPE, env=env)
-        p = p.stdout
-    else:
-        p = subprocess.check_output(args)
-    return p
+    p = subprocess.run(args, stdout=subprocess.PIPE, env=env)
+    return p.stdout
 
 def run_cmd(*args, env=None):
     p = subprocess.run(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE, env=env)
