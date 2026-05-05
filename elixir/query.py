@@ -91,12 +91,12 @@ class Query:
         if version not in self.file_cache:
             version_cache = set()
             last_dir = None
-            for _, path in self.db.vers.get(version).iter():
-                dirname, filename = os.path.split(path)
+            for _, file_path in self.db.vers.get(version).iter():
+                dirname, filename = os.path.split(file_path)
                 if dirname != last_dir:
                     last_dir = dirname
                     version_cache.add(dirname)
-                version_cache.add(path)
+                version_cache.add(file_path)
 
             self.file_cache[version] = version_cache
 
