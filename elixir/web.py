@@ -210,6 +210,7 @@ class IndexResource:
                                      status=falcon.HTTP_INTERNAL_SERVER_ERROR)
 
         version = query.get_latest_tag(rc=False)
+        query.close()
         resp.status = falcon.HTTP_FOUND
         resp.location = stringify_source_path(project, version, '/')
         return
@@ -366,6 +367,7 @@ class IncompleteURLRedirectResource:
             rc = version == 'latest-rc'
             version = query.get_latest_tag(rc=rc)
 
+        query.close()
         resp.status = falcon.HTTP_FOUND
         resp.location = stringify_source_path(project, version, '/')
 
