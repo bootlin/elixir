@@ -25,8 +25,8 @@ import os
 import os.path
 import errno
 
-deflist_regex = re.compile(b'(\d*)(\w)(\d*)(\w),?')
-deflist_macro_regex = re.compile('\dM\d+(\w)')
+deflist_regex = re.compile(rb'(\d*)(\w)(\d*)(\w),?')
+deflist_macro_regex = re.compile(r'\dM\d+(\w)')
 
 ##################################################################################
 
