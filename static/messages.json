@@ -1,51 +1,57 @@
 [
     {
-        "title": "Embedded Linux training (on-line)",
-        "body": "Apr 13-23, 2026",
+        "title": "Linux kernel driver development (on-line)",
+        "body": "Jun 22 - Jul 3, 2026",
         "action": "Register",
-        "link": "https://shop.bootlin.com/en/event/189"
+        "link": "https://shop.bootlin.com/en/event/197"
     },
     {
-        "title": "Embedded Linux training (on-line)",
-        "body": "Nov 2-12, 2026",
+        "title": "Yocto Project and OpenEmbedded System Development (on-line)",
+        "body": "Jun 22-26, 2026",
         "action": "Register",
-        "link": "https://shop.bootlin.com/en/event/188"
+        "link": "https://shop.bootlin.com/en/event/196"
     },
     {
-        "title": "Linux kernel drivers training (on-line)",
-        "body": "Apr 13-23, 2026",
+        "title": "Embedded Linux system development (on-line)",
+        "body": "Jun 29 - Jul 10, 2026",
         "action": "Register",
-        "link": "https://shop.bootlin.com/en/event/183"
+        "link": "https://shop.bootlin.com/en/event/195"
     },
     {
-        "title": "Yocto / OpenEmbedded training (on-line)",
-        "body": "Apr 20-23, 2026",
+        "title": "Linux debugging, profiling, tracing and performance analysis (on-line)",
+        "body": "Jun 29 - Jul 3, 2026",
         "action": "Register",
-        "link": "https://shop.bootlin.com/en/event/186"
+        "link": "https://shop.bootlin.com/en/event/199"
     },
     {
-        "title": "Linux debugging, profiling, tracing and performance analysis training",
-        "body": "Apr 20-23, 2026",
+        "title": "Embedded Linux networking (on-line)",
+        "body": "Jul 20-24, 2026",
         "action": "Register",
-        "link": "https://shop.bootlin.com/en/event/185"
+        "link": "https://shop.bootlin.com/en/event/198"
     },
     {
-        "title": "Buildroot System Development training",
-        "body": "Dec 7-11, 2026",
+        "title": "Embedded Linux security (on-line)",
+        "body": "Sep 7-11, 2026",
         "action": "Register",
-        "link": "https://shop.bootlin.com/en/event/170"
+        "link": "https://shop.bootlin.com/en/event/200"
     },
     {
-        "title": "Embedded Linux Networking training",
-        "body": "Apr 13-17, 2026",
-        "action": "Register",
-        "link": "https://shop.bootlin.com/en/event/181"
-    },
-    {
-        "title": "Embedded Linux Audio training",
+        "title": "Audio with embedded Linux (on-line)",
         "body": "Sep 21-25, 2026",
         "action": "Register",
         "link": "https://shop.bootlin.com/en/event/190"
+    },
+    {
+        "title": "Real-Time Linux with PREEMPT_RT (on-line)",
+        "body": "Oct 20-22, 2026",
+        "action": "Register",
+        "link": "https://shop.bootlin.com/en/event/191"
+    },
+    {
+        "title": "Buildroot System Development (on-line)",
+        "body": "Dec 7-11, 2026",
+        "action": "Register",
+        "link": "https://shop.bootlin.com/en/event/170"
     },
     {
         "title": "Linux BSP development engineering services",
