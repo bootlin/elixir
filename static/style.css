@@ -1278,7 +1278,6 @@ main {
     -moz-box-shadow: -2px 0px 15px 1px rgba(0,0,0,0.69);
     box-shadow: -2px 0px 15px 1px rgba(0,0,0,0.69);
     font-size: 14;
-    font-family: Arial;
     font-weight: bold;
     width: 215px;
     height: 120px;
@@ -1340,7 +1339,6 @@ main {
     text-align: center;
     background: #757575;
     color: #fff;
-    font-family: Arial;
   }
   .message-banner .title {
     margin: 0;
