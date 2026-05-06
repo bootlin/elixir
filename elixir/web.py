@@ -114,7 +114,7 @@ def get_project_error_page(req, resp, exception: ElixirProjectError):
             # If details about current version are not available, make base links
             # point to latest.
             # current_tag is not set to latest to avoid latest being highlighted in the sidebar
-            version = query.get_latest_tag()
+            version = query.get_latest_tag(rc=False)
 
         template_ctx = {
             **template_ctx,
@@ -210,7 +210,7 @@ class IndexResource:
             raise ElixirProjectError('Error', f'Unknown default project: {project}',
                                      status=falcon.HTTP_INTERNAL_SERVER_ERROR)
 
-        version = query.get_latest_tag()
+        version = query.get_latest_tag(rc=False)
         resp.status = falcon.HTTP_FOUND
         resp.location = stringify_source_path(project, version, '/')
         return
