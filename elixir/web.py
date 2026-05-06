@@ -43,7 +43,6 @@ from .web_utils import ProjectConverter, IdentConverter, validate_version, valid
         get_elixir_version_string, get_elixir_repo_url, RequestContext, Config
 
 VERSION_CACHE_DURATION_SECONDS = 2 * 60  # 2 minutes
-ADD_ISSUE_LINK = "https://github.com/bootlin/elixir/issues/new"
 ELIXIR_VERSION_STRING = get_elixir_version_string()
 ELIXIR_REPO_LINK = get_elixir_repo_url(ELIXIR_VERSION_STRING)
 
@@ -76,7 +75,7 @@ def get_github_issue_url(details: str):
             "---\n\n" +
             details)
 
-    return ADD_ISSUE_LINK + "?body=" + parse.quote(body)
+    return "https://github.com/bootlin/elixir/issues/new?body=" + parse.quote(body)
 
 
 # Generate an error page from ElixirProjectError
@@ -157,7 +156,7 @@ def get_error_page(req, resp, exception: ElixirProjectError):
         'source_base_url': '/',
 
         'referer': req.referer,
-        'bug_report_url': ADD_ISSUE_LINK + parse.quote(report_error_details),
+        'bug_report_url': get_github_issue_url(report_error_details),
         'report_error_details': report_error_details,
 
         'error_title': exception.title,
