@@ -192,6 +192,8 @@ class UpdateVersions(Thread):
 def generate_defs_caches():
     for key in db.defs.get_keys():
         value = db.defs.get(key)
+        if value is None:
+            continue
         for family in ['C', 'K', 'D', 'M']:
             if (lib.compatibleFamily(value.get_families(), family) or
                         lib.compatibleMacro(value.get_macros(), family)):
