@@ -341,7 +341,7 @@ function updateBannerContents(msg) {
 }
 
 function updateMessageBanner() {
-  fetch('/static/messages.json')
+  fetch('/static/messages.json?v=1')
     .then(r => r.json())
     .then(messages => {
       // TODO compatibility with old messages format, remove after ~march 2025
@@ -353,7 +353,7 @@ function updateMessageBanner() {
 }
 
 function cycleBanner(delay=500) {
-  fetch('/static/messages.json')
+  fetch('/static/messages.json?v=1')
     .then(r => r.json())
     .then(messages => {
       cycleBannerWithData(messages, delay);
