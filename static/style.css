@@ -1067,12 +1067,12 @@ main {
   z-index: 2;
 }
 
-
 /* responsive */
 
 .open-menu {
   margin-right: 1.2rem;
   margin-left: -0.5rem;
+  user-select: none;
 }
 .open-menu::before {
   font-size: 1.5rem;
