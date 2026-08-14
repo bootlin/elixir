@@ -2,6 +2,7 @@ import os
 import re
 import logging
 import threading
+from collections import namedtuple
 from urllib import parse
 from typing import Any, Dict, NamedTuple
 import falcon
@@ -80,4 +81,13 @@ class IdentConverter(falcon.routing.BaseConverter):
     def convert(self, value: str) -> str|None:
         value = parse.unquote(value)
         return validate_ident(value)
+
+# Represents a file entry in git tree
+# type : either tree (directory), blob (file) or symlink
+# name: filename of the file
+# path: path of the file, path to the target in case of symlinks
+# url: absolute URL of the file
+# size: int, file size in bytes, None for directories and symlinks
+# diff: file state in a diff - "added", "removed", "changed" or None
+DirectoryEntry = namedtuple('DirectoryEntry', 'type, name, path, url, size, diff')
 

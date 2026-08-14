@@ -10,6 +10,9 @@
 
 {% block main %}
 <div class="lxrcode">
+    {% if warning %}
+        <div class="note-banner">{{ warning }}</div>
+    {% endif %}
     {{ code }}
 </div>
 {% endblock %}
