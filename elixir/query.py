@@ -18,7 +18,7 @@
 #  You should have received a copy of the GNU Affero General Public License
 #  along with Elixir.  If not, see <http://www.gnu.org/licenses/>.
 
-from .lib import script, scriptLines, decode
+from .lib import script, scriptLines, decode, tokenizeFile
 from . import lib
 from . import data
 import os
@@ -113,7 +113,7 @@ class Query:
             assert family in lib.CACHED_DEFINITIONS_FAMILIES, f"family {family} must have its definitions cached"
 
             buffer = BytesIO()
-            tokens = self.scriptLines('tokenize-file', version, path, family)
+            tokens = tokenizeFile(version, path, family, env=self.getEnv())
             even = True
 
             prefix = b''
@@ -334,4 +334,3 @@ class Query:
             symbol_doccomments.append(SymbolInstance(path, docline))
 
         return symbol_definitions, symbol_references, symbol_doccomments, True
-

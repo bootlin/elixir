@@ -94,27 +94,6 @@ get_dir()
         sort -t ' ' -k 1,1r -k 2,2
 }
 
-tokenize_file()
-{
-    if [ "$opt1" = -b ]; then
-        ref=$opt2
-    else
-        v=`echo $opt1 | version_rev`
-        ref="$v:`denormalize $opt2`"
-    fi
-
-    if [ $opt3 = "D" ]; then #Don't cut around '-' in devicetrees
-        regex='s%((/\*.*?\*/|//.*?\001|[^'"'"']"(\\.|.)*?"|# *include *<.*?>|[^\w-])+)([\w-]+)?%\1\n\4\n%g'
-    else
-        regex='s%((/\*.*?\*/|//.*?\001|[^'"'"']"(\\.|.)*?"|# *include *<.*?>|\W)+)(\w+)?%\1\n\4\n%g'
-    fi
-
-    git cat-file blob $ref 2>/dev/null |
-    tr '\n' '\1' |
-    perl -pe "$regex" |
-    head -n -1
-}
-
 list_blobs()
 {
     v=`echo $opt2 | version_rev`
@@ -269,10 +248,6 @@ case $cmd in
 
     list-blobs)
         list_blobs
-        ;;
-
-    tokenize-file)
-        tokenize_file
         ;;
 
     untokenize)
