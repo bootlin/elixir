@@ -26,7 +26,7 @@ from sys import argv
 from threading import Thread, Lock, Event, Condition
 
 import elixir.lib as lib
-from elixir.lib import script, scriptLines
+from elixir.lib import script, scriptLines, tokenizeBlob
 import elixir.data as data
 from elixir.data import PathList
 from find_compatible_dts import FindCompatibleDTS
@@ -316,7 +316,7 @@ class UpdateRefs(Thread):
             if family == 'K':
                 prefix = b'CONFIG_'
 
-            tokens = scriptLines('tokenize-file', '-b', hash, family)
+            tokens = tokenizeBlob(hash, family)
             even = True
             line_num = 1
             idents = {}
