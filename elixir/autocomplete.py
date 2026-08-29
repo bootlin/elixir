@@ -21,12 +21,39 @@ import sys
 import os
 import json
 from urllib import parse
-from berkeleydb.db import DB_SET_RANGE
+from berkeleydb.db import DB_SET_RANGE, DB
 import falcon
 
 from .lib import autoBytes, validFamily
 from .query import get_query
 from .web_utils import validate_project, validate_ident
+
+def get_top_keys_with_prefix(db: DB, prefix: str, k: int):
+    cur = db.cursor()
+    i = 0
+    query_bytes = autoBytes(parse.quote(prefix))
+    keys = []
+
+    # Find "the smallest key greater than or equal to the specified key"
+    # https://docs.oracle.com/cd/E17276_01/html/api_reference/C/dbcget.html
+    # In practice this should mean "the key that starts with provided prefix"
+    # See docs about the default comparison function for B-Tree databases:
+    # https://docs.oracle.com/cd/E17276_01/html/api_reference/C/dbset_bt_compare.html
+    result = cur.get(query_bytes, DB_SET_RANGE)
+    while result is not None and i < k:
+        key, _ = result
+        if key.startswith(query_bytes):
+            # If found key starts with the prefix, add to response
+            # and move to the next key
+            i += 1
+            keys.append(key.decode("utf-8"))
+            result = cur.next()
+        else:
+            # If found key does not start with the prefix, stop
+            break
+
+    return keys
+
 
 class AutocompleteResource:
     def on_get(self, req, resp):
@@ -52,38 +79,19 @@ class AutocompleteResource:
 
         if family == 'B':
             # DTS identifiers are stored quoted
-            process = lambda x: parse.unquote(x)
-            db = query.db.comps
+            result = [
+                parse.unquote(k)
+                for k
+                in get_top_keys_with_prefix(query.db.comps.db, ident_prefix, 10)
+            ]
         else:
-            process = lambda x: x
-            db = query.db.defs
-
-        response = []
-
-        i = 0
-        cur = db.db.cursor()
-        query_bytes = autoBytes(parse.quote(ident_prefix))
-        # Find "the smallest key greater than or equal to the specified key"
-        # https://docs.oracle.com/cd/E17276_01/html/api_reference/C/dbcget.html
-        # In practice this should mean "the key that starts with provided prefix"
-        # See docs about the default comparison function for B-Tree databases:
-        # https://docs.oracle.com/cd/E17276_01/html/api_reference/C/dbset_bt_compare.html
-        result = cur.get(query_bytes, DB_SET_RANGE)
-        while result is not None and i < 10:
-            key, _ = result
-            if key.startswith(query_bytes):
-                # If found key starts with the prefix, add to response
-                # and move to the next key
-                i += 1
-                response.append(process(key.decode("utf-8")))
-                result = cur.next()
-            else:
-                # If found key does not start with the prefix, stop
-                break
+            result_defs = get_top_keys_with_prefix(query.db.defs.db, ident_prefix, 10)
+            result_refs = get_top_keys_with_prefix(query.db.refs.db, ident_prefix, 10)
+            result = sorted(set(result_defs).union(result_refs))[:10]
 
         resp.status = falcon.HTTP_200
         resp.content_type = falcon.MEDIA_JSON
-        resp.media = response
+        resp.media = result
 
         query.close()
 

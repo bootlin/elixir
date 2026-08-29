@@ -21,6 +21,7 @@
 import sys
 import logging
 import subprocess, os
+from .special_tokens import always_indexed_tokens, always_indexed_prefixes, blacklist
 
 logger = logging.getLogger(__name__)
 
@@ -64,115 +65,6 @@ def decode(byte_object):
     except UnicodeDecodeError:
         return byte_object.decode('iso-8859-1')
 
-# List of tokens which we don't want to consider as identifiers
-# Typically for very frequent variable names and things redefined by #define
-# TODO: allow to have per project blacklists
-
-blacklist = (
-    b'NULL',
-    b'__',
-    b'adapter',
-    b'addr',
-    b'arg',
-    b'attr',
-    b'base',
-    b'bp',
-    b'buf',
-    b'buffer',
-    b'c',
-    b'card',
-    b'char',
-    b'chip',
-    b'cmd',
-    b'codec',
-    b'const',
-    b'count',
-    b'cpu',
-    b'ctx',
-    b'data',
-    b'default',
-    b'define',
-    b'desc',
-    b'dev',
-    b'driver',
-    b'else',
-    b'end',
-    b'endif',
-    b'entry',
-    b'err',
-    b'error',
-    b'event',
-    b'extern',
-    b'failed',
-    b'flags',
-    b'h',
-    b'host',
-    b'hw',
-    b'i',
-    b'id',
-    b'idx',
-    b'if',
-    b'index',
-    b'info',
-    b'inline',
-    b'int',
-    b'irq',
-    b'j',
-    b'len',
-    b'length',
-    b'list',
-    b'lock',
-    b'long',
-    b'mask',
-    b'mode',
-    b'msg',
-    b'n',
-    b'name',
-    b'net',
-    b'next',
-    b'offset',
-    b'ops',
-    b'out',
-    b'p',
-    b'pdev',
-    b'port',
-    b'priv',
-    b'ptr',
-    b'q',
-    b'r',
-    b'rc',
-    b'rdev',
-    b'reg',
-    b'regs',
-    b'req',
-    b'res',
-    b'result',
-    b'ret',
-    b'return',
-    b'retval',
-    b'root',
-    b's',
-    b'sb',
-    b'size',
-    b'sizeof',
-    b'sk',
-    b'skb',
-    b'spec',
-    b'start',
-    b'state',
-    b'static',
-    b'status',
-    b'struct',
-    b't',
-    b'tmp',
-    b'tp',
-    b'type',
-    b'val',
-    b'value',
-    b'vcpu',
-    b'x'
-)
-
 def isIdent(bstr):
     if (len(bstr) < 2 or
         bstr in blacklist or
@@ -180,6 +72,10 @@ def isIdent(bstr):
         return False
     else:
         return True
+
+def isAlwaysIndexed(token):
+    return token in always_indexed_tokens or \
+        any(token.startswith(pref) for pref in always_indexed_prefixes)
 
 def autoBytes(arg):
     if type(arg) is str:
