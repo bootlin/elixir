@@ -24,6 +24,14 @@ if [ ! -d "$LXR_REPO_DIR" ]; then
     exit 1
 fi
 
+# The index and web server can run as different users. Trust this invocation's
+# explicitly configured repository without modifying a user's global Git
+# configuration.
+git()
+{
+    command git -c safe.directory="$LXR_REPO_DIR" "$@"
+}
+
 # Get our path so we can find peer find-file-doc-comments.pl later
 cur_dir=`pwd`
 script_path=`realpath "$0"`

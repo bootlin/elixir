@@ -782,8 +782,9 @@ class RequestContextMiddleware:
         self.versions_cache_lock = threading.Lock()
 
     def process_request(self, req, _resp):
+        project_dir = req.env.get('LXR_PROJ_DIR') or os.environ['LXR_PROJ_DIR']
         req.context = RequestContext(
-            Config(req.env['LXR_PROJ_DIR'], ELIXIR_VERSION_STRING, ELIXIR_REPO_LINK),
+            Config(project_dir, ELIXIR_VERSION_STRING, ELIXIR_REPO_LINK),
             self.jinja_env,
             logging.getLogger(__name__),
             self.versions_cache,
@@ -793,7 +794,10 @@ class RequestContextMiddleware:
 # Serializes caught exceptions to JSON or HTML
 # See https://falcon.readthedocs.io/en/stable/api/app.html#falcon.App.set_error_serializer
 def error_serializer(req, resp, exception):
-    preferred = req.client_prefers((falcon.MEDIA_HTML, falcon.MEDIA_JSON))
+    if req.path.startswith('/api/'):
+        preferred = falcon.MEDIA_JSON
+    else:
+        preferred = req.client_prefers((falcon.MEDIA_HTML, falcon.MEDIA_JSON))
 
     if preferred is not None:
         if preferred == falcon.MEDIA_JSON:

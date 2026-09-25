@@ -1,0 +1,201 @@
+#!/bin/bash
+
+set -euo pipefail
+
+usage() {
+    cat <<'EOF'
+Usage: LXR_PROJ_DIR=<projects-dir> setup-local [--skip-index] <project> <source-repository>
+
+Environment:
+  LXR_PROJ_DIR   Parent directory containing all indexed projects
+                 (default: existing Apache setting or $HOME/elixir-workspace)
+  ELIXIR_HOME    Installed Elixir source directory (default: /usr/local/elixir)
+  ELIXIR_VENV    Python virtual environment (default: $HOME/venv)
+  APACHE_USER    Apache runtime user (default: www-data)
+
+Example:
+  LXR_PROJ_DIR="$HOME/self_project/elixir-workspace" \
+  ELIXIR_HOME=/usr/local/elixir \
+  ELIXIR_VENV="$HOME/venv" \
+      ./utils/setup-local riot "$HOME/self_project/RIOT"
+EOF
+}
+
+skip_index=0
+if [[ ${1:-} == "--skip-index" ]]; then
+    skip_index=1
+    shift
+fi
+
+if [[ $# -ne 2 ]]; then
+    usage >&2
+    exit 2
+fi
+
+if [[ -z ${LXR_PROJ_DIR:-} &&
+      -r /etc/apache2/sites-available/elixir.conf ]]; then
+    while read -r directive name value _rest; do
+        if [[ $directive == SetEnv && $name == LXR_PROJ_DIR ]]; then
+            LXR_PROJ_DIR=${value#\"}
+            LXR_PROJ_DIR=${LXR_PROJ_DIR%\"}
+            break
+        fi
+    done < /etc/apache2/sites-available/elixir.conf
+fi
+LXR_PROJ_DIR=${LXR_PROJ_DIR:-"$HOME/elixir-workspace"}
+export LXR_PROJ_DIR
+
+project=$1
+source_repo=$2
+elixir_home=${ELIXIR_HOME:-/usr/local/elixir}
+elixir_venv=${ELIXIR_VENV:-"$HOME/venv"}
+apache_user=${APACHE_USER:-www-data}
+project_dir=$LXR_PROJ_DIR/$project
+repo_dir=$project_dir/repo
+data_dir=$project_dir/data
+
+if [[ $skip_index -eq 1 && ! -s $data_dir/versions.db ]]; then
+    echo "No existing index found for $project in $data_dir" >&2
+    echo "Run setup-local without --skip-index first." >&2
+    exit 1
+fi
+
+if [[ ! $project =~ ^[A-Za-z0-9_.-]+$ ]]; then
+    echo "Invalid project name: $project" >&2
+    exit 2
+fi
+
+for path in "$LXR_PROJ_DIR" "$source_repo" "$elixir_home" "$elixir_venv"; do
+    if [[ $path == *[[:space:]]* ]]; then
+        echo "Paths containing whitespace are not supported: $path" >&2
+        exit 2
+    fi
+done
+
+if [[ ! -d $source_repo ]]; then
+    echo "Source repository does not exist: $source_repo" >&2
+    exit 1
+fi
+
+if ! git -C "$source_repo" rev-parse --git-dir >/dev/null 2>&1; then
+    echo "Source repository is not a Git repository: $source_repo" >&2
+    exit 1
+fi
+
+if ! git -C "$source_repo" tag --list | grep -q .; then
+    echo "Source repository has no tags: $source_repo" >&2
+    echo "Elixir requires at least one tagged version before indexing." >&2
+    exit 1
+fi
+
+if [[ ! -f $elixir_home/wsgi.py || ! -f $elixir_home/update.py ]]; then
+    echo "ELIXIR_HOME is not an Elixir installation: $elixir_home" >&2
+    exit 1
+fi
+
+for command in git python3 sudo systemctl apache2ctl a2enmod a2ensite a2dissite; do
+    if ! command -v "$command" >/dev/null; then
+        echo "Required command is missing: $command" >&2
+        exit 1
+    fi
+done
+
+# Ask for sudo before dependency installation or potentially long indexing.
+sudo -v
+
+if [[ ! -x $elixir_venv/bin/python3 ]]; then
+    python3 -m venv "$elixir_venv"
+fi
+
+"$elixir_venv/bin/python3" -m pip install -r "$elixir_home/requirements.txt"
+
+mkdir -p "$project_dir" "$data_dir"
+if [[ ! -e $repo_dir ]]; then
+    git clone --bare "$source_repo" "$repo_dir"
+elif [[ -d $repo_dir && -z $(ls -A "$repo_dir") ]]; then
+    rmdir "$repo_dir"
+    git clone --bare "$source_repo" "$repo_dir"
+elif ! git -C "$repo_dir" rev-parse --is-bare-repository 2>/dev/null |
+        grep -qx true; then
+    echo "Existing repository is not bare: $repo_dir" >&2
+    exit 1
+fi
+
+if git -C "$repo_dir" remote get-url origin >/dev/null 2>&1; then
+    git -C "$repo_dir" remote set-url origin "$source_repo"
+else
+    git -C "$repo_dir" remote add origin "$source_repo"
+fi
+git -C "$repo_dir" fetch --prune origin \
+    '+refs/heads/*:refs/heads/*' \
+    '+refs/tags/*:refs/tags/*'
+
+if [[ $skip_index -eq 0 ]]; then
+    env \
+        LXR_REPO_DIR="$repo_dir" \
+        LXR_DATA_DIR="$data_dir" \
+        "$elixir_venv/bin/python3" "$elixir_home/update.py"
+fi
+
+# Apache must be able to traverse the home directory to reach the virtualenv
+# and project data. Files created by Git, venv, and update.py are world-readable
+# under the normal umask.
+if [[ $elixir_venv == "$HOME"/* || $LXR_PROJ_DIR == "$HOME"/* ]]; then
+    chmod o+x "$HOME"
+fi
+chmod o+x "$LXR_PROJ_DIR" "$project_dir"
+chmod -R o+rX "$elixir_venv" "$repo_dir" "$data_dir"
+
+apache_config=$(mktemp)
+trap 'rm -f "$apache_config"' EXIT
+
+cat >"$apache_config" <<EOF
+ServerName localhost
+
+<Directory "$elixir_home/">
+    AllowOverride None
+    Require all denied
+    <FilesMatch "wsgi.py">
+        Require all granted
+    </FilesMatch>
+</Directory>
+<Directory "$elixir_home/static/">
+    AllowOverride None
+    Require all granted
+</Directory>
+
+<VirtualHost *:80>
+    DocumentRoot "$elixir_home/"
+
+    SetEnv LXR_PROJ_DIR "$LXR_PROJ_DIR"
+    WSGIDaemonProcess Elixir processes=16 threads=1 \\
+        display-name=%{GROUP} restart-interval=43200 \\
+        home=$elixir_home/ python-home=$elixir_venv/
+    WSGIApplicationGroup %{GLOBAL}
+
+    WSGIProcessGroup Elixir
+    WSGIScriptAliasMatch "^/(?!static/)" "$elixir_home/wsgi.py/\$1"
+
+    AllowEncodedSlashes On
+    RewriteEngine On
+    RewriteRule "^/$" "/$project/latest/source" [R]
+    RewriteRule "^/robots.txt$" "/static/robots.txt" [L]
+    RewriteRule "^/favicon.ico$" "/static/img/favicon.ico" [L]
+</VirtualHost>
+EOF
+
+sudo install -o root -g root -m 0644 \
+    "$apache_config" /etc/apache2/sites-available/elixir.conf
+sudo a2enmod rewrite wsgi
+sudo a2dissite 000-default >/dev/null 2>&1 || true
+sudo a2ensite elixir
+if [[ -f $data_dir/versions.db ]]; then
+    sudo -u "$apache_user" test -r "$data_dir/versions.db" || {
+        echo "$apache_user cannot read the generated index in $data_dir" >&2
+        exit 1
+    }
+fi
+sudo apache2ctl configtest
+sudo systemctl restart apache2
+
+echo "Elixir is available at http://localhost/$project/latest/source"
