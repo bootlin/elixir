@@ -24,6 +24,7 @@
 
 from sys import argv
 from threading import Thread, Lock, Event, Condition
+from os import environ
 
 import elixir.lib as lib
 from elixir.lib import script, scriptLines
@@ -560,6 +561,13 @@ if len(argv) >= 2 and argv[1].isdigit() :
     if cpu < 5 :
         cpu = 5
 
+# Optional git tag filter list
+git_tag_filter=None
+if len(argv) >= 3 :
+    git_tag_filter = { 'LXR_GIT_TAG_FILTER' : argv[2] }
+
+git_tag_filter.update(environ)
+
 # Distribute threads among functions using the following rules :
 # There are more (or equal) refs threads than others
 # There are more (or equal) defs threads than docs or comps threads
@@ -587,7 +595,7 @@ num_th_defs += quo
 num_th_refs += quo + rem
 
 tag_buf = []
-for tag in scriptLines('list-tags'):
+for tag in scriptLines('list-tags', env=git_tag_filter):
     if not db.vers.exists(tag):
         tag_buf.append(tag)
 
