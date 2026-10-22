@@ -30,9 +30,13 @@ from .web_utils import validate_version
 
 class ApiIdentGetterResource:
     def on_get(self, req, resp, project, ident):
-        version = validate_version(req.get_param('version'))
+        version_param = req.get_param('version')
+        if version_param is None:
+            raise falcon.HTTPMissingParam('version')
+
+        version = validate_version(version_param)
         if version is None:
-            raise falcon.HTTPInvalidParam('', 'version')
+            raise falcon.HTTPInvalidParam(version_param, 'version')
 
         family = req.get_param('family')
         if not validFamily(family):

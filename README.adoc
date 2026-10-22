@@ -43,25 +43,95 @@ queries, respectively.
 When installing the system, you should test each layer manually and make
 sure it works correctly before moving on to the next one.
 
-= Manual Installation
+= Installation
 
-== Install Dependencies
+== Quick Start on Debian or Ubuntu
 
-____
-For Debian
-____
+Install the system dependencies:
 
 ----
 sudo apt install python3-pip python3-venv libdb-dev python3-dev build-essential universal-ctags perl git apache2 libapache2-mod-wsgi-py3 libjansson4
 ----
 
-== Download Elixir Project
+The source to index must be a Git repository with at least one tag. Verify it
+before setup:
+
+----
+git -C /path/to/source tag --list
+----
+
+From the default Elixir installation, run the installer:
+
+----
+cd /usr/local/elixir
+./utils/setup-local <project> /path/to/source
+----
+
+`LXR_PROJ_DIR` defaults to the value in an existing generated Apache site, or
+to `$HOME/elixir-workspace` on the first run. Override it when needed:
+
+----
+export LXR_PROJ_DIR=/path/to/elixir-workspace
+----
+
+For example:
+
+----
+./utils/setup-local mboot $HOME/self_project/mboot
+----
+
+The installer creates `<LXR_PROJ_DIR>/<project>/repo` and `data`, installs the
+Python requirements, indexes all tagged versions, configures Apache, and
+restarts it. Open:
+
+----
+http://localhost/<project>/latest/source
+----
+
+It uses `/usr/local/elixir` as the Elixir installation and `$HOME/venv` as the
+Python virtual environment by default. Override either location when needed:
+
+----
+ELIXIR_HOME=/path/to/elixir ELIXIR_VENV=/path/to/venv \
+    ./utils/setup-local <project> <source-repository>
+----
+
+Pass `--skip-index` only when that project already has a generated database:
+
+----
+./utils/setup-local --skip-index <project> <source-repository>
+----
+
+Re-run the normal command after adding source tags. It refreshes the bare
+repository and indexes only new data.
+
+== Development Deployment
+
+When developing in a separate checkout while Apache uses
+`/usr/local/elixir`, deploy changes to `script.sh` and restart Apache:
+
+----
+elixir_source=$(git rev-parse --show-toplevel)
+elixir_home=${ELIXIR_HOME:-/usr/local/elixir}
+sudo install -m 755 "$elixir_source/script.sh" "$elixir_home/script.sh"
+sudo systemctl restart apache2
+----
+
+This deployment step is unnecessary when the development checkout itself is
+the configured `ELIXIR_HOME`.
+
+== Manual Installation
+
+The following sections describe the individual installation steps for
+environments where `utils/setup-local` cannot be used.
+
+=== Download Elixir Project
 
 ----
 git clone https://github.com/bootlin/elixir.git /usr/local/elixir/
 ----
 
-== Create a virtualenv for Elixir
+=== Create a virtualenv for Elixir
 
 ----
 python -m venv /usr/local/elixir/venv
@@ -69,14 +139,14 @@ python -m venv /usr/local/elixir/venv
 pip install -r /usr/local/elixir/requirements.txt
 ----
 
-== Create directories for project data
+=== Create directories for project data
 
 ----
 mkdir -p /path/elixir-data/linux/repo
 mkdir -p /path/elixir-data/linux/data
 ----
 
-== Set environment variables
+=== Set environment variables
 
 Two environment variables are used to tell Elixir where to find the project's
 local git repository and its databases:
@@ -93,7 +163,7 @@ export LXR_DATA_DIR=/path/elixir-data/linux/data
 
 And then run `source /etc/profile`.
 
-== Clone Kernel source code
+=== Clone Kernel source code
 
 First clone the master tree released by Linus Torvalds:
 
@@ -120,14 +190,14 @@ git fetch history --tags
 
 Feel free to add more remote branches in this way, as Elixir will consider tags from all remote branches.
 
-== First Test
+=== First Test
 
 ----
 cd /usr/local/elixir/
 ./script.sh list-tags
 ----
 
-== Create Database
+=== Create Database
 
 ----
 . ./venv/bin/activate
@@ -138,7 +208,7 @@ ____
 Generating the full database can take a long time: it takes about 15 hours on a Xeon E3-1245 v5 to index 1800 tags in the Linux kernel. For that reason, you may want to tweak the script (for example, by limiting the number of tags with a "head") in order to test the update and query commands. You can even create a new Git repository and just create one tag instead of using the official kernel repository which is very large.
 ____
 
-== Second Test
+=== Second Test
 
 Verify that the queries work:
 
@@ -148,7 +218,7 @@ Verify that the queries work:
 NOTE: `v4.10` can be replaced with any other tag.
 NOTE: Don't forget to activate the virtual environment!
 
-== Configure httpd
+=== Configure httpd
 
 The CGI interface (`web.py`) is meant to be called from your web
 server. Since it includes support for indexing multiple projects,
@@ -180,7 +250,7 @@ systemctl restart apache2
 ----
 
 
-== Configure SELinux policy
+=== Configure SELinux policy
 
 When running systemd with SELinux enabled, httpd server can only visit limited directories.
 If your /path/elixir-data/ is not one of these allowed directories, you will be responded with 500 status code.
@@ -200,7 +270,7 @@ In case you want to check SELinux log related with httpd, run the following code
 audit2why -a | grep httpd | less
 ----
 
-== Configure systemd log directory
+=== Configure systemd log directory
 
 By default, the error log of elixir will be put in /tmp/elixir-errors.
 However, systemd enables PrivateTmp by default.
@@ -210,7 +280,7 @@ If you want to disable it, configure httpd.service with the following attribute:
 PrivateTmp=false
 ----
 
-== Configuration for other servers
+=== Configuration for other servers
 
 Other HTTP servers (like nginx or lighthttpd) may not support WSGI and may require a separate WSGI server, like uWSGI.
 
