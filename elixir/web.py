@@ -383,6 +383,27 @@ class UnknownPathResource:
                           })
 
 
+class OpenSearchManifestResource:
+    def on_get(self, req, resp, project):
+        ctx = req.context
+        query = get_query(ctx.config.project_dir, project)
+        if not query:
+            resp.status = falcon.HTTP_NOT_FOUND
+            resp.content_type = falcon.MEDIA_TEXT
+            resp.text = f'invalid project name: {project}'
+            return
+
+        template = ctx.jinja_env.get_template('search.xml')
+
+        data = {
+            'project_name': project,
+        }
+
+        resp.status = falcon.HTTP_OK
+        resp.content_type = falcon.MEDIA_XML
+        resp.text = template.render(data)
+
+
 # File families available in the dropdown next to search input in the topbar
 TOPBAR_FAMILIES = {
     'A': 'All symbols',
@@ -829,6 +850,8 @@ def get_application():
 
     app.add_route('/acp', AutocompleteResource())
     app.add_route('/api/ident/{project:project}/{ident:ident}', ApiIdentGetterResource())
+
+    app.add_route('/opensearch/{project:project}/search.xml', OpenSearchManifestResource())
 
     app.add_route('/{project}', IncompleteURLRedirectResource())
     app.add_route('/{project}/{version}', IncompleteURLRedirectResource())
