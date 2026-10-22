@@ -12,10 +12,16 @@
         "link": "https://shop.bootlin.com/en/event/214"
     },
     {
-        "title": "Linux debugging, profiling, tracing and performance analysis (on-line)",
+        "title": "Embedded Linux networking (on-line)",
         "body": "Nov 2-6, 2026",
         "action": "Register",
-        "link": "https://shop.bootlin.com/en/event/215"
+        "link": "https://shop.bootlin.com/en/event/198"
+    },
+    {
+        "title": "Embedded Linux system development (on-line)",
+        "body": "Nov 30 - Dec 11, 2026",
+        "action": "Register",
+        "link": "https://shop.bootlin.com/en/event/227"
     },
     {
         "title": "Linux kernel driver development (on-line)",
@@ -36,22 +42,10 @@
         "link": "https://shop.bootlin.com/en/event/224"
     },
     {
-        "title": "Linux debugging, profiling, tracing and performance analysis (on-line)",
-        "body": "Nov 30 - Dec 4, 2026",
-        "action": "Register",
-        "link": "https://shop.bootlin.com/en/event/219"
-    },
-    {
         "title": "Linux kernel driver development (on-line)",
         "body": "Dec 7-18, 2026",
         "action": "Register",
         "link": "https://shop.bootlin.com/en/event/217"
-    },
-    {
-        "title": "Yocto Project and OpenEmbedded System Development (on-line)",
-        "body": "Dec 7-11, 2026",
-        "action": "Register",
-        "link": "https://shop.bootlin.com/en/event/220"
     },
     {
         "title": "Buildroot System Development (on-line)",
@@ -61,9 +55,21 @@
     },
     {
         "title": "Yocto Project and OpenEmbedded System Development (on-line)",
+        "body": "Dec 7-11, 2026",
+        "action": "Register",
+        "link": "https://shop.bootlin.com/en/event/220"
+    },
+    {
+        "title": "Yocto Project and OpenEmbedded System Development (on-line)",
         "body": "Dec 14-18, 2026",
         "action": "Register",
         "link": "https://shop.bootlin.com/en/event/222"
+    },
+    {
+        "title": "Embedded Linux system development (on-line)",
+        "body": "Jan 18-29, 2027",
+        "action": "Register",
+        "link": "https://shop.bootlin.com/en/event/228"
     },
     {
         "title": "Real-Time Linux with PREEMPT_RT (on-line)",
