@@ -1,17 +1,5 @@
 [
     {
-        "title": "Linux kernel driver development (on-line)",
-        "body": "Oct 26 - Nov 6, 2026",
-        "action": "Register",
-        "link": "https://shop.bootlin.com/en/event/213"
-    },
-    {
-        "title": "Yocto Project and OpenEmbedded System Development (on-line)",
-        "body": "Oct 26-30, 2026",
-        "action": "Register",
-        "link": "https://shop.bootlin.com/en/event/214"
-    },
-    {
         "title": "Embedded Linux networking (on-line)",
         "body": "Nov 2-6, 2026",
         "action": "Register",
@@ -28,12 +16,6 @@
         "body": "Nov 30 - Dec 11, 2026",
         "action": "Register",
         "link": "https://shop.bootlin.com/en/event/216"
-    },
-    {
-        "title": "Embedded Linux system development (on-line)",
-        "body": "Nov 30 - Dec 11, 2026",
-        "action": "Register",
-        "link": "https://shop.bootlin.com/en/event/226"
     },
     {
         "title": "Embedded Linux networking (on-line)",
@@ -72,10 +54,28 @@
         "link": "https://shop.bootlin.com/en/event/228"
     },
     {
+        "title": "Linux debugging, profiling, tracing and performance analysis (on-line)",
+        "body": "Jan 18-22, 2027",
+        "action": "Register",
+        "link": "https://shop.bootlin.com/en/event/229"
+    },
+    {
+        "title": "Embedded Linux security (on-line)",
+        "body": "Feb 15-19, 2027",
+        "action": "Register",
+        "link": "https://shop.bootlin.com/en/event/231"
+    },
+    {
         "title": "Real-Time Linux with PREEMPT_RT (on-line)",
         "body": "Mar 22-24, 2027",
         "action": "Register",
         "link": "https://shop.bootlin.com/en/event/225"
+    },
+    {
+        "title": "Audio with embedded Linux (on-line)",
+        "body": "Apr 5-8, 2027",
+        "action": "Register",
+        "link": "https://shop.bootlin.com/en/event/230"
     },
     {
         "title": "Linux BSP development engineering services",
