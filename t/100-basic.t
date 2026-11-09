@@ -75,17 +75,17 @@ ok_or_die( -d $db_dir, 'database dir exists',
 # Make sure the database has the files we expect
 ok( (-r File::Spec->catfile($db_dir, $_)), "$_ exists" )
     foreach qw(blobs.db definitions.db filenames.db hashes.db references.db
-                variables.db versions.db);
+                variables.db versions.db definitions-cache-P.db);
 
 # Spot-check some identifiers
 
 run_produces_ok('ident query (nonexistent)',
-    [$query_py, qw(v5.4 ident SOME_NONEXISTENT_IDENTIFIER_XYZZY_PLUGH C)],
+    [$query_py, qw(ident v5.4 SOME_NONEXISTENT_IDENTIFIER_XYZZY_PLUGH C)],
     [qr{^Symbol Definitions:}, qr{^Symbol References:}, qr{^\s*$}],
     MUST_SUCCEED);
 
 run_produces_ok('ident query (existent)',
-    [$query_py, qw(v5.4 ident i2c_acpi_notify C)],
+    [$query_py, qw(ident v5.4 i2c_acpi_notify C)],
     [qr{^Symbol Definitions:}, qr{^Symbol References:},
         { def => qr{drivers/i2c/i2c-core-acpi\.c.+\b402\b.+\bfunction\b} },
         { ref => qr{drivers/i2c/i2c-core-acpi\.c.+\b439} },
@@ -93,7 +93,7 @@ run_produces_ok('ident query (existent)',
     MUST_SUCCEED);
 
 run_produces_ok('ident query (existent, #131)',
-    [$query_py, qw(v5.4 ident class C)],
+    [$query_py, qw(ident v5.4 class C)],
     [qr{^Symbol Definitions:}, qr{^Symbol References:},
         { def => qr{issue131\.h.+\b9\b.+\bstruct\b} },
         { ref => qr{issue131\.h.+\b13}  },
@@ -101,7 +101,7 @@ run_produces_ok('ident query (existent, #131)',
     MUST_SUCCEED);
 
 run_produces_ok('ident query (existent, #150)',
-    [$query_py, qw(v5.4 ident memset C)],
+    [$query_py, qw(ident v5.4 memset C)],
     [qr{^Symbol Definitions:}, qr{^Symbol References:},
         { def => qr{issue150\.S.+\b7\b.+\bfunction\b} },
         { ref => qr{i2c-core-acpi\.c.+\b121\b} }
@@ -109,21 +109,21 @@ run_produces_ok('ident query (existent, #150)',
     MUST_SUCCEED);
 
 run_produces_ok('ident query (ENTRY that should not be detected, #150)',
-    [$query_py, qw(v5.4 ident), 'HYPERVISOR_##hypercall', 'C'],
+    [$query_py, qw(ident v5.4), 'HYPERVISOR_##hypercall', 'C'],
     [qr{^Symbol Definitions:}, qr{^Symbol References:},
         { def => { not => qr{hypercall\.S} } },
     ],
     MUST_SUCCEED);
 
 run_produces_ok('ident query (ENTRY that should not be detected, #150)',
-    [$query_py, qw(v5.4 ident), '0xfffffffe', 'C'],
+    [$query_py, qw(ident v5.4), '0xfffffffe', 'C'],
     [qr{^Symbol Definitions:}, qr{^Symbol References:},
         { def => { not => qr{bcm74xx_sprom\.c} } },
     ],
     MUST_SUCCEED);
 
 run_produces_ok('ident query (existent, #228)',
-    [$query_py, qw(v5.4 ident sys_init_module C)],
+    [$query_py, qw(ident v5.4 sys_init_module C)],
     [qr{^Symbol Definitions:}, qr{^Symbol References:},
         { def => qr{syscall_define\.c.+\b1\b.+\bfunction\b} }
     ],
@@ -132,22 +132,99 @@ run_produces_ok('ident query (existent, #228)',
 # Spot-check some files
 
 run_produces_ok('file query (nonexistent)',
-    [$query_py, qw(v5.4 file /SOME_NONEXISTENT_FILENAME_XYZZY_PLUGH)],
+    [$query_py, qw(file v5.4 /SOME_NONEXISTENT_FILENAME_XYZZY_PLUGH)],
     [{not => qr{\S}}]);
 
 run_produces_ok('file query (existent), .h',
-    [$query_py, qw(v5.4 file /drivers/i2c/i2c-dev.c)],
+    [$query_py, qw(file v5.4 /drivers/i2c/i2c-dev.c)],
     [qr{\S}],
     MUST_SUCCEED);
 
 run_produces_ok('file query (existent), .c',
-    [$query_py, qw(v5.4 file /drivers/i2c/i2c-dev.c)],
+    [$query_py, qw(file v5.4 /drivers/i2c/i2c-dev.c)],
     [qr{i2c-dev\.c}, qr{\bVogl\b}],
     MUST_SUCCEED);
 
 run_produces_ok('file query (existent), .h',
-    [$query_py, qw(v5.4 file /drivers/i2c/i2c-core.h)],
+    [$query_py, qw(file v5.4 /drivers/i2c/i2c-core.h)],
     [qr{i2c-core\.h}, qr{\bWe\b}],
+    MUST_SUCCEED);
+
+# Python family: definitions, references, and tokens that must not be refs.
+
+run_produces_ok('python ident query (function)',
+    [$query_py, qw(ident v5.4 py_make_widget P)],
+    [qr{^Symbol Definitions:}, qr{^Symbol References:},
+        { def => qr{python/py_widgets\.py.+\b16\b.+\bfunction\b} },
+        { ref => qr{python/py_widgets\.py.+\b22\b} },
+        { ref => qr{python/py_widgets\.py.+\b26\b} },
+        { ref => qr{python/py_consumer\.py.+\b4\b} },
+        { ref => { not => qr{py_widgets\.py.+\b1\b} } },
+        { ref => { not => qr{py_widgets\.py.+\b8\b} } },
+        { ref => { not => qr{py_widgets\.py.+\b11\b} } },
+        { ref => { not => qr{py_widgets\.py.+\b14\b} } },
+        { ref => { not => qr{py_widgets\.py.+\b17\b} } },
+        { ref => { not => qr{py_widgets\.py.+\b18\b} } },
+    ],
+    MUST_SUCCEED);
+
+run_produces_ok('python ident query (class, variable, method)',
+    [$query_py, qw(ident v5.4 PyWidget P)],
+    [
+        { def => qr{python/py_widgets\.py.+\b7\b.+\bclass\b} },
+        { ref => qr{python/py_widgets\.py.+\b19\b} },
+    ],
+    MUST_SUCCEED);
+
+run_produces_ok('python ident query (variable)',
+    [$query_py, qw(ident v5.4 PY_WIDGET_LIMIT P)],
+    [
+        { def => qr{python/py_widgets\.py.+\b5\b.+\bvariable\b} },
+    ],
+    MUST_SUCCEED);
+
+run_produces_ok('python ident query (method)',
+    [$query_py, qw(ident v5.4 render P)],
+    [
+        { def => qr{python/py_widgets\.py.+\b13\b.+\bmember\b} },
+        { ref => qr{python/py_widgets\.py.+\b23\b} },
+    ],
+    MUST_SUCCEED);
+
+run_produces_ok('python ident is not a C symbol',
+    [$query_py, qw(ident v5.4 py_make_widget C)],
+    [
+        { def => { not => qr{\S} } },
+        { ref => { not => qr{\S} } },
+    ],
+    MUST_SUCCEED);
+
+run_produces_ok('python ident is visible in all-symbols search',
+    [$query_py, qw(ident v5.4 py_make_widget A)],
+    [
+        { def => qr{python/py_widgets\.py.+\bfunction\b} },
+    ],
+    MUST_SUCCEED);
+
+run_produces_ok('C ident is not a Python symbol',
+    [$query_py, qw(ident v5.4 i2c_acpi_notify P)],
+    [
+        { def => { not => qr{\S} } },
+        { ref => { not => qr{\S} } },
+    ],
+    MUST_SUCCEED);
+
+run_produces_ok('python file query keeps text and links real idents',
+    [$query_py, qw(file v5.4 /python/py_widgets.py)],
+    [
+        qr{Module docstring mentions py_make_widget},
+        qr{# py_make_widget in a comment should not count},
+        qr{"py_make_widget inside a string"},
+        qr{\x{1b}\[31mpy_make_widget\x{1b}\[0m\("demo"\)},
+        qr{\x{1b}\[31mPyWidget\x{1b}\[0m},
+        { not => qr{# \x{1b}\[31mpy_make_widget} },
+        { not => qr{"\x{1b}\[31mpy_make_widget} },
+    ],
     MUST_SUCCEED);
 
 done_testing;

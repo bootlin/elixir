@@ -192,7 +192,7 @@ class UpdateVersions(Thread):
 def generate_defs_caches():
     for key in db.defs.get_keys():
         value = db.defs.get(key)
-        for family in ['C', 'K', 'D', 'M']:
+        for family in lib.CACHED_DEFINITIONS_FAMILIES:
             if (lib.compatibleFamily(value.get_families(), family) or
                         lib.compatibleMacro(value.get_macros(), family)):
                 db.defs_cache[family].put(key, b'')
@@ -392,7 +392,9 @@ class UpdateDocs(Thread):
                 filename = db.file.get(idx)
 
             family = lib.getFileFamily(filename)
-            if family in [None, 'M']: continue
+            # parse-docs understands C doc comments only. Makefiles and
+            # Python files have nothing for it to index.
+            if family in [None, 'M', 'P']: continue
 
             lines = scriptLines('parse-docs', hash, filename)
             with docs_lock:
@@ -453,7 +455,8 @@ class UpdateComps(Thread):
                 filename = db.file.get(idx)
 
             family = lib.getFileFamily(filename)
-            if family in [None, 'K', 'M']: continue
+            # DT compatible strings are parsed from C, DTS, and binding docs.
+            if family in [None, 'K', 'M', 'P']: continue
 
             lines = compatibles_parser.run(scriptLines('get-blob', hash), family)
             comps = {}

@@ -44,7 +44,9 @@ defTypeR = {
     't': 'typedef',
     'u': 'union',
     'v': 'variable',
-    'x': 'externvar'}
+    'x': 'externvar',
+    # 'c' is already config. Python classes use 'C'.
+    'C': 'class'}
 
 defTypeD = {v: k for k, v in defTypeR.items()}
 
@@ -210,6 +212,7 @@ class DB:
         self.defs_cache['K'] = BsdDB(dir + '/definitions-cache-K.db', ro, NOOP, shared=shared)
         self.defs_cache['D'] = BsdDB(dir + '/definitions-cache-D.db', ro, NOOP, shared=shared)
         self.defs_cache['M'] = BsdDB(dir + '/definitions-cache-M.db', ro, NOOP, shared=shared)
+        self.defs_cache['P'] = BsdDB(dir + '/definitions-cache-P.db', ro, NOOP, shared=shared)
         assert sorted(self.defs_cache.keys()) == sorted(lib.CACHED_DEFINITIONS_FAMILIES)
         self.refs = BsdDB(dir + '/references.db', ro, RefList, shared=shared)
         self.docs = BsdDB(dir + '/doccomments.db', ro, RefList, shared=shared)
@@ -230,6 +233,7 @@ class DB:
         self.defs_cache['K'].close()
         self.defs_cache['D'].close()
         self.defs_cache['M'].close()
+        self.defs_cache['P'].close()
         self.refs.close()
         self.docs.close()
         if self.dtscomp:

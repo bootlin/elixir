@@ -206,11 +206,11 @@ def currentProject():
     return os.path.basename(os.path.dirname(getDataDir()))
 
 # List all families supported by Elixir
-families = ['A', 'B', 'C', 'D', 'K', 'M']
+families = ['A', 'B', 'C', 'D', 'K', 'M', 'P']
 
 # Those families have databases that cache the content of definitions.db.
 # This allows faster lookup.
-CACHED_DEFINITIONS_FAMILIES = ['C', 'K', 'D', 'M']
+CACHED_DEFINITIONS_FAMILIES = ['C', 'K', 'D', 'M', 'P']
 
 def validFamily(family):
     return family in families
@@ -223,6 +223,10 @@ def getFileFamily(filename):
         return 'C' # C file family and ASM
     elif ext in ['.dts', '.dtsi'] :
         return 'D' # Devicetree files
+    elif ext == '.py':
+        # Before the Kconfig/Makefile name checks so that files such as
+        # Kconfig.py stay in the Python family.
+        return 'P' # Python
     elif name[:7] == 'kconfig' and ext != '.rst':
         # Some files are named like Kconfig-nommu so we only check the first 7 letters
         # We also exclude documentation files that can be named kconfig
@@ -238,7 +242,9 @@ compatibility_list = {
     'C' : ['C', 'K'],
     'K' : ['K'],
     'D' : ['D', 'CM'],
-    'M' : ['K']
+    'M' : ['K'],
+    # Python identifiers are not interchangeable with C, Kconfig, or DTS.
+    'P' : ['P'],
 }
 
 # Check if families are compatible

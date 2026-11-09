@@ -1,3 +1,14 @@
+#!/usr/bin/env python3
+
+import os
+import sys
+
+# Support `./utils/query.py ident <version> ...` in addition to
+# `python3 -m utils.query`. Running the file directly puts its directory,
+# not the repository root, on sys.path.
+if __package__ in (None, ''):
+    sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
 from elixir.query import Query
 from elixir import lib
 
