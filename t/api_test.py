@@ -17,42 +17,40 @@
 #  You should have received a copy of the GNU Affero General Public License
 #  along with Elixir.  If not, see <http://www.gnu.org/licenses/>.
 
-import os
-import sys
-
 import falcon
 from falcon import testing
 
-api_dir = os.path.abspath(os.path.join(os.path.dirname(os.path.realpath(__file__)), '..','api'))
-sys.path.insert(0, api_dir)
-
-from api import create_ident_getter
+from elixir.web import application
 
 class APITest(testing.TestCase):
     def setUp(self):
         super(APITest, self).setUp()
 
-        self.app = create_ident_getter()
+        self.app = application
 
     def test_identifier_not_found(self):
-        result = self.simulate_get('/ident/testproj/SOME_NONEXISTENT_IDENTIFIER', query_string="version=latest&family=C")
+        result = self.simulate_get('/api/ident/testproj/SOME_NONEXISTENT_IDENTIFIER', query_string="version=latest&family=C")
 
         self.assertEqual(result.status_code, 200)
         self.assertEqual(result.json, {'definitions': [], 'references':[], 'documentations': []})
 
     def test_missing_version(self):
         # A get request without a version query string
-        result = self.simulate_get('/ident/testproj/of_i2c_get_board_info', query_string="")
+        result = self.simulate_get(
+            '/api/ident/testproj/of_i2c_get_board_info',
+            query_string="",
+            headers={'Accept': 'application/json'},
+        )
 
         self.assertEqual(result.status_code, 400)
 
-        required_response = falcon.HTTPMissingParam('version')
+        required_response = falcon.HTTPInvalidParam('', 'version')
         self.assertEqual(result.json["title"], required_response.title)
         self.assertEqual(result.json["description"], required_response.description)
 
     def test_existing_identifier(self):
-        result_for_specific_version = self.simulate_get('/ident/testproj/of_i2c_get_board_info', query_string="version=v5.4&family=C")
-        result_for_latest_version = self.simulate_get('/ident/testproj/of_i2c_get_board_info', query_string="version=latest&family=C")
+        result_for_specific_version = self.simulate_get('/api/ident/testproj/of_i2c_get_board_info', query_string="version=v5.4&family=C")
+        result_for_latest_version = self.simulate_get('/api/ident/testproj/of_i2c_get_board_info', query_string="version=latest&family=C")
 
         expected_json = {
             'definitions':

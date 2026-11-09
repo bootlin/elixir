@@ -30,7 +30,10 @@ use TestHelpers;
 my $tenv = TestEnvironment->new;
 $tenv->build_repo(sibling_abs_path('tree'))->build_db->update_env;
 
-# Test the api using pytest. Prints the test results
-run_produces_ok('api pytest suite', ["pytest", "-v", "t"], [], MUST_SUCCEED, 1);
+# Test the api using pytest. Prints the test results.
+# Ignore SyntaxWarning from pre-existing non-raw regexes during import.
+local $ENV{PYTHONWARNINGS} = 'ignore';
+local $ENV{PYTHONPATH} = sibling_abs_path('..');
+run_produces_ok('api pytest suite', ["pytest", "-v", "t/api_test.py"], [], MUST_SUCCEED, 1);
 
 done_testing;

@@ -390,6 +390,7 @@ TOPBAR_FAMILIES = {
     'K': 'Kconfig',
     'D': 'Devicetree',
     'B': 'DT compatible',
+    'P': 'Python',
 }
 
 # Returns a list of names of top-level directories in basedir
@@ -782,8 +783,16 @@ class RequestContextMiddleware:
         self.versions_cache_lock = threading.Lock()
 
     def process_request(self, req, _resp):
+        # WSGI servers usually copy the process environment. The Falcon test
+        # client does not, so fall back to os.environ for LXR_PROJ_DIR.
+        project_dir = req.env.get('LXR_PROJ_DIR') or os.environ.get('LXR_PROJ_DIR')
+        if not project_dir:
+            raise falcon.HTTPInternalServerError(
+                title='Error',
+                description='LXR_PROJ_DIR is not set',
+            )
         req.context = RequestContext(
-            Config(req.env['LXR_PROJ_DIR'], ELIXIR_VERSION_STRING, ELIXIR_REPO_LINK),
+            Config(project_dir, ELIXIR_VERSION_STRING, ELIXIR_REPO_LINK),
             self.jinja_env,
             logging.getLogger(__name__),
             self.versions_cache,

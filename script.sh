@@ -103,6 +103,14 @@ tokenize_file()
         ref="$v:`denormalize $opt2`"
     fi
 
+    # Python comments, quotes, and f-strings are not C tokens. Keep the
+    # original text in the separator stream and emit real identifiers only.
+    if [ "$opt3" = "P" ]; then
+        git cat-file blob "$ref" 2>/dev/null |
+        "$script_dir/tokenize-python.py"
+        return
+    fi
+
     if [ $opt3 = "D" ]; then #Don't cut around '-' in devicetrees
         regex='s%((/\*.*?\*/|//.*?\001|[^'"'"']"(\\.|.)*?"|# *include *<.*?>|[^\w-])+)([\w-]+)?%\1\n\4\n%g'
     else
@@ -155,6 +163,9 @@ parse_defs()
     "D")
         parse_defs_D
         ;;
+    "P")
+        parse_defs_P
+        ;;
     esac
 }
 
@@ -195,6 +206,22 @@ parse_defs_D()
     git cat-file blob "$opt1" > "$full_path"
     ctags -x --language-force=dts "$full_path" |
     awk '{print $1" "$2" "$3}'
+    rm "$full_path"
+    rmdir $tmp
+}
+
+parse_defs_P()
+{
+    tmp=`mktemp -d`
+    full_path=$tmp/$opt2
+    git cat-file blob "$opt1" > "$full_path"
+
+    # Stock Universal Ctags. cfmv is class, function, member, and variable.
+    # Setting the list (no + or -) disables imports, parameters, and locals,
+    # whose kind letters differ between ctags 5.9 (unknown=x) and 6.1 (Y).
+    ctags -x --language-force=Python --kinds-python=cfmv "$full_path" |
+    awk '{print $1" "$2" "$3}'
+
     rm "$full_path"
     rmdir $tmp
 }

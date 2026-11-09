@@ -38,21 +38,21 @@ $tenv->update_env;
 
 diag $tenv->report;
 
-http_request_ok 'index query', $tenv, '/testproj/latest/source',
-    [ qr{^Content-Type:\s*text/html}, qr{href="latest/source/issue102.c"},
-        qr{href="latest/source/arch"} ], 1;
+http_request_ok 'index query', $tenv, '/testproj/v5.4/source',
+    [ qr{^Content-Type:\s*text/html}, qr{href="/testproj/v5.4/source/issue102.c"},
+        qr{href="/testproj/v5.4/source/arch"},
+        qr{href="/testproj/v5.4/source/python"},
+        qr{<option value="P"}, qr{Python} ], 1;
 
 http_request_ok 'identifier query', $tenv, '/testproj/v5.4/ident/gsb_buffer',
     [ qr{^Content-Type:\s*text/html}, qr{\bgsb_buffer\b},
-        qr{"v5.4/source/drivers/i2c/i2c-core-acpi.c\#L23".+?
-            drivers/i2c/i2c-core-acpi.c.+?
-            line[ ]23.+?
-            \bstruct\b}x ], 1;
+        qr{source/drivers/i2c/i2c-core-acpi\.c#L23},
+        qr{as a struct} ], 1;
 
 # Doc comments: testcases pulled from t/300
 http_request_ok 'doc-comment query (nonexistent)', $tenv,
     '/testproj/v5.4/ident/SOME_NONEXISTENT_IDENTIFIER_XYZZY_PLUGH',
-    [ qr{^Content-Type:\s*text/html}, qr{<h\d>Identifier not used</h\d>}i], 1;
+    [ qr{^Content-Type:\s*text/html}, qr{Unknown identifier} ], 1;
 
 http_request_ok 'doc-comment query (existent but not documented)', $tenv,
     '/testproj/v5.4/ident/gsb_buffer',   # in drivers/i2c/i2c-core-acpi.c
@@ -66,7 +66,7 @@ http_request_ok 'ident query (existent, function, documented in C file)', $tenv,
     [
         qr{^Content-Type:\s*text/html},
         qr{\bDocumented in \d},
-        {doc => qr{drivers/i2c/i2c-core-acpi\.c.+\b45\b}},
+        qr{source/drivers/i2c/i2c-core-acpi\.c#L45},
     ], 1;
 
 http_request_ok 'ident query (existent, function, documented in C file, #102)',
@@ -74,7 +74,34 @@ http_request_ok 'ident query (existent, function, documented in C file, #102)',
     [
         qr{^Content-Type:\s*text/html},
         qr{\bDocumented in \d},
-        {doc => qr{issue102\.c.+\b6\b}},
+        qr{source/issue102\.c#L6},
+    ], 1;
+
+http_request_ok 'python ident query', $tenv, '/testproj/v5.4/P/ident/py_make_widget',
+    [
+        qr{^Content-Type:\s*text/html},
+        qr{python/py_widgets\.py},
+        qr{line 16},
+        qr{as a function},
+        qr{python/py_consumer\.py},
+        qr{<option value="P"},
+        qr{\bPython\b},
+    ], 1;
+
+http_request_ok 'python ident is absent from the C family', $tenv,
+    '/testproj/v5.4/C/ident/py_make_widget',
+    [
+        qr{^Content-Type:\s*text/html},
+        qr{Unknown identifier 'py_make_widget'},
+    ], 1;
+
+http_request_ok 'python source links identifiers', $tenv,
+    '/testproj/v5.4/source/python/py_widgets.py',
+    [
+        qr{^Content-Type:\s*text/html},
+        qr{class="ident" href="/testproj/v5.4/P/ident/py_make_widget"},
+        qr{class="ident" href="/testproj/v5.4/P/ident/PyWidget"},
+        qr{py_make_widget in a comment should not count},
     ], 1;
 
 done_testing;

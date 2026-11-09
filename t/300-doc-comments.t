@@ -46,7 +46,7 @@ ok_or_die( -d $tenv->lxr_data_dir, 'database dir exists',
 # Spot-check some identifiers
 
 run_produces_ok('doc-comment query (nonexistent)',
-    [$tenv->query_py, qw(v5.4 ident SOME_NONEXISTENT_IDENTIFIER_XYZZY_PLUGH C)],
+    [$tenv->query_py, qw(ident v5.4 SOME_NONEXISTENT_IDENTIFIER_XYZZY_PLUGH C)],
     [
         qr{^Documented in:},
         {doc => { not => qr{/} }},   # No file paths in the doc section
@@ -54,7 +54,7 @@ run_produces_ok('doc-comment query (nonexistent)',
     MUST_SUCCEED);
 
 run_produces_ok('doc-comment query (existent but not documented)',
-    [$tenv->query_py, qw(v5.4 ident gsb_buffer C)],   # in drivers/i2c/i2c-core-acpi.c
+    [$tenv->query_py, qw(ident v5.4 gsb_buffer C)],   # in drivers/i2c/i2c-core-acpi.c
     [
         qr{^Documented in:},
         {doc => { not => qr{/} }}
@@ -62,7 +62,7 @@ run_produces_ok('doc-comment query (existent but not documented)',
     MUST_SUCCEED);
 
 run_produces_ok('ident query (existent, function, documented in C file)',
-    [$tenv->query_py, qw(v5.4 ident i2c_acpi_get_i2c_resource C)],
+    [$tenv->query_py, qw(ident v5.4 i2c_acpi_get_i2c_resource C)],
     [
         qr{^Documented in:},
         {doc => qr{drivers/i2c/i2c-core-acpi\.c.+\b45\b}},
@@ -70,7 +70,7 @@ run_produces_ok('ident query (existent, function, documented in C file)',
     MUST_SUCCEED);
 
 run_produces_ok('ident query (existent, function, documented in C file, #102)',
-    [$tenv->query_py, qw(v5.4 ident documented_function_XYZZY C)],
+    [$tenv->query_py, qw(ident v5.4 documented_function_XYZZY C)],
     [
         qr{^Documented in:},
         {doc => qr{issue102\.c.+\b6\b}},
@@ -80,7 +80,7 @@ run_produces_ok('ident query (existent, function, documented in C file, #102)',
 # Non-functions
 
 run_produces_ok('ident query (existent, enum, documented in H file)',
-    [$tenv->query_py, qw(v5.4 ident memblock_flags C)],
+    [$tenv->query_py, qw(ident v5.4 memblock_flags C)],
     [
         qr{^Documented in:},
         {doc => qr{\bmemblock\.h.+\b28\b}},
@@ -88,7 +88,7 @@ run_produces_ok('ident query (existent, enum, documented in H file)',
     MUST_SUCCEED);
 
 run_produces_ok('ident query (existent, enum, not documented)',
-    [$tenv->query_py, qw(v5.4 ident rseq_cpu_id_state C)],  # uapi/linux/rseq.h:16
+    [$tenv->query_py, qw(ident v5.4 rseq_cpu_id_state C)],  # uapi/linux/rseq.h:16
     [
         qr{^Documented in:},
         {doc => { not => qr{/} }}
@@ -96,7 +96,7 @@ run_produces_ok('ident query (existent, enum, not documented)',
     MUST_SUCCEED);
 
 run_produces_ok('ident query (existent, struct, documented in H file)',
-    [$tenv->query_py, qw(v5.4 ident memblock_region C)],
+    [$tenv->query_py, qw(ident v5.4 memblock_region C)],
     [
         qr{^Documented in:},
         {doc => qr{\bmemblock\.h.+\b42\b}},
@@ -104,7 +104,7 @@ run_produces_ok('ident query (existent, struct, documented in H file)',
     MUST_SUCCEED);
 
 run_produces_ok('ident query (existent, struct, not documented)',
-    [$tenv->query_py, qw(v5.4 ident epoll_event C)],    # eventpoll.h:77
+    [$tenv->query_py, qw(ident v5.4 epoll_event C)],    # eventpoll.h:77
     [
         qr{^Documented in:},
         {doc => { not => qr{/} }}
@@ -112,7 +112,7 @@ run_produces_ok('ident query (existent, struct, not documented)',
     MUST_SUCCEED);
 
 run_produces_ok('ident query (existent, macro, documented in H file)',
-    [$tenv->query_py, qw(v5.4 ident for_each_mem_range C)],
+    [$tenv->query_py, qw(ident v5.4 for_each_mem_range C)],
     [
         qr{^Documented in:},
         {doc => qr{\bmemblock\.h.+\b148\b}},
@@ -120,7 +120,7 @@ run_produces_ok('ident query (existent, macro, documented in H file)',
     MUST_SUCCEED);
 
 run_produces_ok('ident query (existent, macro, not documented)',
-    [$tenv->query_py, qw(v5.4 ident MEMBLOCK_LOW_LIMIT C)], # memblock.h:343
+    [$tenv->query_py, qw(ident v5.4 MEMBLOCK_LOW_LIMIT C)], # memblock.h:343
     [
         qr{^Documented in:},
         {doc => { not => qr{/} }}
@@ -131,7 +131,7 @@ run_produces_ok('ident query (existent, macro, not documented)',
 
 # Like regmap_update_bits_base()
 run_produces_ok('ident query (existent, function, documented in C file, nonstandard doc comment, #134)',
-    [$tenv->query_py, qw(v5.4 ident issue134_function1 C)],
+    [$tenv->query_py, qw(ident v5.4 issue134_function1 C)],
     [
         qr{^Documented in:},
         {doc => qr{\bissue134\.c.+\b9\b}},
@@ -140,7 +140,7 @@ run_produces_ok('ident query (existent, function, documented in C file, nonstand
 
 # Like wait_for_completion()
 run_produces_ok('ident query (existent, function, documented in C file, nonstandard doc comment, #134)',
-    [$tenv->query_py, qw(v5.4 ident issue134_function2 C)],
+    [$tenv->query_py, qw(ident v5.4 issue134_function2 C)],
     [
         qr{^Documented in:},
         {doc => qr{\bissue134\.c.+\b25\b}},
@@ -149,7 +149,7 @@ run_produces_ok('ident query (existent, function, documented in C file, nonstand
 
 # Like v4l2_fwnode_endpoint_parse()
 run_produces_ok('ident query (existent, prototype, documented in C file), #134',
-    [$tenv->query_py, qw(v5.4 ident issue134_function3 C)],
+    [$tenv->query_py, qw(ident v5.4 issue134_function3 C)],
     [
         qr{^Documented in:},
         {doc => qr{\bissue134\.c.+\b38\b}},
@@ -164,7 +164,7 @@ run_produces_ok('No warnings on macro, #186',
 
 # #186 counterexamples
 run_produces_ok('ident query (existent, documented as function), #186 counterexample',
-    [$tenv->query_py, qw(v5.4 ident i186c_fn1 C)],
+    [$tenv->query_py, qw(ident v5.4 i186c_fn1 C)],
     [
         qr{^Documented in:},
         {doc => qr{\bissue186-counterexamples\.c.+\b5\b}},
@@ -172,7 +172,7 @@ run_produces_ok('ident query (existent, documented as function), #186 counterexa
     MUST_SUCCEED);
 
 run_produces_ok('ident query (existent, documented as macro), #186 counterexample',
-    [$tenv->query_py, qw(v5.4 ident i186c_fn2 C)],
+    [$tenv->query_py, qw(ident v5.4 i186c_fn2 C)],
     [
         qr{^Documented in:},
         {doc => qr{\bissue186-counterexamples\.c.+\b20\b}},
@@ -189,7 +189,7 @@ run_produces_ok('No warnings on indented #define, #188',
 
 # Like request_firmware()
 run_produces_ok('ident query (existent, function, documented in C file, type on preceding line, #192)',
-    [$tenv->query_py, qw(v5.4 ident issue192a C)],
+    [$tenv->query_py, qw(ident v5.4 issue192a C)],
     [
         qr{^Documented in:},
         {doc => qr{\bissue192\.c.+\b5\b}},
@@ -197,7 +197,7 @@ run_produces_ok('ident query (existent, function, documented in C file, type on 
     MUST_SUCCEED);
 
 run_produces_ok('ident query (existent, function, documented in C file, uppercase return type on preceding line, #192)',
-    [$tenv->query_py, qw(v5.4 ident issue192b C)],
+    [$tenv->query_py, qw(ident v5.4 issue192b C)],
     [
         qr{^Documented in:},
         {doc => qr{\bissue192\.c.+\b15\b}},

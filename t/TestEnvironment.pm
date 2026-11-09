@@ -96,7 +96,7 @@ has script_sh => (
     default => sub { find_program('script.sh') }
 );
 has query_py => (
-    default => sub { find_program('elixir', 'query.py') }
+    default => sub { find_program('utils', 'query.py') }
 );
 has update_py => (
     default => sub { find_program('update.py') }
@@ -254,8 +254,15 @@ sub make_web_request {
     $self->update_env;  # just in case
 
     local $ENV{REQUEST_URI} = $url;
+    local $ENV{REQUEST_METHOD} = 'GET';
+    local $ENV{SERVER_NAME} = 'localhost';
+    local $ENV{SERVER_PORT} = '80';
+    local $ENV{SERVER_PROTOCOL} = 'HTTP/1.0';
+    # Importing the WSGI app warns on pre-existing non-raw regexes.
+    local $ENV{PYTHONWARNINGS} = 'ignore';
+    my $oneshot = File::Spec->catfile($FindBin::Bin, 'wsgi_oneshot.py');
     diag "Requesting `$url'";
-    my ($exit_status, $lrStdout, $lrStderr) = run_program($self->web_py);
+    my ($exit_status, $lrStdout, $lrStderr) = run_program('python3', $oneshot);
 
     if(!wantarray) {
         return $lrStdout;
